@@ -1,0 +1,51 @@
+import { redirect } from "next/navigation"
+import { createClient } from "@/lib/supabase/server"
+import { getUserContext } from "@/app/auth/context/userContext"
+import type { MaterialEntrada } from "@/lib/types"
+import EntradaPageContent from "./entrada-page-content"
+
+export const dynamic = "force-dynamic"
+
+export default async function EntradaPage() {
+    const supabase = await createClient()
+    const { userPermissions } = await getUserContext()
+    const {
+        data: { user },
+        error,
+    } = await supabase.auth.getUser()
+    if (error || !user) {
+        redirect("/auth/login")
+    }
+
+    const { data: entradasData } = await supabase
+        .from("material_entradas")
+        .select("*, materiais:material_id (id, nome, unidade_medida), clientes:cliente_id (id, nome)")
+        .order("data", { ascending: false })
+
+    const entradas: MaterialEntrada[] = (entradasData || []).map((e: any) => ({
+        ...e,
+        material_nome: e.materiais?.nome || null,
+        material_unidade: e.materiais?.unidade_medida || null,
+        cliente_nome: e.clientes?.nome || null,
+    }))
+
+    const { data: materiaisData } = await supabase
+        .from("materiais")
+        .select("id, nome, unidade_medida")
+        .eq("ativo", true)
+        .order("nome")
+
+    const { data: clientesData } = await supabase
+        .from("clientes")
+        .select("id, nome")
+        .order("nome")
+
+    return (
+        <EntradaPageContent
+            entradas={entradas}
+            materiais={materiaisData || []}
+            clientes={clientesData || []}
+            userPermissions={userPermissions}
+        />
+    )
+}

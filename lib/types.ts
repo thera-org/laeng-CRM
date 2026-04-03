@@ -208,7 +208,18 @@ export interface PermissoesUsuario {
     delete: boolean;
     edit: boolean;
   };
-
+  'material-entrada'?: {
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    delete: boolean;
+  };
+  'material-saida'?: {
+    view: boolean;
+    create: boolean;
+    edit: boolean;
+    delete: boolean;
+  };
 }
 
 //TIPOS PARA O MÓDULO DE PAGAMENTOS
@@ -265,4 +276,66 @@ export interface FinancialMetrics {
   despesaCount: number;
   receitaCount: number;
   saldo: number;
+}
+
+// ============ TIPOS PARA O MODULO DE ALMOXARIFADO ============
+
+export interface Material {
+  id: string;
+  nome: string;
+  unidade_medida: 'peca' | 'metro' | 'litro' | 'kg';
+  estoque_inicial: number;
+  ativo: boolean;
+  created_by?: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaterialEntrada {
+  id: string;
+  material_id: string;
+  quantidade: number;
+  data: string;
+  cliente_id?: string;
+  observacao?: string;
+  created_by?: string;
+  created_by_name?: string;
+  created_at: string;
+  updated_at: string;
+  material_nome?: string;
+  material_unidade?: string;
+  cliente_nome?: string;
+}
+
+export interface MaterialSaida {
+  id: string;
+  material_id: string;
+  quantidade: number;
+  data: string;
+  cliente_id?: string;
+  observacao?: string;
+  created_by?: string;
+  created_by_name?: string;
+  created_at: string;
+  updated_at: string;
+  material_nome?: string;
+  material_unidade?: string;
+  cliente_nome?: string;
+}
+
+export interface MaterialFiltersState {
+  material: string;
+  month: string;
+  year: string;
+  week: string;
+}
+
+export interface FluxoMaterialResumo {
+  material_id: string;
+  material_nome: string;
+  unidade_medida: string;
+  estoque_inicial: number;
+  total_entradas: number;
+  total_saidas: number;
+  estoque_atual: number;
 }
