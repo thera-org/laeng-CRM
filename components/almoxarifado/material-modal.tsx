@@ -10,11 +10,9 @@ import {
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2 } from "lucide-react"
 import type { Material } from "@/lib/types"
 import { useGestaoModals } from "@/components/almoxarifado/hooks/useGestaoModals"
-import { UNIDADES_MEDIDA } from "@/components/almoxarifado/types/almoxarifadoTypes"
 
 interface MaterialModalProps {
   isOpen: boolean
@@ -31,66 +29,41 @@ export function MaterialModal({ isOpen, onClose, material }: MaterialModalProps)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="sm:max-w-md">
-        <DialogHeader className="border-b pb-4">
-          <DialogTitle className="text-xl font-bold">
+      <DialogContent className="max-w-2xl min-h-[20vh] max-h-[90vh] flex flex-col p-0 bg-white">
+        <DialogHeader className="px-6 pt-6 pb-4 border-b bg-gray-50/50">
+          <DialogTitle className="text-2xl font-bold text-[#1E1E1E]">
             {isEditing ? "Editar Material" : "Novo Material"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 py-4">
+        <div className="overflow-y-auto px-6 py-6 space-y-6 scrollbar-thin flex-10">
           <div className="space-y-2">
-            <Label htmlFor="nome">Nome do Material *</Label>
+            <Label htmlFor="nome" className="font-semibold text-sm text-gray-700">
+              Nome do Material *
+            </Label>
             <Input
               id="nome"
               placeholder="Ex: Cimento, Areia, Tijolo..."
               value={formData.nome}
               onChange={(e) => updateField("nome", e.target.value)}
               disabled={isLoading}
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="unidade">Unidade de Medida *</Label>
-            <Select
-              value={formData.unidade_medida}
-              onValueChange={(v) => updateField("unidade_medida", v)}
-              disabled={isLoading}
-            >
-              <SelectTrigger id="unidade">
-                <SelectValue placeholder="Selecione..." />
-              </SelectTrigger>
-              <SelectContent>
-                {UNIDADES_MEDIDA.map((u) => (
-                  <SelectItem key={u.value} value={u.value}>
-                    {u.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-
-          <div className="space-y-2">
-            <Label htmlFor="estoque">Estoque Inicial</Label>
-            <Input
-              id="estoque"
-              type="number"
-              min={0}
-              value={formData.estoque_inicial}
-              onChange={(e) => updateField("estoque_inicial", Number(e.target.value))}
-              disabled={isLoading}
+              className="border-gray-300 focus:border-[#F5C800]"
             />
           </div>
         </div>
 
-        <DialogFooter>
-          <Button variant="outline" onClick={onClose} disabled={isLoading}>
+        <DialogFooter className="flex justify-between items-center px-6 py-4 border-t bg-gray-50 mt-auto w-full">
+          <Button variant="ghost" onClick={onClose} disabled={isLoading} className="text-gray-500 hover:text-gray-900">
             Cancelar
           </Button>
           <Button
             onClick={saveMaterial}
             disabled={isLoading}
-            className="bg-[#F5C800] hover:bg-[#F5C800]/90 text-[#1E1E1E] font-bold"
+            className={
+              isEditing
+                ? "bg-[#F5C800] text-[#1E1E1E] hover:bg-[#F5C800]/90 font-bold min-w-[150px]"
+                : "bg-[#1E1E1E] text-white hover:bg-[#333] font-bold min-w-[150px] border border-[#F5C800]"
+            }
           >
             {isLoading ? (
               <>

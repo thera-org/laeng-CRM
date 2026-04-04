@@ -77,7 +77,7 @@ const menuItems = [
   {
     title: "Materiais",
     icon: Package,
-    href: "/gestao",
+    href: "/materiais",
     group: 3
   },
   {

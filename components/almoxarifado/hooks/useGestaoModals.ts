@@ -7,14 +7,10 @@ import { toast } from "@/hooks/use-toast"
 
 interface GestaoFormData {
   nome: string
-  unidade_medida: string
-  estoque_inicial: number
 }
 
 const INITIAL_FORM: GestaoFormData = {
   nome: "",
-  unidade_medida: "peca",
-  estoque_inicial: 0,
 }
 
 export function useGestaoModals(
@@ -30,8 +26,6 @@ export function useGestaoModals(
     if (isOpen && material) {
       setFormData({
         nome: material.nome,
-        unidade_medida: material.unidade_medida,
-        estoque_inicial: material.estoque_inicial,
       })
     } else if (isOpen) {
       setFormData(INITIAL_FORM)
@@ -39,7 +33,7 @@ export function useGestaoModals(
   }, [isOpen, material])
 
   const updateField = useCallback(
-    (field: keyof GestaoFormData, value: string | number) => {
+    (field: keyof GestaoFormData, value: string) => {
       setFormData((prev) => ({ ...prev, [field]: value }))
     },
     []
@@ -56,8 +50,6 @@ export function useGestaoModals(
       const result = await saveMaterialAction(
         {
           nome: formData.nome.trim(),
-          unidade_medida: formData.unidade_medida,
-          estoque_inicial: formData.estoque_inicial,
         },
         material?.id
       )

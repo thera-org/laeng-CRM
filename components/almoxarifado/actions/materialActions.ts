@@ -4,7 +4,7 @@ import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 
 export async function saveMaterialAction(
-  data: { nome: string; unidade_medida: string; estoque_inicial: number },
+  data: { nome: string },
   id?: string
 ) {
   const supabase = await createClient()
@@ -30,8 +30,6 @@ export async function saveMaterialAction(
         .from("materiais")
         .update({
           nome: data.nome,
-          unidade_medida: data.unidade_medida,
-          estoque_inicial: data.estoque_inicial,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)
@@ -42,15 +40,13 @@ export async function saveMaterialAction(
 
       const { error } = await supabase.from("materiais").insert({
         nome: data.nome,
-        unidade_medida: data.unidade_medida,
-        estoque_inicial: data.estoque_inicial,
         created_by: userData.user?.id,
       })
 
       if (error) throw error
     }
 
-    revalidatePath("/gestao")
+    revalidatePath("/materiais")
     return { ok: true }
   } catch (e: any) {
     return { ok: false, error: e.message }
@@ -72,7 +68,7 @@ export async function deleteMaterialAction(id: string) {
       throw error
     }
 
-    revalidatePath("/gestao")
+    revalidatePath("/materiais")
     return { ok: true }
   } catch (e: any) {
     return { ok: false, error: e.message }
@@ -89,7 +85,7 @@ export async function toggleMaterialAtivoAction(id: string, ativo: boolean) {
 
     if (error) throw error
 
-    revalidatePath("/gestao")
+    revalidatePath("/materiais")
     return { ok: true }
   } catch (e: any) {
     return { ok: false, error: e.message }
