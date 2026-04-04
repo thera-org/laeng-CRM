@@ -37,7 +37,7 @@ export default async function SaidaPage() {
 
     const { data: clientesData } = await supabase
         .from("clientes")
-        .select("id, nome")
+        .select("id, nome, codigo")
         .order("nome")
 
     return (

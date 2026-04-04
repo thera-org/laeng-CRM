@@ -19,7 +19,7 @@ import { toast } from "@/hooks/use-toast"
 interface SaidaPageContentProps {
     saidas: MaterialSaida[]
     materiais: { id: string; nome: string }[]
-    clientes: { id: string; nome: string }[]
+    clientes: { id: string; nome: string; codigo?: number }[]
     userPermissions: Record<string, any>
 }
 
