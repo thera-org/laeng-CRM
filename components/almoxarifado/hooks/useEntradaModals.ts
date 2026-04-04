@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect, useCallback } from "react"
+import { useState, useEffect, useCallback, useMemo } from "react"
 import type { MaterialEntrada } from "@/lib/types"
 import { saveEntradaAction } from "@/components/almoxarifado/actions/entradaActions"
 import { toast } from "@/hooks/use-toast"
@@ -25,11 +25,16 @@ const INITIAL_FORM: EntradaFormData = {
 export function useEntradaModals(
   isOpen: boolean,
   onClose: () => void,
-  entrada?: MaterialEntrada | null
+  entrada?: MaterialEntrada | null,
+  clientes?: { id: string; nome: string; codigo?: number }[]
 ) {
   const isEditing = !!entrada
   const [formData, setFormData] = useState<EntradaFormData>(INITIAL_FORM)
   const [isLoading, setIsLoading] = useState(false)
+
+  // Client search state
+  const [searchTerm, setSearchTerm] = useState("")
+  const [selectedClienteId, setSelectedClienteId] = useState<string | null>(null)
 
   useEffect(() => {
     if (isOpen && entrada) {
@@ -40,10 +45,34 @@ export function useEntradaModals(
         cliente_id: entrada.cliente_id || "",
         observacao: entrada.observacao || "",
       })
+      setSelectedClienteId(entrada.cliente_id || null)
+      setSearchTerm("")
     } else if (isOpen) {
       setFormData(INITIAL_FORM)
+      setSelectedClienteId(null)
+      setSearchTerm("")
     }
   }, [isOpen, entrada])
+
+  // Filter clients by search term
+  const filteredClientes = useMemo(() => {
+    if (searchTerm.length < 2) return []
+    return (clientes || []).filter(c =>
+      c.nome.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+  }, [clientes, searchTerm])
+
+  // Selected client object
+  const selectedCliente = useMemo(() =>
+    (clientes || []).find(c => c.id === selectedClienteId),
+    [clientes, selectedClienteId]
+  )
+
+  const selectFromSearch = useCallback((id: string) => {
+    setSelectedClienteId(id)
+    setFormData(prev => ({ ...prev, cliente_id: id }))
+    setSearchTerm("")
+  }, [])
 
   const updateField = useCallback(
     (field: keyof EntradaFormData, value: string | number) => {
@@ -53,16 +82,16 @@ export function useEntradaModals(
   )
 
   const saveEntrada = useCallback(async () => {
+    if (!formData.cliente_id) {
+      toast({ title: "Erro", description: "Selecione um cliente.", variant: "destructive" })
+      return
+    }
     if (!formData.material_id) {
       toast({ title: "Erro", description: "Selecione um material.", variant: "destructive" })
       return
     }
     if (!formData.quantidade || formData.quantidade <= 0) {
       toast({ title: "Erro", description: "Quantidade deve ser maior que zero.", variant: "destructive" })
-      return
-    }
-    if (!formData.cliente_id) {
-      toast({ title: "Erro", description: "Selecione um cliente/obra.", variant: "destructive" })
       return
     }
 
@@ -102,5 +131,12 @@ export function useEntradaModals(
     saveEntrada,
     isLoading,
     isEditing,
+    searchTerm,
+    setSearchTerm,
+    filteredClientes,
+    selectedCliente,
+    selectedClienteId,
+    setSelectedClienteId,
+    selectFromSearch,
   }
 }

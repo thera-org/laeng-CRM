@@ -18,8 +18,8 @@ import { toast } from "@/hooks/use-toast"
 
 interface EntradaPageContentProps {
     entradas: MaterialEntrada[]
-    materiais: { id: string; nome: string; unidade_medida: string }[]
-    clientes: { id: string; nome: string }[]
+    materiais: { id: string; nome: string }[]
+    clientes: { id: string; nome: string; codigo?: number }[]
     userPermissions: Record<string, any>
 }
 

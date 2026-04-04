@@ -23,7 +23,6 @@ export default async function GestaoPage() {
 
     const materiais: Material[] = (materiaisData || []).map((m: any) => ({
         ...m,
-        estoque_inicial: Number(m.estoque_inicial),
     }))
 
     return <GestaoPageContent materiais={materiais} />

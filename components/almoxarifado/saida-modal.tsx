@@ -20,7 +20,7 @@ interface SaidaModalProps {
   isOpen: boolean
   onClose: () => void
   saida?: MaterialSaida | null
-  materiais: { id: string; nome: string; unidade_medida: string }[]
+  materiais: { id: string; nome: string }[]
   clientes: { id: string; nome: string }[]
 }
 

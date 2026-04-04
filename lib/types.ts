@@ -283,10 +283,6 @@ export interface FinancialMetrics {
 export interface Material {
   id: string;
   nome: string;
-  unidade_medida: 'peca' | 'metro' | 'litro' | 'kg';
-  estoque_inicial: number;
-  ativo: boolean;
-  created_by?: string;
   created_at: string;
   updated_at: string;
 }
@@ -298,13 +294,11 @@ export interface MaterialEntrada {
   data: string;
   cliente_id?: string;
   observacao?: string;
-  created_by?: string;
-  created_by_name?: string;
   created_at: string;
   updated_at: string;
   material_nome?: string;
-  material_unidade?: string;
   cliente_nome?: string;
+  cliente_codigo?: number;
 }
 
 export interface MaterialSaida {
@@ -314,13 +308,11 @@ export interface MaterialSaida {
   data: string;
   cliente_id?: string;
   observacao?: string;
-  created_by?: string;
-  created_by_name?: string;
   created_at: string;
   updated_at: string;
   material_nome?: string;
-  material_unidade?: string;
   cliente_nome?: string;
+  cliente_codigo?: number;
 }
 
 export interface MaterialFiltersState {
@@ -333,8 +325,6 @@ export interface MaterialFiltersState {
 export interface FluxoMaterialResumo {
   material_id: string;
   material_nome: string;
-  unidade_medida: string;
-  estoque_inicial: number;
   total_entradas: number;
   total_saidas: number;
   estoque_atual: number;

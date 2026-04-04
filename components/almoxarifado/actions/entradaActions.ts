@@ -30,21 +30,12 @@ export async function saveEntradaAction(
 
       if (error) throw error
     } else {
-      const { data: userData } = await supabase.auth.getUser()
-      const { data: profile } = await supabase
-        .from("profiles")
-        .select("nome_completo")
-        .eq("id", userData.user?.id)
-        .single()
-
       const { error } = await supabase.from("material_entradas").insert({
         material_id: data.material_id,
         quantidade: data.quantidade,
         data: data.data,
         cliente_id: data.cliente_id || null,
         observacao: data.observacao || null,
-        created_by: userData.user?.id,
-        created_by_name: profile?.nome_completo || null,
       })
 
       if (error) throw error

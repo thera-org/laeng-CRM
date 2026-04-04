@@ -2,16 +2,14 @@
 
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
-import { Package, TrendingUp, TrendingDown, BoxIcon } from "lucide-react"
+import { Package, TrendingUp, TrendingDown } from "lucide-react"
 import type { FluxoMaterialResumo } from "@/lib/types"
-import { UNIDADE_LABEL } from "@/components/almoxarifado/types/almoxarifadoTypes"
 
 interface FluxoMaterialDashboardProps {
   data: FluxoMaterialResumo[]
 }
 
 export function FluxoMaterialDashboard({ data }: FluxoMaterialDashboardProps) {
-  const totalEstoqueInicial = data.reduce((sum, d) => sum + d.estoque_inicial, 0)
   const totalEntradas = data.reduce((sum, d) => sum + d.total_entradas, 0)
   const totalSaidas = data.reduce((sum, d) => sum + d.total_saidas, 0)
   const totalEstoqueAtual = data.reduce((sum, d) => sum + d.estoque_atual, 0)
@@ -19,14 +17,7 @@ export function FluxoMaterialDashboard({ data }: FluxoMaterialDashboardProps) {
   return (
     <div className="space-y-6">
       {/* Cards resumo */}
-      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
-        <SummaryCard
-          title="Estoque Inicial"
-          value={totalEstoqueInicial}
-          icon={BoxIcon}
-          color="text-blue-600"
-          bgColor="bg-blue-50"
-        />
+      <div className="grid grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
         <SummaryCard
           title="Total Entradas"
           value={totalEntradas}
@@ -64,8 +55,6 @@ export function FluxoMaterialDashboard({ data }: FluxoMaterialDashboardProps) {
               <TableHeader className="bg-gray-50">
                 <TableRow>
                   <TableHead className="font-bold py-3">MATERIAL</TableHead>
-                  <TableHead className="font-bold py-3">UNIDADE</TableHead>
-                  <TableHead className="font-bold py-3 text-center">ESTOQUE INICIAL</TableHead>
                   <TableHead className="font-bold py-3 text-center text-green-600">ENTRADAS</TableHead>
                   <TableHead className="font-bold py-3 text-center text-red-600">SAIDAS</TableHead>
                   <TableHead className="font-bold py-3 text-center">ESTOQUE ATUAL</TableHead>
@@ -74,18 +63,14 @@ export function FluxoMaterialDashboard({ data }: FluxoMaterialDashboardProps) {
               <TableBody>
                 {data.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={6} className="text-center py-8 text-gray-500">
-                      Nenhum material ativo encontrado.
+                    <TableCell colSpan={4} className="text-center py-8 text-gray-500">
+                      Nenhum material encontrado.
                     </TableCell>
                   </TableRow>
                 ) : (
                   data.map((item) => (
                     <TableRow key={item.material_id} className="hover:bg-[#F5C800]/5">
                       <TableCell className="font-medium">{item.material_nome}</TableCell>
-                      <TableCell>
-                        {UNIDADE_LABEL[item.unidade_medida] || item.unidade_medida}
-                      </TableCell>
-                      <TableCell className="text-center">{item.estoque_inicial}</TableCell>
                       <TableCell className="text-center font-semibold text-green-600">
                         +{item.total_entradas}
                       </TableCell>

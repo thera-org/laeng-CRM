@@ -19,25 +19,24 @@ export default async function EntradaPage() {
 
     const { data: entradasData } = await supabase
         .from("material_entradas")
-        .select("*, materiais:material_id (id, nome, unidade_medida), clientes:cliente_id (id, nome)")
+        .select("*, materiais:material_id (id, nome), clientes:cliente_id (id, nome, codigo)")
         .order("data", { ascending: false })
 
     const entradas: MaterialEntrada[] = (entradasData || []).map((e: any) => ({
         ...e,
         material_nome: e.materiais?.nome || null,
-        material_unidade: e.materiais?.unidade_medida || null,
         cliente_nome: e.clientes?.nome || null,
+        cliente_codigo: e.clientes?.codigo || null,
     }))
 
     const { data: materiaisData } = await supabase
         .from("materiais")
-        .select("id, nome, unidade_medida")
-        .eq("ativo", true)
+        .select("id, nome")
         .order("nome")
 
     const { data: clientesData } = await supabase
         .from("clientes")
-        .select("id, nome")
+        .select("id, nome, codigo")
         .order("nome")
 
     return (

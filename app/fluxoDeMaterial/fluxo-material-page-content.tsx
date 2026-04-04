@@ -97,11 +97,9 @@ export default function FluxoMaterialPageContent({
             result.push({
                 material_id: original.material_id,
                 material_nome: original.material_nome,
-                unidade_medida: original.unidade_medida,
-                estoque_inicial: original.estoque_inicial,
                 total_entradas: totalEntradas,
                 total_saidas: totalSaidas,
-                estoque_atual: original.estoque_inicial + totalEntradas - totalSaidas,
+                estoque_atual: totalEntradas - totalSaidas,
             })
         })
 

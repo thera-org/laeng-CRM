@@ -19,20 +19,19 @@ export default async function SaidaPage() {
 
     const { data: saidasData } = await supabase
         .from("material_saidas")
-        .select("*, materiais:material_id (id, nome, unidade_medida), clientes:cliente_id (id, nome)")
+        .select("*, materiais:material_id (id, nome), clientes:cliente_id (id, nome, codigo)")
         .order("data", { ascending: false })
 
     const saidas: MaterialSaida[] = (saidasData || []).map((s: any) => ({
         ...s,
         material_nome: s.materiais?.nome || null,
-        material_unidade: s.materiais?.unidade_medida || null,
         cliente_nome: s.clientes?.nome || null,
+        cliente_codigo: s.clientes?.codigo || null,
     }))
 
     const { data: materiaisData } = await supabase
         .from("materiais")
-        .select("id, nome, unidade_medida")
-        .eq("ativo", true)
+        .select("id, nome")
         .order("nome")
 
     const { data: clientesData } = await supabase

@@ -36,11 +36,8 @@ export async function saveMaterialAction(
 
       if (error) throw error
     } else {
-      const { data: userData } = await supabase.auth.getUser()
-
       const { error } = await supabase.from("materiais").insert({
         nome: data.nome,
-        created_by: userData.user?.id,
       })
 
       if (error) throw error
@@ -75,30 +72,12 @@ export async function deleteMaterialAction(id: string) {
   }
 }
 
-export async function toggleMaterialAtivoAction(id: string, ativo: boolean) {
-  const supabase = await createClient()
-  try {
-    const { error } = await supabase
-      .from("materiais")
-      .update({ ativo, updated_at: new Date().toISOString() })
-      .eq("id", id)
-
-    if (error) throw error
-
-    revalidatePath("/materiais")
-    return { ok: true }
-  } catch (e: any) {
-    return { ok: false, error: e.message }
-  }
-}
-
 export async function getMateriaisAtivosAction() {
   const supabase = await createClient()
   try {
     const { data, error } = await supabase
       .from("materiais")
-      .select("id, nome, unidade_medida")
-      .eq("ativo", true)
+      .select("id, nome")
       .order("nome")
 
     if (error) throw error

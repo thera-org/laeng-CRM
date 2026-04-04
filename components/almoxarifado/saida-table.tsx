@@ -4,7 +4,6 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Pencil, Trash2 } from "lucide-react"
 import type { MaterialSaida } from "@/lib/types"
-import { UNIDADE_LABEL } from "@/components/almoxarifado/types/almoxarifadoTypes"
 import { usePagination } from "@/lib/table-utils"
 import { PagamentosPagination } from "@/components/pagamentos/pagamentos-pagination"
 import { format, parseISO } from "date-fns"
@@ -42,10 +41,8 @@ export function SaidaTable({ data, userPermissions, onEdit, onDelete }: SaidaTab
                 <TableHead className="text-[#F5C800] font-bold py-3">DATA</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3">MATERIAL</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3">QUANTIDADE</TableHead>
-                <TableHead className="text-[#F5C800] font-bold py-3">UNIDADE</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3">CLIENTE/OBRA</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3">OBSERVACAO</TableHead>
-                <TableHead className="text-[#F5C800] font-bold py-3">REGISTRADO POR</TableHead>
                 {(canEdit || canDelete) && (
                   <TableHead className="text-[#F5C800] font-bold py-3 text-right">ACOES</TableHead>
                 )}
@@ -54,7 +51,7 @@ export function SaidaTable({ data, userPermissions, onEdit, onDelete }: SaidaTab
             <TableBody>
               {paginatedData.length === 0 ? (
                 <TableRow>
-                  <TableCell colSpan={8} className="text-center py-8 text-gray-500">
+                  <TableCell colSpan={6} className="text-center py-8 text-gray-500">
                     Nenhuma saida encontrada.
                   </TableCell>
                 </TableRow>
@@ -68,15 +65,9 @@ export function SaidaTable({ data, userPermissions, onEdit, onDelete }: SaidaTab
                     <TableCell className="font-semibold text-red-600">
                       -{saida.quantidade}
                     </TableCell>
-                    <TableCell>
-                      {UNIDADE_LABEL[saida.material_unidade || ""] || saida.material_unidade || "-"}
-                    </TableCell>
                     <TableCell>{saida.cliente_nome || "-"}</TableCell>
                     <TableCell className="max-w-[200px] truncate" title={saida.observacao || ""}>
                       {saida.observacao || "-"}
-                    </TableCell>
-                    <TableCell className="text-sm text-gray-500">
-                      {saida.created_by_name || "-"}
                     </TableCell>
                     {(canEdit || canDelete) && (
                       <TableCell className="text-right">
