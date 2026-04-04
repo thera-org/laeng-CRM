@@ -287,7 +287,7 @@ export interface Material {
   updated_at: string;
 }
 
-export interface MaterialEntrada {
+export interface MaterialMovimentacao {
   id: string;
   material_id: string;
   quantidade: number;
@@ -296,24 +296,14 @@ export interface MaterialEntrada {
   observacao?: string;
   created_at: string;
   updated_at: string;
+  type: 'ENTRADA' | 'SAIDA';
   material_nome?: string;
   cliente_nome?: string;
   cliente_codigo?: number;
 }
 
-export interface MaterialSaida {
-  id: string;
-  material_id: string;
-  quantidade: number;
-  data: string;
-  cliente_id?: string;
-  observacao?: string;
-  created_at: string;
-  updated_at: string;
-  material_nome?: string;
-  cliente_nome?: string;
-  cliente_codigo?: number;
-}
+export type MaterialEntrada = MaterialMovimentacao;
+export type MaterialSaida = MaterialMovimentacao;
 
 export interface MaterialFiltersState {
   material: string;

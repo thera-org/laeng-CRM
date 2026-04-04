@@ -17,7 +17,7 @@ export async function saveEntradaAction(
   try {
     if (id) {
       const { error } = await supabase
-        .from("material_entradas")
+        .from("material_movimentacao")
         .update({
           material_id: data.material_id,
           quantidade: data.quantidade,
@@ -30,12 +30,13 @@ export async function saveEntradaAction(
 
       if (error) throw error
     } else {
-      const { error } = await supabase.from("material_entradas").insert({
+      const { error } = await supabase.from("material_movimentacao").insert({
         material_id: data.material_id,
         quantidade: data.quantidade,
         data: data.data,
         cliente_id: data.cliente_id || null,
         observacao: data.observacao || null,
+        type: "ENTRADA",
       })
 
       if (error) throw error
@@ -51,7 +52,7 @@ export async function saveEntradaAction(
 export async function deleteEntradaAction(id: string) {
   const supabase = await createClient()
   try {
-    const { error } = await supabase.from("material_entradas").delete().eq("id", id)
+    const { error } = await supabase.from("material_movimentacao").delete().eq("id", id)
     if (error) throw error
 
     revalidatePath("/entrada")

@@ -18,8 +18,9 @@ export default async function EntradaPage() {
     }
 
     const { data: entradasData } = await supabase
-        .from("material_entradas")
+        .from("material_movimentacao")
         .select("*, materiais:material_id (id, nome), clientes:cliente_id (id, nome, codigo)")
+        .eq("type", "ENTRADA")
         .order("data", { ascending: false })
 
     const entradas: MaterialEntrada[] = (entradasData || []).map((e: any) => ({

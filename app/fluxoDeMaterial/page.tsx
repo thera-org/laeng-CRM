@@ -29,8 +29,9 @@ export default async function FluxoMaterialPage() {
     }))
 
     const { data: entradasData } = await supabase
-        .from("material_entradas")
+        .from("material_movimentacao")
         .select("*, materiais:material_id (id, nome), clientes:cliente_id (id, nome)")
+        .eq("type", "ENTRADA")
         .order("data", { ascending: false })
 
     const entradas: MaterialEntrada[] = (entradasData || []).map((e: any) => ({
@@ -40,8 +41,9 @@ export default async function FluxoMaterialPage() {
     }))
 
     const { data: saidasData } = await supabase
-        .from("material_saidas")
+        .from("material_movimentacao")
         .select("*, materiais:material_id (id, nome), clientes:cliente_id (id, nome)")
+        .eq("type", "SAIDA")
         .order("data", { ascending: false })
 
     const saidas: MaterialSaida[] = (saidasData || []).map((s: any) => ({
