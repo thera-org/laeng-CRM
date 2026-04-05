@@ -295,6 +295,7 @@ export interface ClienteMaterialEstoque {
   created_at?: string;
   updated_at?: string;
   material_nome?: string;
+  cliente_nome?: string;
 }
 
 export interface MaterialMovimentacao {

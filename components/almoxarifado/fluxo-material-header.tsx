@@ -1,7 +1,7 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { Search, ArrowLeftRight, RotateCcw, Calendar, Package, Users } from "lucide-react"
+import { Search, ArrowLeftRight, RotateCcw, Calendar, Package } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -12,15 +12,12 @@ interface FluxoMaterialHeaderProps {
   setSearchTerm: (term: string) => void
   materialFilter: string
   setMaterialFilter: (v: string) => void
-  clienteFilter: string
-  setClienteFilter: (v: string) => void
   dateFrom: string
   setDateFrom: (v: string) => void
   dateTo: string
   setDateTo: (v: string) => void
   clearFilters: () => void
   materiais: { id: string; nome: string }[]
-  clientes: { id: string; nome: string }[]
 }
 
 export function FluxoMaterialHeader({
@@ -29,17 +26,14 @@ export function FluxoMaterialHeader({
   setSearchTerm,
   materialFilter,
   setMaterialFilter,
-  clienteFilter,
-  setClienteFilter,
   dateFrom,
   setDateFrom,
   dateTo,
   setDateTo,
   clearFilters,
   materiais,
-  clientes,
 }: FluxoMaterialHeaderProps) {
-  const hasFilters = materialFilter !== "all" || clienteFilter !== "all" || dateFrom || dateTo || searchTerm
+  const hasFilters = materialFilter !== "all" || dateFrom || dateTo || searchTerm
 
   return (
     <div className="bg-[#1E1E1E] border-b-2 sm:border-b-4 border-[#F5C800] shadow-lg">
@@ -68,7 +62,7 @@ export function FluxoMaterialHeader({
             <div className="flex-1 relative group">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#F5C800]" />
               <Input
-                placeholder="Buscar por material..."
+                placeholder="Buscar por cliente..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-10 bg-white border-0 text-gray-900 placeholder:text-gray-500 rounded-md shadow-sm w-full"
@@ -99,17 +93,6 @@ export function FluxoMaterialHeader({
               <SelectItem value="all">Todos Materiais</SelectItem>
               {materiais.map((m) => (
                 <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
-              ))}
-            </FilterSelect>
-            <FilterSelect
-              value={clienteFilter}
-              onChange={setClienteFilter}
-              placeholder="Cliente/Obra"
-              icon={Users}
-            >
-              <SelectItem value="all">Todos Clientes</SelectItem>
-              {clientes.map((c) => (
-                <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
               ))}
             </FilterSelect>
             <div className="lg:col-span-2">

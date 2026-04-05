@@ -1,35 +1,31 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import type { FluxoMaterialResumo, MaterialEntrada, MaterialSaida } from "@/lib/types"
+import type { ClienteMaterialEstoque, FluxoMaterialResumo, MaterialEntrada, MaterialSaida } from "@/lib/types"
 import { FluxoMaterialHeader } from "@/components/almoxarifado/fluxo-material-header"
 import { FluxoMaterialDashboard } from "@/components/almoxarifado/fluxo-material-dashboard"
 
 interface FluxoMaterialPageContentProps {
-    fluxo: FluxoMaterialResumo[]
     entradas: MaterialEntrada[]
     saidas: MaterialSaida[]
+    estoques: ClienteMaterialEstoque[]
     materiais: { id: string; nome: string }[]
-    clientes: { id: string; nome: string }[]
 }
 
 export default function FluxoMaterialPageContent({
-    fluxo,
     entradas,
     saidas,
+    estoques,
     materiais,
-    clientes,
 }: FluxoMaterialPageContentProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [materialFilter, setMaterialFilter] = useState("all")
-    const [clienteFilter, setClienteFilter] = useState("all")
     const [dateFrom, setDateFrom] = useState("")
     const [dateTo, setDateTo] = useState("")
 
     const clearFilters = () => {
         setSearchTerm("")
         setMaterialFilter("all")
-        setClienteFilter("all")
         setDateFrom("")
         setDateTo("")
     }
@@ -38,81 +34,94 @@ export default function FluxoMaterialPageContent({
         return (items: (MaterialEntrada | MaterialSaida)[]) => {
             return items.filter((item) => {
                 if (materialFilter !== "all" && item.material_id !== materialFilter) return false
-                if (clienteFilter !== "all" && item.cliente_id !== clienteFilter) return false
                 if (dateFrom && item.data && item.data < dateFrom) return false
                 if (dateTo && item.data && item.data > dateTo) return false
 
                 if (searchTerm) {
                     const term = searchTerm.toLowerCase()
-                    if (!(item.material_nome || "").toLowerCase().includes(term)) return false
+                    const matchesMaterial = (item.material_nome || "").toLowerCase().includes(term)
+                    const matchesCliente = (item.cliente_nome || "").toLowerCase().includes(term)
+                    const matchesObservacao = (item.observacao || "").toLowerCase().includes(term)
+
+                    if (!matchesMaterial && !matchesCliente && !matchesObservacao) return false
                 }
 
                 return true
             })
         }
-    }, [clienteFilter, dateFrom, dateTo, materialFilter, searchTerm])
+    }, [dateFrom, dateTo, materialFilter, searchTerm])
 
     const filteredEntradas = useMemo(() => filterItems(entradas), [entradas, filterItems])
     const filteredSaidas = useMemo(() => filterItems(saidas), [saidas, filterItems])
+    const filteredEstoques = useMemo(() => {
+        return estoques.filter((item) => {
+            if (materialFilter !== "all" && item.material_id !== materialFilter) return false
 
-    // When filters are applied, compute fluxo dynamically from entradas/saidas
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase()
+                const matchesMaterial = (item.material_nome || "").toLowerCase().includes(term)
+                const matchesCliente = (item.cliente_nome || "").toLowerCase().includes(term)
+
+                if (!matchesMaterial && !matchesCliente) return false
+            }
+
+            return true
+        })
+    }, [estoques, materialFilter, searchTerm])
+
     const filteredFluxo = useMemo(() => {
-        const hasAdvancedFilter = clienteFilter !== "all" || dateFrom || dateTo
-
-        if (!hasAdvancedFilter) {
-            // Use the view data directly (faster), just apply material and search filters
-            return fluxo.filter((item) => {
-                if (materialFilter !== "all" && item.material_id !== materialFilter) return false
-                if (searchTerm) {
-                    const term = searchTerm.toLowerCase()
-                    if (!item.material_nome.toLowerCase().includes(term)) return false
-                }
-                return true
-            })
-        }
-
-        // Advanced filtering: recompute from raw entradas/saidas
-        // Get relevant material IDs
         const materialIds = new Set<string>()
         filteredEntradas.forEach((e) => materialIds.add(e.material_id))
         filteredSaidas.forEach((s) => materialIds.add(s.material_id))
+        filteredEstoques.forEach((item) => materialIds.add(item.material_id))
 
-        // Also include materials from fluxo that match the material filter
         if (materialFilter !== "all") {
             materialIds.add(materialFilter)
         }
 
-        // Build aggregated fluxo
         const result: FluxoMaterialResumo[] = []
-        const fluxoMap = new Map(fluxo.map((f) => [f.material_id, f]))
+        const materialMap = new Map(materiais.map((item) => [item.id, item.nome]))
 
         materialIds.forEach((mid) => {
-            const original = fluxoMap.get(mid)
-            if (!original) return
-
-            if (searchTerm) {
-                const term = searchTerm.toLowerCase()
-                if (!original.material_nome.toLowerCase().includes(term)) return
-            }
-
             const totalEntradas = filteredEntradas
                 .filter((e) => e.material_id === mid)
                 .reduce((sum, e) => sum + e.quantidade, 0)
             const totalSaidas = filteredSaidas
                 .filter((s) => s.material_id === mid)
                 .reduce((sum, s) => sum + s.quantidade, 0)
+            const estoqueAtual = filteredEstoques
+                .filter((item) => item.material_id === mid)
+                .reduce((sum, item) => sum + Number(item.estoque || 0), 0)
+
+            const materialNome = materialMap.get(mid) || filteredEstoques.find((item) => item.material_id === mid)?.material_nome || filteredEntradas.find((item) => item.material_id === mid)?.material_nome || filteredSaidas.find((item) => item.material_id === mid)?.material_nome
+
+            if (!materialNome) return
+
+            if (searchTerm) {
+                const term = searchTerm.toLowerCase()
+                const hasMovementOrStockMatch =
+                    filteredEntradas.some((item) => item.material_id === mid) ||
+                    filteredSaidas.some((item) => item.material_id === mid) ||
+                    filteredEstoques.some((item) => item.material_id === mid)
+
+                if (!materialNome.toLowerCase().includes(term) && !hasMovementOrStockMatch) return
+            }
+
+            if (totalEntradas === 0 && totalSaidas === 0 && estoqueAtual === 0 && materialFilter === "all" && searchTerm) {
+                return
+            }
 
             result.push({
-                material_id: original.material_id,
-                material_nome: original.material_nome,
+                material_id: mid,
+                material_nome: materialNome,
                 total_entradas: totalEntradas,
                 total_saidas: totalSaidas,
-                estoque_atual: totalEntradas - totalSaidas,
+                estoque_atual: estoqueAtual,
             })
         })
 
         return result.sort((a, b) => a.material_nome.localeCompare(b.material_nome))
-    }, [clienteFilter, dateFrom, dateTo, filteredEntradas, filteredSaidas, fluxo, materialFilter, searchTerm])
+    }, [filteredEntradas, filteredEstoques, filteredSaidas, materiais, materialFilter, searchTerm])
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50">
@@ -122,15 +131,12 @@ export default function FluxoMaterialPageContent({
                 setSearchTerm={setSearchTerm}
                 materialFilter={materialFilter}
                 setMaterialFilter={setMaterialFilter}
-                clienteFilter={clienteFilter}
-                setClienteFilter={setClienteFilter}
                 dateFrom={dateFrom}
                 setDateFrom={setDateFrom}
                 dateTo={dateTo}
                 setDateTo={setDateTo}
                 clearFilters={clearFilters}
                 materiais={materiais}
-                clientes={clientes}
             />
 
             <div className="flex-1 px-2 sm:px-4 lg:px-8 py-3 sm:py-6">
