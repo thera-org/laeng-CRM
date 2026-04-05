@@ -1,6 +1,6 @@
 "use client"
 
-import { ArrowLeftRight, RotateCcw, Calendar, Package } from "lucide-react"
+import { ArrowLeftRight, RotateCcw, Calendar, Package, Boxes } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -13,12 +13,18 @@ interface FluxoMaterialHeaderProps {
   setSearchTerm: (term: string) => void
   materialFilter: string
   setMaterialFilter: (v: string) => void
+  classeFilter: string
+  setClasseFilter: (v: string) => void
+  grupoFilter: string
+  setGrupoFilter: (v: string) => void
   monthFilter: string
   setMonthFilter: (v: string) => void
   yearFilter: string
   setYearFilter: (v: string) => void
   clearFilters: () => void
   materiais: { id: string; nome: string }[]
+  classes: { id: string; nome: string }[]
+  groups: { id: string; nome: string }[]
   clientes: { id: string; nome: string; codigo?: number }[]
   availableYears: number[]
   availableMonth: number[]
@@ -30,17 +36,29 @@ export function FluxoMaterialHeader({
   setSearchTerm,
   materialFilter,
   setMaterialFilter,
+  classeFilter,
+  setClasseFilter,
+  grupoFilter,
+  setGrupoFilter,
   monthFilter,
   setMonthFilter,
   yearFilter,
   setYearFilter,
   clearFilters,
   materiais,
+  classes,
+  groups,
   clientes,
   availableYears,
   availableMonth,
 }: FluxoMaterialHeaderProps) {
-  const hasFilters = materialFilter !== "all" || monthFilter !== "all" || yearFilter !== "all" || !!searchTerm
+  const hasFilters =
+    materialFilter !== "all" ||
+    classeFilter !== "all" ||
+    grupoFilter !== "all" ||
+    monthFilter !== "all" ||
+    yearFilter !== "all" ||
+    !!searchTerm
 
   return (
     <div className="bg-[#1E1E1E] border-b-2 sm:border-b-4 border-[#F5C800] shadow-lg">
@@ -92,6 +110,18 @@ export function FluxoMaterialHeader({
               <SelectItem value="all">Todos Materiais</SelectItem>
               {materiais.map((m) => (
                 <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+              ))}
+            </FilterSelect>
+            <FilterSelect value={classeFilter} onChange={setClasseFilter} placeholder="Classe" icon={Boxes}>
+              <SelectItem value="all">Todas Classes</SelectItem>
+              {classes.map((materialClass) => (
+                <SelectItem key={materialClass.id} value={materialClass.id}>{materialClass.nome}</SelectItem>
+              ))}
+            </FilterSelect>
+            <FilterSelect value={grupoFilter} onChange={setGrupoFilter} placeholder="Grupo" icon={Boxes}>
+              <SelectItem value="all">Todos Grupos</SelectItem>
+              {groups.map((group) => (
+                <SelectItem key={group.id} value={group.id}>{group.nome}</SelectItem>
               ))}
             </FilterSelect>
             <FilterSelect value={monthFilter} onChange={setMonthFilter} placeholder="Mês" icon={Calendar}>

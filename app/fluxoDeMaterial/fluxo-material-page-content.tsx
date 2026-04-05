@@ -24,10 +24,46 @@ export default function FluxoMaterialPageContent({
 }: FluxoMaterialPageContentProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [filters, setFilters] = useState<MaterialFiltersState>(INITIAL_MATERIAL_FILTERS)
+    const [classeFilter, setClasseFilter] = useState("all")
+    const [grupoFilter, setGrupoFilter] = useState("all")
+
+    const materialMetaMap = useMemo(
+        () => new Map(materiais.map((material) => [material.id, material])),
+        [materiais]
+    )
 
     const combinedItems = useMemo(() => [...entradas, ...saidas], [entradas, saidas])
     const availableYears = useMemo(() => getAvailableYears(combinedItems), [combinedItems])
     const availableMonth = useMemo(() => getAvailableMonth(combinedItems), [combinedItems])
+    const availableClasses = useMemo(() => {
+        const classesMap = new Map<string, string>()
+
+        materiais.forEach((material) => {
+            if (material.classe_id) {
+                classesMap.set(material.classe_id, material.classe_nome)
+            }
+        })
+
+        return Array.from(classesMap.entries())
+            .map(([id, nome]) => ({ id, nome }))
+            .sort((a, b) => a.nome.localeCompare(b.nome))
+    }, [materiais])
+
+    const availableGroups = useMemo(() => {
+        const groupsMap = new Map<string, string>()
+
+        materiais
+            .filter((material) => classeFilter === "all" || material.classe_id === classeFilter)
+            .forEach((material) => {
+                if (material.grupo_id) {
+                    groupsMap.set(material.grupo_id, material.grupo_nome)
+                }
+            })
+
+        return Array.from(groupsMap.entries())
+            .map(([id, nome]) => ({ id, nome }))
+            .sort((a, b) => a.nome.localeCompare(b.nome))
+    }, [classeFilter, materiais])
 
     const clientes = useMemo(() => {
         const clientsMap = new Map<string, { id: string; nome: string; codigo?: number }>()
@@ -49,17 +85,35 @@ export default function FluxoMaterialPageContent({
     const clearFilters = () => {
         setSearchTerm("")
         setFilters(INITIAL_MATERIAL_FILTERS)
+        setClasseFilter("all")
+        setGrupoFilter("all")
     }
 
     const updateFilter = (key: keyof MaterialFiltersState, value: string) => {
         setFilters((prev) => ({ ...prev, [key]: value }))
     }
 
-    const filteredEntradas = useMemo(() => filterMaterialItems(entradas, filters, searchTerm), [entradas, filters, searchTerm])
-    const filteredSaidas = useMemo(() => filterMaterialItems(saidas, filters, searchTerm), [saidas, filters, searchTerm])
+    const matchesClassAndGroup = (materialId: string) => {
+        const material = materialMetaMap.get(materialId)
+        if (!material) return false
+        if (classeFilter !== "all" && material.classe_id !== classeFilter) return false
+        if (grupoFilter !== "all" && material.grupo_id !== grupoFilter) return false
+        return true
+    }
+
+    const filteredEntradas = useMemo(
+        () => filterMaterialItems(entradas, filters, searchTerm).filter((item) => matchesClassAndGroup(item.material_id)),
+        [entradas, filters, searchTerm, classeFilter, grupoFilter, materialMetaMap]
+    )
+    const filteredSaidas = useMemo(
+        () => filterMaterialItems(saidas, filters, searchTerm).filter((item) => matchesClassAndGroup(item.material_id)),
+        [saidas, filters, searchTerm, classeFilter, grupoFilter, materialMetaMap]
+    )
     const filteredMateriais = useMemo(() => {
         return materiais.filter((item) => {
             if (filters.material !== "all" && item.id !== filters.material) return false
+            if (classeFilter !== "all" && item.classe_id !== classeFilter) return false
+            if (grupoFilter !== "all" && item.grupo_id !== grupoFilter) return false
 
             if (searchTerm) {
                 const term = searchTerm.toLowerCase()
@@ -70,7 +124,7 @@ export default function FluxoMaterialPageContent({
 
             return true
         })
-    }, [filters.material, materiais, searchTerm])
+    }, [filters.material, materiais, searchTerm, classeFilter, grupoFilter])
 
     const filteredFluxo = useMemo(() => {
         const materialIds = new Set<string>()
@@ -132,12 +186,21 @@ export default function FluxoMaterialPageContent({
                 setSearchTerm={setSearchTerm}
                 materialFilter={filters.material}
                 setMaterialFilter={(value) => updateFilter("material", value)}
+                classeFilter={classeFilter}
+                setClasseFilter={(value) => {
+                    setClasseFilter(value)
+                    setGrupoFilter("all")
+                }}
+                grupoFilter={grupoFilter}
+                setGrupoFilter={setGrupoFilter}
                 monthFilter={filters.month}
                 setMonthFilter={(value) => updateFilter("month", value)}
                 yearFilter={filters.year}
                 setYearFilter={(value) => updateFilter("year", value)}
                 clearFilters={clearFilters}
                 materiais={materiais.map((item) => ({ id: item.id, nome: item.nome }))}
+                classes={availableClasses}
+                groups={availableGroups}
                 clientes={clientes}
                 availableYears={availableYears}
                 availableMonth={availableMonth}
