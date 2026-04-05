@@ -26,7 +26,6 @@ export default async function FluxoMaterialPage() {
         <FluxoMaterialPageContent
             entradas={result.data.entradas}
             saidas={result.data.saidas}
-            estoques={result.data.estoques}
             materiais={result.data.materiais}
         />
     )

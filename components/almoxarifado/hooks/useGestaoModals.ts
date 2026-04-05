@@ -1,39 +1,74 @@
 "use client"
 
 import { useState, useEffect, useCallback } from "react"
-import type { Material } from "@/lib/types"
+import type { Material, MaterialClasse, MaterialGrupo, MaterialManagementMode, TipoUnidadeMedida } from "@/lib/types"
 import { saveMaterialAction } from "@/components/almoxarifado/actions/materialActions"
 import { toast } from "@/hooks/use-toast"
 
 interface GestaoFormData {
   nome: string
+  classeId: string
+  grupoId: string
+  unidade: TipoUnidadeMedida
+  quantPorObra: string
 }
 
 const INITIAL_FORM: GestaoFormData = {
   nome: "",
+  classeId: "",
+  grupoId: "",
+  unidade: "UN",
+  quantPorObra: "",
 }
 
 export function useGestaoModals(
   isOpen: boolean,
   onClose: () => void,
-  material?: Material | null
+  mode: MaterialManagementMode,
+  options?: {
+    material?: Material | null
+    classe?: MaterialClasse | null
+    grupo?: MaterialGrupo | null
+  }
 ) {
+  const material = options?.material
+  const classe = options?.classe
+  const grupo = options?.grupo
   const isEditing = !!material
   const [formData, setFormData] = useState<GestaoFormData>(INITIAL_FORM)
   const [isLoading, setIsLoading] = useState(false)
 
   useEffect(() => {
-    if (isOpen && material) {
+    if (!isOpen) return
+
+    if (mode === "material" && material) {
       setFormData({
         nome: material.nome,
+        classeId: material.classe_id,
+        grupoId: material.grupo_id,
+        unidade: material.unidade,
+        quantPorObra: String(material.quant_por_obra),
       })
-    } else if (isOpen) {
+      return
+    }
+
+    if (mode === "classe" && classe) {
+      setFormData({ ...INITIAL_FORM, nome: classe.nome })
+      return
+    }
+
+    if (mode === "grupo" && grupo) {
+      setFormData({ ...INITIAL_FORM, nome: grupo.nome })
+      return
+    }
+
+    if (isOpen) {
       setFormData(INITIAL_FORM)
     }
-  }, [isOpen, material])
+  }, [classe, grupo, isOpen, material, mode])
 
   const updateField = useCallback(
-    (field: keyof GestaoFormData, value: string) => {
+    (field: keyof GestaoFormData, value: string | TipoUnidadeMedida) => {
       setFormData((prev) => ({ ...prev, [field]: value }))
     },
     []
@@ -41,16 +76,48 @@ export function useGestaoModals(
 
   const saveMaterial = useCallback(async () => {
     if (!formData.nome.trim()) {
-      toast({ title: "Erro", description: "Nome do material e obrigatorio.", variant: "destructive" })
+      toast({
+        title: "Erro",
+        description: mode === "material" ? "Nome do material e obrigatorio." : `Nome d${mode === "classe" ? "a classe" : "o grupo"} e obrigatorio.`,
+        variant: "destructive",
+      })
       return
+    }
+
+    if (mode === "material") {
+      if (!formData.classeId) {
+        toast({ title: "Erro", description: "Selecione uma classe.", variant: "destructive" })
+        return
+      }
+
+      if (!formData.grupoId) {
+        toast({ title: "Erro", description: "Selecione um grupo.", variant: "destructive" })
+        return
+      }
+
+      const quantPorObra = Number(formData.quantPorObra)
+      if (!Number.isFinite(quantPorObra) || quantPorObra <= 0) {
+        toast({ title: "Erro", description: "Quantidade por obra deve ser maior que zero.", variant: "destructive" })
+        return
+      }
     }
 
     setIsLoading(true)
     try {
       const result = await saveMaterialAction(
-        {
-          nome: formData.nome.trim(),
-        },
+        mode === "material"
+          ? {
+              entityType: "material",
+              nome: formData.nome.trim(),
+              classeId: formData.classeId,
+              grupoId: formData.grupoId,
+              unidade: formData.unidade,
+              quantPorObra: Number(formData.quantPorObra),
+            }
+          : {
+              entityType: mode,
+              nome: formData.nome.trim(),
+            },
         material?.id
       )
 
@@ -60,16 +127,23 @@ export function useGestaoModals(
       }
 
       toast({
-        title: isEditing ? "Material atualizado!" : "Material cadastrado!",
+        title:
+          mode === "material"
+            ? isEditing
+              ? "Material atualizado!"
+              : "Material cadastrado!"
+            : mode === "classe"
+              ? "Classe cadastrada!"
+              : "Grupo cadastrado!",
         description: `${formData.nome} salvo com sucesso.`,
       })
       onClose()
     } catch {
-      toast({ title: "Erro", description: "Erro ao salvar material.", variant: "destructive" })
+      toast({ title: "Erro", description: "Erro ao salvar cadastro.", variant: "destructive" })
     } finally {
       setIsLoading(false)
     }
-  }, [formData, material, isEditing, onClose])
+  }, [formData, isEditing, material, mode, onClose])
 
   return {
     formData,

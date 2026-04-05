@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import type { ClienteMaterialEstoque, MaterialSaida, MaterialFiltersState } from "@/lib/types"
+import type { Material, MaterialSaida, MaterialFiltersState } from "@/lib/types"
 import { SaidaHeader } from "@/components/almoxarifado/saida-header"
 import { SaidaTable } from "@/components/almoxarifado/saida-table"
 import { SaidaModal } from "@/components/almoxarifado/saida-modal"
@@ -18,9 +18,8 @@ import { toast } from "@/hooks/use-toast"
 
 interface SaidaPageContentProps {
     saidas: MaterialSaida[]
-    materiais: { id: string; nome: string }[]
+    materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
     clientes: { id: string; nome: string; codigo?: number }[]
-    estoques: ClienteMaterialEstoque[]
     userPermissions: Record<string, any>
     userRole: string
 }
@@ -35,7 +34,6 @@ export default function SaidaPageContent({
     saidas,
     materiais,
     clientes,
-    estoques,
     userPermissions,
     userRole,
 }: SaidaPageContentProps) {
@@ -165,7 +163,6 @@ export default function SaidaPageContent({
                 saida={selectedSaida}
                 materiais={materiais}
                 clientes={clientes}
-                estoques={estoques}
             />
         </div>
     )

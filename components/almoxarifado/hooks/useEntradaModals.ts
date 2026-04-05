@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { ClienteMaterialEstoque, MaterialEntrada } from "@/lib/types"
+import type { Material, MaterialEntrada } from "@/lib/types"
 import { saveEntradaAction } from "@/components/almoxarifado/actions/entradaActions"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
@@ -11,7 +11,7 @@ interface EntradaFormData {
   quantidade: number
   data: string
   cliente_id: string
-  observacao: string
+  justificativa: string
 }
 
 const INITIAL_FORM: EntradaFormData = {
@@ -19,7 +19,7 @@ const INITIAL_FORM: EntradaFormData = {
   quantidade: 0,
   data: format(new Date(), "yyyy-MM-dd"),
   cliente_id: "",
-  observacao: "",
+  justificativa: "",
 }
 
 export function useEntradaModals(
@@ -27,7 +27,7 @@ export function useEntradaModals(
   onClose: () => void,
   entrada?: MaterialEntrada | null,
   clientes?: { id: string; nome: string; codigo?: number }[],
-  estoques?: ClienteMaterialEstoque[]
+  materiais?: Pick<Material, "id" | "nome" | "estoque_global">[]
 ) {
   const isEditing = !!entrada
   const [formData, setFormData] = useState<EntradaFormData>(INITIAL_FORM)
@@ -44,7 +44,7 @@ export function useEntradaModals(
         quantidade: entrada.quantidade,
         data: entrada.data,
         cliente_id: entrada.cliente_id || "",
-        observacao: entrada.observacao || "",
+        justificativa: entrada.justificativa || entrada.observacao || "",
       })
       setSelectedClienteId(entrada.cliente_id || null)
       setSearchTerm("")
@@ -70,18 +70,21 @@ export function useEntradaModals(
   )
 
   const selectedEstoque = useMemo(() => {
-    if (!selectedClienteId || !formData.material_id) return 0
+    if (!formData.material_id) return 0
 
-    const estoque = (estoques || []).find(
-      (item) => item.cliente_id === selectedClienteId && item.material_id === formData.material_id
-    )
-
-    return Number(estoque?.estoque || 0)
-  }, [estoques, formData.material_id, selectedClienteId])
+    const material = (materiais || []).find((item) => item.id === formData.material_id)
+    return Number(material?.estoque_global || 0)
+  }, [formData.material_id, materiais])
 
   const selectFromSearch = useCallback((id: string) => {
     setSelectedClienteId(id)
     setFormData(prev => ({ ...prev, cliente_id: id }))
+    setSearchTerm("")
+  }, [])
+
+  const clearSelectedCliente = useCallback(() => {
+    setSelectedClienteId(null)
+    setFormData((prev) => ({ ...prev, cliente_id: "" }))
     setSearchTerm("")
   }, [])
 
@@ -93,10 +96,6 @@ export function useEntradaModals(
   )
 
   const saveEntrada = useCallback(async () => {
-    if (!formData.cliente_id) {
-      toast({ title: "Erro", description: "Selecione um cliente.", variant: "destructive" })
-      return
-    }
     if (!formData.material_id) {
       toast({ title: "Erro", description: "Selecione um material.", variant: "destructive" })
       return
@@ -114,7 +113,7 @@ export function useEntradaModals(
           quantidade: formData.quantidade,
           data: formData.data,
           cliente_id: formData.cliente_id || undefined,
-          observacao: formData.observacao || undefined,
+          justificativa: formData.justificativa || undefined,
         },
         entrada?.id
       )
@@ -150,5 +149,6 @@ export function useEntradaModals(
     selectedClienteId,
     setSelectedClienteId,
     selectFromSearch,
+    clearSelectedCliente,
   }
 }

@@ -271,9 +271,51 @@ export interface FinancialMetrics {
 
 // ============ TIPOS PARA O MODULO DE ALMOXARIFADO ============
 
+export type TipoMovimentacaoMaterial = 'ENTRADA' | 'SAIDA';
+
+export type TipoUnidadeMedida =
+  | 'UN'
+  | 'PÇ'
+  | 'KG'
+  | 'G'
+  | 'TON'
+  | 'L'
+  | 'ML'
+  | 'M'
+  | 'M2'
+  | 'M3'
+  | 'CX'
+  | 'PCT'
+  | 'SC'
+  | 'PR'
+  | 'CJ';
+
+export type MaterialManagementMode = 'material' | 'classe' | 'grupo';
+
+export interface MaterialClasse {
+  id: string;
+  nome: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaterialGrupo {
+  id: string;
+  nome: string;
+  created_at: string;
+  updated_at: string;
+}
+
 export interface Material {
   id: string;
   nome: string;
+  classe_id: string;
+  grupo_id: string;
+  classe_nome: string;
+  grupo_nome: string;
+  unidade: TipoUnidadeMedida;
+  estoque_global: number;
+  quant_por_obra: number;
   created_at: string;
   updated_at: string;
 }
@@ -295,11 +337,13 @@ export interface MaterialMovimentacao {
   quantidade: number;
   data: string;
   cliente_id?: string;
+  justificativa?: string;
   observacao?: string;
   created_at: string;
   updated_at: string;
-  type: 'ENTRADA' | 'SAIDA';
+  type: TipoMovimentacaoMaterial;
   material_nome?: string;
+  material_unidade?: TipoUnidadeMedida;
   cliente_nome?: string;
   cliente_codigo?: number;
   estoque_cliente_material?: number;
@@ -313,6 +357,11 @@ export interface MaterialFiltersState {
   month: string;
   year: string;
   week: string;
+}
+
+export interface MaterialCatalogFiltersState {
+  classe: string;
+  grupo: string;
 }
 
 export interface FluxoMaterialResumo {

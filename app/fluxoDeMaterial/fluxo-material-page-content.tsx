@@ -1,21 +1,19 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import type { ClienteMaterialEstoque, FluxoMaterialResumo, MaterialEntrada, MaterialSaida } from "@/lib/types"
+import type { FluxoMaterialResumo, Material, MaterialEntrada, MaterialSaida } from "@/lib/types"
 import { FluxoMaterialHeader } from "@/components/almoxarifado/fluxo-material-header"
 import { FluxoMaterialDashboard } from "@/components/almoxarifado/fluxo-material-dashboard"
 
 interface FluxoMaterialPageContentProps {
     entradas: MaterialEntrada[]
     saidas: MaterialSaida[]
-    estoques: ClienteMaterialEstoque[]
-    materiais: { id: string; nome: string }[]
+    materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
 }
 
 export default function FluxoMaterialPageContent({
     entradas,
     saidas,
-    estoques,
     materiais,
 }: FluxoMaterialPageContentProps) {
     const [searchTerm, setSearchTerm] = useState("")
@@ -53,27 +51,26 @@ export default function FluxoMaterialPageContent({
 
     const filteredEntradas = useMemo(() => filterItems(entradas), [entradas, filterItems])
     const filteredSaidas = useMemo(() => filterItems(saidas), [saidas, filterItems])
-    const filteredEstoques = useMemo(() => {
-        return estoques.filter((item) => {
-            if (materialFilter !== "all" && item.material_id !== materialFilter) return false
+    const filteredMateriais = useMemo(() => {
+        return materiais.filter((item) => {
+            if (materialFilter !== "all" && item.id !== materialFilter) return false
 
             if (searchTerm) {
                 const term = searchTerm.toLowerCase()
-                const matchesMaterial = (item.material_nome || "").toLowerCase().includes(term)
-                const matchesCliente = (item.cliente_nome || "").toLowerCase().includes(term)
+                const matchesMaterial = (item.nome || "").toLowerCase().includes(term)
 
-                if (!matchesMaterial && !matchesCliente) return false
+                if (!matchesMaterial) return false
             }
 
             return true
         })
-    }, [estoques, materialFilter, searchTerm])
+    }, [materiais, materialFilter, searchTerm])
 
     const filteredFluxo = useMemo(() => {
         const materialIds = new Set<string>()
         filteredEntradas.forEach((e) => materialIds.add(e.material_id))
         filteredSaidas.forEach((s) => materialIds.add(s.material_id))
-        filteredEstoques.forEach((item) => materialIds.add(item.material_id))
+        filteredMateriais.forEach((item) => materialIds.add(item.id))
 
         if (materialFilter !== "all") {
             materialIds.add(materialFilter)
@@ -89,11 +86,9 @@ export default function FluxoMaterialPageContent({
             const totalSaidas = filteredSaidas
                 .filter((s) => s.material_id === mid)
                 .reduce((sum, s) => sum + s.quantidade, 0)
-            const estoqueAtual = filteredEstoques
-                .filter((item) => item.material_id === mid)
-                .reduce((sum, item) => sum + Number(item.estoque || 0), 0)
+            const estoqueAtual = Number(filteredMateriais.find((item) => item.id === mid)?.estoque_global || 0)
 
-            const materialNome = materialMap.get(mid) || filteredEstoques.find((item) => item.material_id === mid)?.material_nome || filteredEntradas.find((item) => item.material_id === mid)?.material_nome || filteredSaidas.find((item) => item.material_id === mid)?.material_nome
+            const materialNome = materialMap.get(mid) || filteredEntradas.find((item) => item.material_id === mid)?.material_nome || filteredSaidas.find((item) => item.material_id === mid)?.material_nome
 
             if (!materialNome) return
 
@@ -102,7 +97,7 @@ export default function FluxoMaterialPageContent({
                 const hasMovementOrStockMatch =
                     filteredEntradas.some((item) => item.material_id === mid) ||
                     filteredSaidas.some((item) => item.material_id === mid) ||
-                    filteredEstoques.some((item) => item.material_id === mid)
+                    filteredMateriais.some((item) => item.id === mid)
 
                 if (!materialNome.toLowerCase().includes(term) && !hasMovementOrStockMatch) return
             }
@@ -121,7 +116,7 @@ export default function FluxoMaterialPageContent({
         })
 
         return result.sort((a, b) => a.material_nome.localeCompare(b.material_nome))
-    }, [filteredEntradas, filteredEstoques, filteredSaidas, materiais, materialFilter, searchTerm])
+    }, [filteredEntradas, filteredMateriais, filteredSaidas, materiais, materialFilter, searchTerm])
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50">

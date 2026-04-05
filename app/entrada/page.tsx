@@ -1,7 +1,7 @@
 import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getUserContext } from "@/app/auth/context/userContext"
-import type { ClienteMaterialEstoque, MaterialEntrada } from "@/lib/types"
+import type { Material, MaterialEntrada } from "@/lib/types"
 import EntradaPageContent from "./entrada-page-content"
 
 export const dynamic = "force-dynamic"
@@ -29,7 +29,8 @@ export default async function EntradaPage() {
         quantidade: Number(e.quantidade || 0),
         data: e.data,
         cliente_id: e.cliente_id || undefined,
-        observacao: e.observacao || undefined,
+        justificativa: e.justificativa || undefined,
+        observacao: e.justificativa || undefined,
         created_at: e.created_at,
         updated_at: e.updated_at,
         type: e.tipo,
@@ -40,21 +41,13 @@ export default async function EntradaPage() {
 
     const { data: materiaisData } = await supabase
         .from("material_categoria")
-        .select("id, nome_do_material")
+        .select("id, nome_do_material, estoque_global")
         .order("nome_do_material")
 
-    const { data: estoquesData } = await supabase
-        .from("clientes_material")
-        .select("id, cliente_id, estoque, created_at, updated_at, material_categoria_id, material_categoria:material_categoria_id (id, nome_do_material)")
-
-    const estoques: ClienteMaterialEstoque[] = (estoquesData || []).map((item: any) => ({
-        id: item.id,
-        cliente_id: item.cliente_id,
-        material_id: item.material_categoria_id,
-        estoque: Number(item.estoque || 0),
-        created_at: item.created_at,
-        updated_at: item.updated_at,
-        material_nome: item.material_categoria?.nome_do_material || null,
+    const materiais: Pick<Material, "id" | "nome" | "estoque_global">[] = (materiaisData || []).map((material: any) => ({
+        id: material.id,
+        nome: material.nome_do_material,
+        estoque_global: Number(material.estoque_global || 0),
     }))
 
     const { data: clientesData } = await supabase
@@ -65,9 +58,8 @@ export default async function EntradaPage() {
     return (
         <EntradaPageContent
             entradas={entradas}
-            materiais={(materiaisData || []).map((material: any) => ({ id: material.id, nome: material.nome_do_material }))}
+            materiais={materiais}
             clientes={clientesData || []}
-            estoques={estoques}
             userPermissions={userPermissions}
             userRole={userRole}
         />

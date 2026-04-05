@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { ClienteMaterialEstoque, MaterialSaida } from "@/lib/types"
+import type { Material, MaterialSaida } from "@/lib/types"
 import { saveSaidaAction } from "@/components/almoxarifado/actions/saidaActions"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
@@ -11,7 +11,7 @@ interface SaidaFormData {
   quantidade: number
   data: string
   cliente_id: string
-  observacao: string
+  justificativa: string
 }
 
 const INITIAL_FORM: SaidaFormData = {
@@ -19,7 +19,7 @@ const INITIAL_FORM: SaidaFormData = {
   quantidade: 0,
   data: format(new Date(), "yyyy-MM-dd"),
   cliente_id: "",
-  observacao: "",
+  justificativa: "",
 }
 
 export function useSaidaModals(
@@ -27,7 +27,7 @@ export function useSaidaModals(
   onClose: () => void,
   saida?: MaterialSaida | null,
   clientes?: { id: string; nome: string; codigo?: number }[],
-  estoques?: ClienteMaterialEstoque[]
+  materiais?: Pick<Material, "id" | "nome" | "estoque_global">[]
 ) {
   const isEditing = !!saida
   const [formData, setFormData] = useState<SaidaFormData>(INITIAL_FORM)
@@ -44,7 +44,7 @@ export function useSaidaModals(
         quantidade: saida.quantidade,
         data: saida.data,
         cliente_id: saida.cliente_id || "",
-        observacao: saida.observacao || "",
+        justificativa: saida.justificativa || saida.observacao || "",
       })
       setSelectedClienteId(saida.cliente_id || null)
       setSearchTerm("")
@@ -70,23 +70,21 @@ export function useSaidaModals(
   )
 
   const selectedEstoque = useMemo(() => {
-    if (!selectedClienteId || !formData.material_id) return 0
+    if (!formData.material_id) return 0
 
-    const estoque = (estoques || []).find(
-      (item) => item.cliente_id === selectedClienteId && item.material_id === formData.material_id
-    )
-
-    return Number(estoque?.estoque || 0)
-  }, [estoques, formData.material_id, selectedClienteId])
+    const material = (materiais || []).find((item) => item.id === formData.material_id)
+    return Number(material?.estoque_global || 0)
+  }, [formData.material_id, materiais])
 
   const estoqueDisponivel = useMemo(() => {
-    const isSamePairAsOriginal =
-      !!saida &&
-      saida.cliente_id === selectedClienteId &&
-      saida.material_id === formData.material_id
+    const isSameMaterialAsOriginal = !!saida && saida.material_id === formData.material_id
+    return isSameMaterialAsOriginal ? selectedEstoque + saida.quantidade : selectedEstoque
+  }, [formData.material_id, saida, selectedEstoque])
 
-    return isSamePairAsOriginal ? selectedEstoque + saida.quantidade : selectedEstoque
-  }, [formData.material_id, saida, selectedClienteId, selectedEstoque])
+  const projectedBalance = useMemo(() => {
+    if (!formData.quantidade) return estoqueDisponivel
+    return estoqueDisponivel - formData.quantidade
+  }, [estoqueDisponivel, formData.quantidade])
 
   const selectFromSearch = useCallback((id: string) => {
     setSelectedClienteId(id)
@@ -114,15 +112,6 @@ export function useSaidaModals(
       toast({ title: "Erro", description: "Quantidade deve ser maior que zero.", variant: "destructive" })
       return
     }
-    if (formData.quantidade > estoqueDisponivel) {
-      toast({
-        title: "Erro",
-        description: "A quantidade informada excede o estoque disponível para este cliente.",
-        variant: "destructive",
-      })
-      return
-    }
-
     setIsLoading(true)
     try {
       const result = await saveSaidaAction(
@@ -130,8 +119,8 @@ export function useSaidaModals(
           material_id: formData.material_id,
           quantidade: formData.quantidade,
           data: formData.data,
-          cliente_id: formData.cliente_id || undefined,
-          observacao: formData.observacao || undefined,
+          cliente_id: formData.cliente_id,
+          justificativa: formData.justificativa || undefined,
         },
         saida?.id
       )
@@ -165,6 +154,7 @@ export function useSaidaModals(
     selectedCliente,
     selectedEstoque,
     estoqueDisponivel,
+    projectedBalance,
     selectedClienteId,
     setSelectedClienteId,
     selectFromSearch,

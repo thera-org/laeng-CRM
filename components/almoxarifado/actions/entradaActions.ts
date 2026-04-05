@@ -9,7 +9,7 @@ export async function saveEntradaAction(
     quantidade: number
     data: string
     cliente_id?: string
-    observacao?: string
+    justificativa?: string
   },
   id?: string
 ) {
@@ -23,7 +23,7 @@ export async function saveEntradaAction(
           quantidade: data.quantidade,
           data: data.data,
           cliente_id: data.cliente_id || null,
-          observacao: data.observacao || null,
+          justificativa: data.justificativa || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)
@@ -35,7 +35,7 @@ export async function saveEntradaAction(
         quantidade: data.quantidade,
         data: data.data,
         cliente_id: data.cliente_id || null,
-        observacao: data.observacao || null,
+        justificativa: data.justificativa || null,
         tipo: "ENTRADA",
       })
 

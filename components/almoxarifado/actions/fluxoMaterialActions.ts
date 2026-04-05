@@ -1,13 +1,12 @@
 "use server"
 
 import { createClient } from "@/lib/supabase/server"
-import type { ClienteMaterialEstoque, MaterialEntrada, MaterialSaida } from "@/lib/types"
+import type { Material, MaterialEntrada, MaterialSaida } from "@/lib/types"
 
 interface FluxoMaterialDashboardData {
   entradas: MaterialEntrada[]
   saidas: MaterialSaida[]
-  estoques: ClienteMaterialEstoque[]
-  materiais: { id: string; nome: string }[]
+  materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
 }
 
 export async function getFluxoMaterialDashboardDataAction(): Promise<{
@@ -18,7 +17,7 @@ export async function getFluxoMaterialDashboardDataAction(): Promise<{
   const supabase = await createClient()
 
   try {
-    const [entradasResult, saidasResult, materiaisResult, estoquesResult] = await Promise.all([
+    const [entradasResult, saidasResult, materiaisResult] = await Promise.all([
       supabase
         .from("material_movimentacoes")
         .select("*, material_categoria:material_categoria_id (id, nome_do_material), clientes:cliente_id (id, nome)")
@@ -31,17 +30,13 @@ export async function getFluxoMaterialDashboardDataAction(): Promise<{
         .order("data", { ascending: false }),
       supabase
         .from("material_categoria")
-        .select("id, nome_do_material")
+        .select("id, nome_do_material, estoque_global")
         .order("nome_do_material"),
-      supabase
-        .from("clientes_material")
-        .select("id, cliente_id, estoque, created_at, updated_at, material_categoria_id, material_categoria:material_categoria_id (id, nome_do_material), clientes:cliente_id (id, nome)"),
     ])
 
     if (entradasResult.error) throw entradasResult.error
     if (saidasResult.error) throw saidasResult.error
     if (materiaisResult.error) throw materiaisResult.error
-    if (estoquesResult.error) throw estoquesResult.error
 
     const entradas: MaterialEntrada[] = (entradasResult.data || []).map((entry: any) => ({
       id: entry.id,
@@ -49,7 +44,8 @@ export async function getFluxoMaterialDashboardDataAction(): Promise<{
       quantidade: Number(entry.quantidade || 0),
       data: entry.data,
       cliente_id: entry.cliente_id || undefined,
-      observacao: entry.observacao || undefined,
+      justificativa: entry.justificativa || undefined,
+      observacao: entry.justificativa || undefined,
       created_at: entry.created_at,
       updated_at: entry.updated_at,
       type: entry.tipo,
@@ -63,7 +59,8 @@ export async function getFluxoMaterialDashboardDataAction(): Promise<{
       quantidade: Number(entry.quantidade || 0),
       data: entry.data,
       cliente_id: entry.cliente_id || undefined,
-      observacao: entry.observacao || undefined,
+      justificativa: entry.justificativa || undefined,
+      observacao: entry.justificativa || undefined,
       created_at: entry.created_at,
       updated_at: entry.updated_at,
       type: entry.tipo,
@@ -71,20 +68,10 @@ export async function getFluxoMaterialDashboardDataAction(): Promise<{
       cliente_nome: entry.clientes?.nome || null,
     }))
 
-    const materiais = (materiaisResult.data || []).map((material: any) => ({
+    const materiais: Pick<Material, "id" | "nome" | "estoque_global">[] = (materiaisResult.data || []).map((material: any) => ({
       id: material.id,
       nome: material.nome_do_material,
-    }))
-
-    const estoques: ClienteMaterialEstoque[] = (estoquesResult.data || []).map((item: any) => ({
-      id: item.id,
-      cliente_id: item.cliente_id,
-      material_id: item.material_categoria_id,
-      estoque: Number(item.estoque || 0),
-      created_at: item.created_at,
-      updated_at: item.updated_at,
-      material_nome: item.material_categoria?.nome_do_material || null,
-      cliente_nome: item.clientes?.nome || null,
+      estoque_global: Number(material.estoque_global || 0),
     }))
 
     return {
@@ -92,7 +79,6 @@ export async function getFluxoMaterialDashboardDataAction(): Promise<{
       data: {
         entradas,
         saidas,
-        estoques,
         materiais,
       },
     }

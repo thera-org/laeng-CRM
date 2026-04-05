@@ -13,19 +13,18 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Search } from "lucide-react"
-import type { ClienteMaterialEstoque, MaterialSaida } from "@/lib/types"
+import type { Material, MaterialSaida } from "@/lib/types"
 import { useSaidaModals } from "@/components/almoxarifado/hooks/useSaidaModals"
 
 interface SaidaModalProps {
   isOpen: boolean
   onClose: () => void
   saida?: MaterialSaida | null
-  materiais: { id: string; nome: string }[]
+  materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
   clientes: { id: string; nome: string; codigo?: number }[]
-  estoques: ClienteMaterialEstoque[]
 }
 
-export function SaidaModal({ isOpen, onClose, saida, materiais, clientes, estoques }: SaidaModalProps) {
+export function SaidaModal({ isOpen, onClose, saida, materiais, clientes }: SaidaModalProps) {
   const {
     formData,
     updateField,
@@ -40,7 +39,8 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes, estoqu
     estoqueDisponivel,
     setSelectedClienteId,
     selectFromSearch,
-  } = useSaidaModals(isOpen, onClose, saida, clientes, estoques)
+    projectedBalance,
+  } = useSaidaModals(isOpen, onClose, saida, clientes, materiais)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -64,7 +64,7 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes, estoqu
               {selectedCliente && (
                 <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
                   <div className="font-semibold">Cliente vinculado: {selectedCliente.nome}</div>
-                  <div className="mt-1">Estoque disponível para o material selecionado: {estoqueDisponivel}</div>
+                  <div className="mt-1">Estoque global disponível para o material selecionado: {estoqueDisponivel}</div>
                 </div>
               )}
 
@@ -87,7 +87,7 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes, estoqu
 
                 {formData.material_id && selectedCliente && (
                   <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900">
-                    Estoque atual deste material para {selectedCliente.nome}: <span className="font-bold">{selectedEstoque}</span>
+                    Estoque global atual: <span className="font-bold">{selectedEstoque}</span>
                     <span className="ml-2 text-yellow-700">Disponível para esta edição: {estoqueDisponivel}</span>
                   </div>
                 )}
@@ -120,11 +120,11 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes, estoqu
               </div>
 
               <div className="space-y-2">
-                <Label className="font-semibold text-sm text-gray-700">Observação</Label>
+                <Label className="font-semibold text-sm text-gray-700">Justificativa / Observação</Label>
                 <Textarea
-                  placeholder="Observação opcional..."
-                  value={formData.observacao}
-                  onChange={(e) => updateField("observacao", e.target.value)}
+                  placeholder="Justificativa opcional..."
+                  value={formData.justificativa}
+                  onChange={(e) => updateField("justificativa", e.target.value)}
                   disabled={isLoading}
                   rows={3}
                   className="border-gray-300 focus:border-[#F5C800]"
@@ -210,7 +210,7 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes, estoqu
 
                     {formData.material_id && (
                       <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900">
-                        Estoque atual deste material para {selectedCliente.nome}: <span className="font-bold">{selectedEstoque}</span>
+                        Estoque global atual: <span className="font-bold">{selectedEstoque}</span>
                       </div>
                     )}
                   </div>
@@ -228,14 +228,17 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes, estoqu
                       className="border-gray-300 focus:border-[#F5C800]"
                     />
                     <p className="text-xs text-gray-500">Disponível para saída: {estoqueDisponivel}</p>
+                    {projectedBalance < 0 && (
+                      <p className="text-xs text-amber-600">A movimentação deixará o estoque global com saldo negativo.</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
-                    <Label className="font-semibold text-sm text-gray-700">Observação</Label>
+                    <Label className="font-semibold text-sm text-gray-700">Justificativa / Observação</Label>
                     <Textarea
-                      placeholder="Observação opcional..."
-                      value={formData.observacao}
-                      onChange={(e) => updateField("observacao", e.target.value)}
+                      placeholder="Obrigatória quando exceder o limite por obra."
+                      value={formData.justificativa}
+                      onChange={(e) => updateField("justificativa", e.target.value)}
                       disabled={isLoading}
                       rows={3}
                       className="border-gray-300 focus:border-[#F5C800]"

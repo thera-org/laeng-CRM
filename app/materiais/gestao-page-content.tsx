@@ -1,18 +1,20 @@
 "use client"
 
-import { useState, useCallback } from "react"
+import { useCallback, useMemo, useState } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import { Button } from "@/components/ui/button"
-import { Pencil, Trash2, Package } from "lucide-react"
-import type { Material } from "@/lib/types"
+import { Package } from "lucide-react"
+import type { Material, MaterialCatalogFiltersState, MaterialClasse, MaterialGrupo, MaterialManagementMode } from "@/lib/types"
 import { GestaoHeader } from "@/components/almoxarifado/gestao-header"
 import { MaterialModal } from "@/components/almoxarifado/material-modal"
+import { MaterialTable } from "@/components/almoxarifado/material-table"
 import { AlmoxarifadoDeleteDialog } from "@/components/almoxarifado/almoxarifado-delete-dialog"
 import { deleteMaterialAction } from "@/components/almoxarifado/actions/materialActions"
 import { toast } from "@/hooks/use-toast"
 
 interface GestaoPageContentProps {
     materiais: Material[]
+    classes: MaterialClasse[]
+    groups: MaterialGrupo[]
 }
 
 interface DeleteState {
@@ -21,21 +23,58 @@ interface DeleteState {
     isDeleting: boolean
 }
 
-export default function GestaoPageContent({ materiais }: GestaoPageContentProps) {
+const INITIAL_FILTERS: MaterialCatalogFiltersState = {
+    classe: "all",
+    grupo: "all",
+}
+
+export default function GestaoPageContent({ materiais, classes, groups }: GestaoPageContentProps) {
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [modalMode, setModalMode] = useState<MaterialManagementMode>("material")
     const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
+    const [filters, setFilters] = useState<MaterialCatalogFiltersState>(INITIAL_FILTERS)
     const [deleteState, setDeleteState] = useState<DeleteState>({
         isOpen: false,
         material: null,
         isDeleting: false,
     })
 
+    const filteredMateriais = useMemo(() => {
+        return materiais.filter((material) => {
+            if (filters.classe !== "all" && material.classe_id !== filters.classe) return false
+            if (filters.grupo !== "all" && material.grupo_id !== filters.grupo) return false
+            return true
+        })
+    }, [filters, materiais])
+
+    const updateFilter = (key: keyof MaterialCatalogFiltersState, value: string) => {
+        setFilters((prev) => ({ ...prev, [key]: value }))
+    }
+
+    const clearFilters = () => {
+        setFilters(INITIAL_FILTERS)
+    }
+
     const handleNewMaterial = () => {
+        setModalMode("material")
+        setSelectedMaterial(null)
+        setIsModalOpen(true)
+    }
+
+    const handleNewClasse = () => {
+        setModalMode("classe")
+        setSelectedMaterial(null)
+        setIsModalOpen(true)
+    }
+
+    const handleNewGrupo = () => {
+        setModalMode("grupo")
         setSelectedMaterial(null)
         setIsModalOpen(true)
     }
 
     const handleEditMaterial = (material: Material) => {
+        setModalMode("material")
         setSelectedMaterial(material)
         setIsModalOpen(true)
     }
@@ -74,57 +113,34 @@ export default function GestaoPageContent({ materiais }: GestaoPageContentProps)
     return (
         <div className="flex min-h-screen flex-col bg-gray-50">
             <GestaoHeader
-                totalMateriais={materiais.length}
+                totalMateriais={filteredMateriais.length}
+                filters={filters}
+                updateFilter={updateFilter}
+                clearFilters={clearFilters}
+                classes={classes}
+                groups={groups}
                 onNewMaterial={handleNewMaterial}
+                onNewClasse={handleNewClasse}
+                onNewGrupo={handleNewGrupo}
             />
 
             <div className="flex-1 px-2 sm:px-4 lg:px-8 py-3 sm:py-6">
-                {materiais.length === 0 ? (
+                {filteredMateriais.length === 0 ? (
                     <div className="flex flex-col items-center justify-center py-16 text-gray-500">
                         <Package className="h-12 w-12 mb-4 text-gray-300" />
-                        <p className="text-lg font-medium">Nenhum material cadastrado.</p>
-                        <p className="text-sm mt-1">Clique em &quot;Novo Material&quot; para comecar.</p>
+                        <p className="text-lg font-medium">Nenhum material encontrado.</p>
+                        <p className="text-sm mt-1">Ajuste os filtros ou crie um novo cadastro.</p>
                     </div>
                 ) : (
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 sm:gap-4">
-                        {materiais.map((material) => (
-                            <Card
-                                key={material.id}
-                                className="border-2 border-gray-200 hover:border-[#F5C800] transition-all hover:shadow-md rounded-xl"
-                            >
-                                <CardContent className="p-4 flex items-center justify-between gap-3">
-                                    <div className="flex items-center gap-3 min-w-0">
-                                        <div className="w-10 h-10 rounded-lg bg-[#F5C800]/10 flex items-center justify-center flex-shrink-0">
-                                            <Package className="h-5 w-5 text-[#F5C800]" />
-                                        </div>
-                                        <span className="font-semibold text-[#1E1E1E] truncate">
-                                            {material.nome}
-                                        </span>
-                                    </div>
-                                    <div className="flex items-center gap-1 flex-shrink-0">
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleEditMaterial(material)}
-                                            title="Editar"
-                                            className="h-8 w-8 text-[#F5C800] hover:text-[#F5C800]/80 hover:bg-[#F5C800]/10"
-                                        >
-                                            <Pencil className="h-4 w-4" />
-                                        </Button>
-                                        <Button
-                                            variant="ghost"
-                                            size="icon"
-                                            onClick={() => handleOpenDeleteDialog(material)}
-                                            title="Excluir"
-                                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50"
-                                        >
-                                            <Trash2 className="h-4 w-4" />
-                                        </Button>
-                                    </div>
-                                </CardContent>
-                            </Card>
-                        ))}
-                    </div>
+                    <Card className="border-0 rounded-xl sm:rounded-2xl shadow-lg min-h-[500px]">
+                        <CardContent className="p-0">
+                            <MaterialTable
+                                data={filteredMateriais}
+                                onEdit={handleEditMaterial}
+                                onDelete={handleOpenDeleteDialog}
+                            />
+                        </CardContent>
+                    </Card>
                 )}
             </div>
 
@@ -140,7 +156,10 @@ export default function GestaoPageContent({ materiais }: GestaoPageContentProps)
             <MaterialModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
+                mode={modalMode}
                 material={selectedMaterial}
+                classes={classes}
+                groups={groups}
             />
         </div>
     )

@@ -30,7 +30,7 @@ describe("fluxoMaterialActions", () => {
                   quantidade: "10",
                   data: "2026-04-01",
                   cliente_id: "cliente-1",
-                  observacao: "Entrada inicial",
+                  justificativa: "Entrada inicial",
                   created_at: "2026-04-01",
                   updated_at: "2026-04-01",
                   tipo: "ENTRADA",
@@ -54,7 +54,7 @@ describe("fluxoMaterialActions", () => {
                   quantidade: "4",
                   data: "2026-04-02",
                   cliente_id: "cliente-1",
-                  observacao: null,
+                  justificativa: null,
                   created_at: "2026-04-02",
                   updated_at: "2026-04-02",
                   tipo: "SAIDA",
@@ -70,26 +70,9 @@ describe("fluxoMaterialActions", () => {
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           order: jest.fn().mockResolvedValue({
-            data: [{ id: "mat-1", nome_do_material: "Cimento" }],
+            data: [{ id: "mat-1", nome_do_material: "Cimento", estoque_global: "6" }],
             error: null,
           }),
-        }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockResolvedValue({
-          data: [
-            {
-              id: "estoque-1",
-              cliente_id: "cliente-1",
-              material_categoria_id: "mat-1",
-              estoque: "6",
-              created_at: "2026-04-02",
-              updated_at: "2026-04-02",
-              material_categoria: { nome_do_material: "Cimento" },
-              clientes: { nome: "Cliente A" },
-            },
-          ],
-          error: null,
         }),
       })
 
@@ -115,16 +98,7 @@ describe("fluxoMaterialActions", () => {
           cliente_nome: "Cliente A",
         }),
       ],
-      estoques: [
-        expect.objectContaining({
-          id: "estoque-1",
-          material_id: "mat-1",
-          estoque: 6,
-          material_nome: "Cimento",
-          cliente_nome: "Cliente A",
-        }),
-      ],
-      materiais: [{ id: "mat-1", nome: "Cimento" }],
+      materiais: [{ id: "mat-1", nome: "Cimento", estoque_global: 6 }],
     })
   })
 
@@ -147,9 +121,6 @@ describe("fluxoMaterialActions", () => {
       })
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({ order: jest.fn().mockResolvedValue({ data: [], error: null }) }),
-      })
-      .mockReturnValueOnce({
-        select: jest.fn().mockResolvedValue({ data: [], error: null }),
       })
 
     const result = await getFluxoMaterialDashboardDataAction()

@@ -8,8 +8,8 @@ export async function saveSaidaAction(
     material_id: string
     quantidade: number
     data: string
-    cliente_id?: string
-    observacao?: string
+    cliente_id: string
+    justificativa?: string
   },
   id?: string
 ) {
@@ -22,8 +22,8 @@ export async function saveSaidaAction(
           material_categoria_id: data.material_id,
           quantidade: data.quantidade,
           data: data.data,
-          cliente_id: data.cliente_id || null,
-          observacao: data.observacao || null,
+          cliente_id: data.cliente_id,
+          justificativa: data.justificativa || null,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)
@@ -34,8 +34,8 @@ export async function saveSaidaAction(
         material_categoria_id: data.material_id,
         quantidade: data.quantidade,
         data: data.data,
-        cliente_id: data.cliente_id || null,
-        observacao: data.observacao || null,
+        cliente_id: data.cliente_id,
+        justificativa: data.justificativa || null,
         tipo: "SAIDA",
       })
 
