@@ -34,6 +34,27 @@ export default function FluxoMaterialPageContent({
         setDateTo("")
     }
 
+    const filterItems = useMemo(() => {
+        return (items: (MaterialEntrada | MaterialSaida)[]) => {
+            return items.filter((item) => {
+                if (materialFilter !== "all" && item.material_id !== materialFilter) return false
+                if (clienteFilter !== "all" && item.cliente_id !== clienteFilter) return false
+                if (dateFrom && item.data && item.data < dateFrom) return false
+                if (dateTo && item.data && item.data > dateTo) return false
+
+                if (searchTerm) {
+                    const term = searchTerm.toLowerCase()
+                    if (!(item.material_nome || "").toLowerCase().includes(term)) return false
+                }
+
+                return true
+            })
+        }
+    }, [clienteFilter, dateFrom, dateTo, materialFilter, searchTerm])
+
+    const filteredEntradas = useMemo(() => filterItems(entradas), [entradas, filterItems])
+    const filteredSaidas = useMemo(() => filterItems(saidas), [saidas, filterItems])
+
     // When filters are applied, compute fluxo dynamically from entradas/saidas
     const filteredFluxo = useMemo(() => {
         const hasAdvancedFilter = clienteFilter !== "all" || dateFrom || dateTo
@@ -51,19 +72,6 @@ export default function FluxoMaterialPageContent({
         }
 
         // Advanced filtering: recompute from raw entradas/saidas
-        const filterItems = (items: (MaterialEntrada | MaterialSaida)[]) => {
-            return items.filter((item) => {
-                if (materialFilter !== "all" && item.material_id !== materialFilter) return false
-                if (clienteFilter !== "all" && item.cliente_id !== clienteFilter) return false
-                if (dateFrom && item.data && item.data < dateFrom) return false
-                if (dateTo && item.data && item.data > dateTo) return false
-                return true
-            })
-        }
-
-        const filteredEntradas = filterItems(entradas)
-        const filteredSaidas = filterItems(saidas)
-
         // Get relevant material IDs
         const materialIds = new Set<string>()
         filteredEntradas.forEach((e) => materialIds.add(e.material_id))
@@ -104,7 +112,7 @@ export default function FluxoMaterialPageContent({
         })
 
         return result.sort((a, b) => a.material_nome.localeCompare(b.material_nome))
-    }, [fluxo, entradas, saidas, materialFilter, clienteFilter, dateFrom, dateTo, searchTerm])
+    }, [clienteFilter, dateFrom, dateTo, filteredEntradas, filteredSaidas, fluxo, materialFilter, searchTerm])
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50">
@@ -126,7 +134,11 @@ export default function FluxoMaterialPageContent({
             />
 
             <div className="flex-1 px-2 sm:px-4 lg:px-8 py-3 sm:py-6">
-                <FluxoMaterialDashboard data={filteredFluxo} />
+                <FluxoMaterialDashboard
+                    data={filteredFluxo}
+                    entradas={filteredEntradas}
+                    saidas={filteredSaidas}
+                />
             </div>
         </div>
     )

@@ -89,7 +89,7 @@ export function FluxoMaterialHeader({
             </div>
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
             <FilterSelect
               value={materialFilter}
               onChange={setMaterialFilter}
@@ -112,7 +112,7 @@ export function FluxoMaterialHeader({
                 <SelectItem key={c.id} value={c.id}>{c.nome}</SelectItem>
               ))}
             </FilterSelect>
-            <div>
+            <div className="lg:col-span-2">
               <Input
                 type="date"
                 value={dateFrom}
@@ -121,7 +121,7 @@ export function FluxoMaterialHeader({
                 placeholder="Data inicio"
               />
             </div>
-            <div>
+            <div className="lg:col-span-2">
               <Input
                 type="date"
                 value={dateTo}
