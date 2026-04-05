@@ -11,11 +11,14 @@ import { PagamentosPagination } from "@/components/pagamentos/pagamentos-paginat
 interface SaidaTableProps {
   data: MaterialSaida[]
   userPermissions: Record<string, any>
+  userRole: string
   onEdit: (saida: MaterialSaida) => void
   onDelete: (saida: MaterialSaida) => void
 }
 
-export function SaidaTable({ data, userPermissions, onEdit, onDelete }: SaidaTableProps) {
+export function SaidaTable({ data, userPermissions, userRole, onEdit, onDelete }: SaidaTableProps) {
+  const canManage = userRole === "admin" || userPermissions?.estoque?.view
+
   const {
     currentPage,
     setCurrentPage,
@@ -114,24 +117,28 @@ export function SaidaTable({ data, userPermissions, onEdit, onDelete }: SaidaTab
 
                   {/* AÇÕES */}
                   <TableCell className="py-3 text-right pr-4">
-                    <Button
-                      size="sm"
-                      onClick={() => onEdit(row)}
-                      className="bg-[#F5C800] hover:bg-[#F5C800]/90 border-2 border-[#F5C800] h-9 w-9 p-0 transition-colors"
-                      title="Editar"
-                    >
-                      <Pencil className="h-4 w-4 text-[#1E1E1E]" />
-                    </Button>
+                    {canManage && (
+                      <>
+                        <Button
+                          size="sm"
+                          onClick={() => onEdit(row)}
+                          className="bg-[#F5C800] hover:bg-[#F5C800]/90 border-2 border-[#F5C800] h-9 w-9 p-0 transition-colors"
+                          title="Editar"
+                        >
+                          <Pencil className="h-4 w-4 text-[#1E1E1E]" />
+                        </Button>
 
-                    <Button
-                      size="sm"
-                      variant="outline"
-                      onClick={() => onDelete(row)}
-                      className="border-2 border-red-300 hover:border-red-500 hover:bg-red-50 h-9 w-9 p-0 transition-colors"
-                      title="Excluir"
-                    >
-                      <Trash2 className="h-4 w-4 text-red-600" />
-                    </Button>
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          onClick={() => onDelete(row)}
+                          className="border-2 border-red-300 hover:border-red-500 hover:bg-red-50 h-9 w-9 p-0 transition-colors"
+                          title="Excluir"
+                        >
+                          <Trash2 className="h-4 w-4 text-red-600" />
+                        </Button>
+                      </>
+                    )}
                   </TableCell>
                 </TableRow>
               ))}

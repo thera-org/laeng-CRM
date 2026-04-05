@@ -34,17 +34,8 @@ export function mapPermissoesToModulos(permissoes: PermissoesUsuario) {
       edit: permissoes.clientes?.edit ?? false,
       delete: permissoes.clientes?.delete ?? false
     },
-    'material-entrada': {
-      view: permissoes['material-entrada']?.view ?? false,
-      create: permissoes['material-entrada']?.create ?? false,
-      edit: permissoes['material-entrada']?.edit ?? false,
-      delete: permissoes['material-entrada']?.delete ?? false
-    },
-    'material-saida': {
-      view: permissoes['material-saida']?.view ?? false,
-      create: permissoes['material-saida']?.create ?? false,
-      edit: permissoes['material-saida']?.edit ?? false,
-      delete: permissoes['material-saida']?.delete ?? false
+    estoque: {
+      view: permissoes.estoque?.view ?? false,
     }
   }
 }

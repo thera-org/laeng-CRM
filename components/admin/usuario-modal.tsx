@@ -25,8 +25,9 @@ const PERMISSOES_DEFAULT: PermissoesUsuario = {
   logs: { view: false},
   obras: { view: true, edit: false},
   financeira: {view: true, edit: false},
-  clientes: { view: false, create: false, delete: false, edit: false },  'material-entrada': { view: false, create: false, edit: false, delete: false },
-  'material-saida': { view: false, create: false, edit: false, delete: false },}
+  clientes: { view: false, create: false, delete: false, edit: false },
+  estoque: { view: false },
+}
 
 interface FormData {
   login: string

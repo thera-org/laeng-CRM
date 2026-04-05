@@ -8,7 +8,7 @@ export const dynamic = "force-dynamic"
 
 export default async function SaidaPage() {
     const supabase = await createClient()
-    const { userPermissions } = await getUserContext()
+    const { userPermissions, userRole } = await getUserContext()
     const {
         data: { user },
         error,
@@ -69,6 +69,7 @@ export default async function SaidaPage() {
             clientes={clientesData || []}
             estoques={estoques}
             userPermissions={userPermissions}
+            userRole={userRole}
         />
     )
 }

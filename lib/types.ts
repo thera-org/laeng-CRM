@@ -208,17 +208,8 @@ export interface PermissoesUsuario {
     delete: boolean;
     edit: boolean;
   };
-  'material-entrada'?: {
+  estoque?: {
     view: boolean;
-    create: boolean;
-    edit: boolean;
-    delete: boolean;
-  };
-  'material-saida'?: {
-    view: boolean;
-    create: boolean;
-    edit: boolean;
-    delete: boolean;
   };
 }
 

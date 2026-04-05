@@ -20,6 +20,7 @@ interface EntradaHeaderProps {
   materiais: { id: string; nome: string }[]
   onNewEntrada: () => void
   userPermissions: Record<string, any>
+  userRole: string
 }
 
 export function EntradaHeader({
@@ -34,10 +35,11 @@ export function EntradaHeader({
   materiais,
   onNewEntrada,
   userPermissions,
+  userRole,
 }: EntradaHeaderProps) {
   const activeFiltersCount = Object.values(filters).filter(v => v !== "all").length
 
-  const canCreate = userPermissions?.["material-entrada"]?.create
+  const canCreate = userRole === "admin" || userPermissions?.estoque?.view
 
   return (
     <div className="bg-[#1E1E1E] border-b-2 sm:border-b-4 border-[#F5C800] shadow-lg">

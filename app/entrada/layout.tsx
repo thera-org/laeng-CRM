@@ -8,7 +8,11 @@ export default async function EntradaLayout({
     children: React.ReactNode;
 }) {
     const { user, userRole, userPermissions } = await getUserContext();
-    resolveRedirect(userPermissions, (p) => p?.["material-entrada"]?.view);
+
+    if (userRole !== "admin") {
+        resolveRedirect(userPermissions, (p) => p?.estoque?.view);
+    }
+
     return (
         <DashboardLayoutClient
             user={user}

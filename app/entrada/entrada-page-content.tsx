@@ -22,6 +22,7 @@ interface EntradaPageContentProps {
     clientes: { id: string; nome: string; codigo?: number }[]
     estoques: ClienteMaterialEstoque[]
     userPermissions: Record<string, any>
+    userRole: string
 }
 
 interface DeleteState {
@@ -36,6 +37,7 @@ export default function EntradaPageContent({
     clientes,
     estoques,
     userPermissions,
+    userRole,
 }: EntradaPageContentProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [filters, setFilters] = useState<MaterialFiltersState>(INITIAL_MATERIAL_FILTERS)
@@ -123,6 +125,7 @@ export default function EntradaPageContent({
                 materiais={materiaisOptions}
                 onNewEntrada={handleNewEntrada}
                 userPermissions={userPermissions}
+                userRole={userRole}
             />
 
             <div className="flex-1 px-2 sm:px-4 lg:px-8 py-3 sm:py-6">
@@ -131,6 +134,7 @@ export default function EntradaPageContent({
                         <EntradaTable
                             data={filteredEntradas}
                             userPermissions={userPermissions}
+                            userRole={userRole}
                             onEdit={handleEditEntrada}
                             onDelete={handleOpenDeleteDialog}
                         />

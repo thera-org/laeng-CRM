@@ -3,7 +3,6 @@
 import { Checkbox } from "@/components/ui/checkbox"
 import { Eye, Plus, Trash2, LayoutDashboard, Users, Building2, DollarSign, LogsIcon, Pencil, Package } from "lucide-react"
 import type { PermissoesUsuario } from "@/lib/types"
-import { icon } from "leaflet"
 
 interface PermissoesTabProps {
   permissoes: PermissoesUsuario
@@ -27,6 +26,13 @@ const MODULOS = [
     acoes: ["view"],
   },
   {
+    id: "estoque",
+    label: "Controle de Estoque",
+    descricao: "Gerenciamento de estoque de materiais",
+    icon: Package,
+    acoes: ["view"],
+  },
+  {
     id: "financeira",
     label: "Financeira",
     descricao: "Gerenciamento financeiro",
@@ -45,20 +51,6 @@ const MODULOS = [
     label: "Clientes",
     descricao: "Gerenciamento de clientes",
     icon: Users,
-    acoes: ["view", "create", "edit", "delete"],
-  },
-  {
-    id: "material-entrada",
-    label: "Entrada de Material",
-    descricao: "Registro de entrada de materiais",
-    icon: Package,
-    acoes: ["view", "create", "edit", "delete"],
-  },
-  {
-    id: "material-saida",
-    label: "Saida de Material",
-    descricao: "Registro de saida de materiais",
-    icon: Package,
     acoes: ["view", "create", "edit", "delete"],
   },
 ] as const

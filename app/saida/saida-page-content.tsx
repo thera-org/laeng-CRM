@@ -22,6 +22,7 @@ interface SaidaPageContentProps {
     clientes: { id: string; nome: string; codigo?: number }[]
     estoques: ClienteMaterialEstoque[]
     userPermissions: Record<string, any>
+    userRole: string
 }
 
 interface DeleteState {
@@ -36,6 +37,7 @@ export default function SaidaPageContent({
     clientes,
     estoques,
     userPermissions,
+    userRole,
 }: SaidaPageContentProps) {
     const [searchTerm, setSearchTerm] = useState("")
     const [filters, setFilters] = useState<MaterialFiltersState>(INITIAL_MATERIAL_FILTERS)
@@ -123,6 +125,7 @@ export default function SaidaPageContent({
                 materiais={materiaisOptions}
                 onNewSaida={handleNewSaida}
                 userPermissions={userPermissions}
+                userRole={userRole}
             />
 
             <div className="flex-1 px-2 sm:px-4 lg:px-8 py-3 sm:py-6">
@@ -131,6 +134,7 @@ export default function SaidaPageContent({
                         <SaidaTable
                             data={filteredSaidas}
                             userPermissions={userPermissions}
+                            userRole={userRole}
                             onEdit={handleEditSaida}
                             onDelete={handleOpenDeleteDialog}
                         />

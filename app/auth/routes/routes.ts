@@ -21,10 +21,10 @@ export const ROUTES = [
   },
   {
     path: "/entrada",
-    permission: (p: any) => p?.['material-entrada']?.view,
+    permission: (p: any) => p?.estoque?.view,
   },
   {
     path: "/saida",
-    permission: (p: any) => p?.['material-saida']?.view,
+    permission: (p: any) => p?.estoque?.view,
   },
 ];

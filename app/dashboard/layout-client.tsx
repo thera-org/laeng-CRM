@@ -171,11 +171,11 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
     items = items.filter((i) => i.title !== "Logs")
   }
 
-  if (!userPermissions?.['material-entrada']?.view && userRole !== "admin") {
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
     items = items.filter((i) => i.title !== "Entrada")
   }
 
-  if (!userPermissions?.['material-saida']?.view && userRole !== "admin") {
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
     items = items.filter((i) => i.title !== "Saida")
   }
 
@@ -320,11 +320,11 @@ function MobileSidebar({ isOpen, onClose, user, userRole, userPermissions }: { i
     items = items.filter((i) => i.title !== "Logs")
   }
 
-  if (!userPermissions?.['material-entrada']?.view && userRole !== "admin") {
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
     items = items.filter((i) => i.title !== "Entrada")
   }
 
-  if (!userPermissions?.['material-saida']?.view && userRole !== "admin") {
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
     items = items.filter((i) => i.title !== "Saida")
   }
 
