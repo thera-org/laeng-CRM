@@ -1,8 +1,7 @@
 "use client"
 
-import { useMemo, useState } from "react"
+import { useMemo } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import {
   ResponsiveContainer,
   LineChart,
@@ -16,7 +15,7 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import { Boxes, Package, TrendingUp, TrendingDown, Warehouse } from "lucide-react"
+import { Package, TrendingUp, TrendingDown, Warehouse } from "lucide-react"
 import type { FluxoMaterialResumo, Material, MaterialEntrada, MaterialSaida } from "@/lib/types"
 
 const MONTH_LABELS = [
@@ -49,43 +48,9 @@ interface FluxoMaterialDashboardProps {
 }
 
 export function FluxoMaterialDashboard({ data, entradas, saidas, materiais }: FluxoMaterialDashboardProps) {
-  const [classeFilter, setClasseFilter] = useState("all")
-  const [grupoFilter, setGrupoFilter] = useState("all")
-
   const totalEntradas = data.reduce((sum, d) => sum + d.total_entradas, 0)
   const totalSaidas = data.reduce((sum, d) => sum + d.total_saidas, 0)
   const totalEstoqueAtual = data.reduce((sum, d) => sum + d.estoque_atual, 0)
-
-  const materialMetaMap = useMemo(
-    () => new Map(materiais.map((material) => [material.id, material])),
-    [materiais]
-  )
-
-  const availableClasses = useMemo(() => {
-    const classesMap = new Map<string, string>()
-    materiais.forEach((material) => {
-      if (material.classe_id) {
-        classesMap.set(material.classe_id, material.classe_nome)
-      }
-    })
-    return Array.from(classesMap.entries())
-      .map(([id, nome]) => ({ id, nome }))
-      .sort((a, b) => a.nome.localeCompare(b.nome))
-  }, [materiais])
-
-  const availableGroups = useMemo(() => {
-    const groupsMap = new Map<string, string>()
-    materiais
-      .filter((material) => classeFilter === "all" || material.classe_id === classeFilter)
-      .forEach((material) => {
-        if (material.grupo_id) {
-          groupsMap.set(material.grupo_id, material.grupo_nome)
-        }
-      })
-    return Array.from(groupsMap.entries())
-      .map(([id, nome]) => ({ id, nome }))
-      .sort((a, b) => a.nome.localeCompare(b.nome))
-  }, [classeFilter, materiais])
 
   const monthlyFlow = useMemo(() => {
     const byMonth = MONTH_LABELS.map((label, index) => ({
@@ -112,29 +77,19 @@ export function FluxoMaterialDashboard({ data, entradas, saidas, materiais }: Fl
     return [...data].sort((a, b) => b.estoque_atual - a.estoque_atual)
   }, [data])
 
-  const distributionData = useMemo(() => {
-    return data.filter((item) => {
-      const material = materialMetaMap.get(item.material_id)
-      if (!material) return false
-      if (classeFilter !== "all" && material.classe_id !== classeFilter) return false
-      if (grupoFilter !== "all" && material.grupo_id !== grupoFilter) return false
-      return true
-    })
-  }, [classeFilter, data, grupoFilter, materialMetaMap])
-
   const distributionEntradas = useMemo(() => {
-    return distributionData
+    return data
       .filter((item) => item.total_entradas > 0)
       .map((item) => ({ name: item.material_nome, value: item.total_entradas }))
       .sort((a, b) => b.value - a.value)
-  }, [distributionData])
+  }, [data])
 
   const distributionSaidas = useMemo(() => {
-    return distributionData
+    return data
       .filter((item) => item.total_saidas > 0)
       .map((item) => ({ name: item.material_nome, value: item.total_saidas }))
       .sort((a, b) => b.value - a.value)
-  }, [distributionData])
+  }, [data])
 
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
@@ -291,44 +246,6 @@ export function FluxoMaterialDashboard({ data, entradas, saidas, materiais }: Fl
               <div className="space-y-1">
                 <CardTitle className="text-lg text-slate-700">Distribuição</CardTitle>
                 <CardDescription>Participação das movimentações por material</CardDescription>
-              </div>
-              <div className="w-full max-w-[320px] grid grid-cols-1 gap-2 md:grid-cols-2">
-                <Select value={classeFilter} onValueChange={(value) => {
-                  setClasseFilter(value)
-                  setGrupoFilter("all")
-                }}>
-                  <SelectTrigger className="h-8">
-                    <div className="flex items-center truncate">
-                      <Boxes className="h-3 w-3 mr-2 text-[#F5C800] shrink-0" />
-                      <span className="truncate block text-left">
-                        <SelectValue placeholder="Classe" />
-                      </span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todas Classes</SelectItem>
-                    {availableClasses.map((materialClass) => (
-                      <SelectItem key={materialClass.id} value={materialClass.id}>{materialClass.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-
-                <Select value={grupoFilter} onValueChange={setGrupoFilter}>
-                  <SelectTrigger className="h-8">
-                    <div className="flex items-center truncate">
-                      <Boxes className="h-3 w-3 mr-2 text-[#F5C800] shrink-0" />
-                      <span className="truncate block text-left">
-                        <SelectValue placeholder="Grupo" />
-                      </span>
-                    </div>
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">Todos Grupos</SelectItem>
-                    {availableGroups.map((group) => (
-                      <SelectItem key={group.id} value={group.id}>{group.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
               </div>
             </CardHeader>
             <CardContent>
