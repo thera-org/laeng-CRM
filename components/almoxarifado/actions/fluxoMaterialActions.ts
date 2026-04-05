@@ -6,7 +6,7 @@ import type { Material, MaterialEntrada, MaterialSaida } from "@/lib/types"
 interface FluxoMaterialDashboardData {
   entradas: MaterialEntrada[]
   saidas: MaterialSaida[]
-  materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
+  materiais: Pick<Material, "id" | "nome" | "estoque_global" | "classe_id" | "grupo_id" | "classe_nome" | "grupo_nome">[]
 }
 
 export async function getFluxoMaterialDashboardDataAction(): Promise<{
@@ -30,7 +30,7 @@ export async function getFluxoMaterialDashboardDataAction(): Promise<{
         .order("data", { ascending: false }),
       supabase
         .from("material_categoria")
-        .select("id, nome_do_material, estoque_global")
+        .select("id, nome_do_material, estoque_global, material_classe_id, material_grupo_id, material_classe:material_classe_id (nome_da_classe), material_grupo:material_grupo_id (nome_do_grupo)")
         .order("nome_do_material"),
     ])
 
@@ -68,10 +68,14 @@ export async function getFluxoMaterialDashboardDataAction(): Promise<{
       cliente_nome: entry.clientes?.nome || null,
     }))
 
-    const materiais: Pick<Material, "id" | "nome" | "estoque_global">[] = (materiaisResult.data || []).map((material: any) => ({
+    const materiais: Pick<Material, "id" | "nome" | "estoque_global" | "classe_id" | "grupo_id" | "classe_nome" | "grupo_nome">[] = (materiaisResult.data || []).map((material: any) => ({
       id: material.id,
       nome: material.nome_do_material,
       estoque_global: Number(material.estoque_global || 0),
+      classe_id: material.material_classe_id,
+      grupo_id: material.material_grupo_id,
+      classe_nome: material.material_classe?.nome_da_classe || "-",
+      grupo_nome: material.material_grupo?.nome_do_grupo || "-",
     }))
 
     return {

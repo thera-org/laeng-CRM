@@ -70,7 +70,15 @@ describe("fluxoMaterialActions", () => {
       .mockReturnValueOnce({
         select: jest.fn().mockReturnValue({
           order: jest.fn().mockResolvedValue({
-            data: [{ id: "mat-1", nome_do_material: "Cimento", estoque_global: "6" }],
+            data: [{
+              id: "mat-1",
+              nome_do_material: "Cimento",
+              estoque_global: "6",
+              material_classe_id: "classe-1",
+              material_grupo_id: "grupo-1",
+              material_classe: { nome_da_classe: "Estrutural" },
+              material_grupo: { nome_do_grupo: "Argamassas" },
+            }],
             error: null,
           }),
         }),
@@ -98,7 +106,15 @@ describe("fluxoMaterialActions", () => {
           cliente_nome: "Cliente A",
         }),
       ],
-      materiais: [{ id: "mat-1", nome: "Cimento", estoque_global: 6 }],
+      materiais: [{
+        id: "mat-1",
+        nome: "Cimento",
+        estoque_global: 6,
+        classe_id: "classe-1",
+        grupo_id: "grupo-1",
+        classe_nome: "Estrutural",
+        grupo_nome: "Argamassas",
+      }],
     })
   })
 

@@ -1,10 +1,11 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Search, ArrowLeftRight, RotateCcw, Calendar, Package } from "lucide-react"
+import { ArrowLeftRight, RotateCcw, Calendar, Package } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
+import { MONTHS } from "@/components/almoxarifado/types/almoxarifadoTypes"
+import { ClientSearchInput } from "@/components/almoxarifado/client-search-input"
 
 interface FluxoMaterialHeaderProps {
   totalMateriais: number
@@ -12,12 +13,15 @@ interface FluxoMaterialHeaderProps {
   setSearchTerm: (term: string) => void
   materialFilter: string
   setMaterialFilter: (v: string) => void
-  dateFrom: string
-  setDateFrom: (v: string) => void
-  dateTo: string
-  setDateTo: (v: string) => void
+  monthFilter: string
+  setMonthFilter: (v: string) => void
+  yearFilter: string
+  setYearFilter: (v: string) => void
   clearFilters: () => void
   materiais: { id: string; nome: string }[]
+  clientes: { id: string; nome: string; codigo?: number }[]
+  availableYears: number[]
+  availableMonth: number[]
 }
 
 export function FluxoMaterialHeader({
@@ -26,14 +30,17 @@ export function FluxoMaterialHeader({
   setSearchTerm,
   materialFilter,
   setMaterialFilter,
-  dateFrom,
-  setDateFrom,
-  dateTo,
-  setDateTo,
+  monthFilter,
+  setMonthFilter,
+  yearFilter,
+  setYearFilter,
   clearFilters,
   materiais,
+  clientes,
+  availableYears,
+  availableMonth,
 }: FluxoMaterialHeaderProps) {
-  const hasFilters = materialFilter !== "all" || dateFrom || dateTo || searchTerm
+  const hasFilters = materialFilter !== "all" || monthFilter !== "all" || yearFilter !== "all" || !!searchTerm
 
   return (
     <div className="bg-[#1E1E1E] border-b-2 sm:border-b-4 border-[#F5C800] shadow-lg">
@@ -59,15 +66,7 @@ export function FluxoMaterialHeader({
 
         <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-700 space-y-3">
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative group">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#F5C800]" />
-              <Input
-                placeholder="Buscar por cliente..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10 bg-white border-0 text-gray-900 placeholder:text-gray-500 rounded-md shadow-sm w-full"
-              />
-            </div>
+            <ClientSearchInput value={searchTerm} onChange={setSearchTerm} clients={clientes} />
             <div className="flex gap-2 w-full sm:w-auto">
               {hasFilters && (
                 <Button
@@ -95,24 +94,20 @@ export function FluxoMaterialHeader({
                 <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
               ))}
             </FilterSelect>
-            <div className="lg:col-span-2">
-              <Input
-                type="date"
-                value={dateFrom}
-                onChange={(e) => setDateFrom(e.target.value)}
-                className="bg-gray-700/50 border-gray-600 text-gray-200 h-10 text-xs"
-                placeholder="Data inicio"
-              />
-            </div>
-            <div className="lg:col-span-2">
-              <Input
-                type="date"
-                value={dateTo}
-                onChange={(e) => setDateTo(e.target.value)}
-                className="bg-gray-700/50 border-gray-600 text-gray-200 h-10 text-xs"
-                placeholder="Data fim"
-              />
-            </div>
+            <FilterSelect value={monthFilter} onChange={setMonthFilter} placeholder="Mês" icon={Calendar}>
+              <SelectItem value="all">Todos Meses</SelectItem>
+              {availableMonth.map((monthIndex) => (
+                <SelectItem key={monthIndex} value={String(monthIndex)}>
+                  {MONTHS[monthIndex]?.label || monthIndex}
+                </SelectItem>
+              ))}
+            </FilterSelect>
+            <FilterSelect value={yearFilter} onChange={setYearFilter} placeholder="Ano" icon={Calendar}>
+              <SelectItem value="all">Todos Anos</SelectItem>
+              {availableYears.map((year) => (
+                <SelectItem key={year} value={String(year)}>{year}</SelectItem>
+              ))}
+            </FilterSelect>
           </div>
         </div>
       </div>

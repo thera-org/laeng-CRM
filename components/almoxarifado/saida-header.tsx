@@ -1,12 +1,12 @@
 "use client"
 
-import { Input } from "@/components/ui/input"
-import { Search, PackageMinus, Plus, RotateCcw, Calendar, Package } from "lucide-react"
+import { PackageMinus, Plus, RotateCcw, Calendar, Package } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import type { MaterialFiltersState } from "@/lib/types"
 import { MONTHS } from "@/components/almoxarifado/types/almoxarifadoTypes"
+import { ClientSearchInput } from "@/components/almoxarifado/client-search-input"
 
 interface SaidaHeaderProps {
   totalSaidas: number
@@ -18,6 +18,7 @@ interface SaidaHeaderProps {
   availableYears: number[]
   availableMonth: number[]
   materiais: { id: string; nome: string }[]
+  clientes: { id: string; nome: string; codigo?: number }[]
   onNewSaida: () => void
   userPermissions: Record<string, any>
   userRole: string
@@ -33,6 +34,7 @@ export function SaidaHeader({
   availableYears,
   availableMonth,
   materiais,
+  clientes,
   onNewSaida,
   userPermissions,
   userRole,
@@ -66,15 +68,7 @@ export function SaidaHeader({
         <div className="bg-gray-800/30 rounded-lg p-3 border border-gray-700 space-y-3">
           {/* LINHA 1: Busca e Botões */}
           <div className="flex flex-col sm:flex-row gap-3">
-            <div className="flex-1 relative group">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#F5C800]" />
-              <Input
-                placeholder="Buscar por cliente..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-10 h-10 bg-white border-0 text-gray-900 placeholder:text-gray-500 rounded-md shadow-sm w-full"
-              />
-            </div>
+            <ClientSearchInput value={searchTerm} onChange={setSearchTerm} clients={clientes} />
             <div className="flex gap-2 w-full sm:w-auto">
               {canCreate && (
                 <Button

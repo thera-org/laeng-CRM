@@ -1,14 +1,20 @@
 "use client"
 
 import { useState, useMemo } from "react"
-import type { FluxoMaterialResumo, Material, MaterialEntrada, MaterialSaida } from "@/lib/types"
+import type { FluxoMaterialResumo, Material, MaterialEntrada, MaterialFiltersState, MaterialSaida } from "@/lib/types"
 import { FluxoMaterialHeader } from "@/components/almoxarifado/fluxo-material-header"
 import { FluxoMaterialDashboard } from "@/components/almoxarifado/fluxo-material-dashboard"
+import {
+    filterMaterialItems,
+    getAvailableMonth,
+    getAvailableYears,
+    INITIAL_MATERIAL_FILTERS,
+} from "@/components/almoxarifado/libs/almoxarifado-filter-logic"
 
 interface FluxoMaterialPageContentProps {
     entradas: MaterialEntrada[]
     saidas: MaterialSaida[]
-    materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
+    materiais: Pick<Material, "id" | "nome" | "estoque_global" | "classe_id" | "grupo_id" | "classe_nome" | "grupo_nome">[]
 }
 
 export default function FluxoMaterialPageContent({
@@ -17,43 +23,43 @@ export default function FluxoMaterialPageContent({
     materiais,
 }: FluxoMaterialPageContentProps) {
     const [searchTerm, setSearchTerm] = useState("")
-    const [materialFilter, setMaterialFilter] = useState("all")
-    const [dateFrom, setDateFrom] = useState("")
-    const [dateTo, setDateTo] = useState("")
+    const [filters, setFilters] = useState<MaterialFiltersState>(INITIAL_MATERIAL_FILTERS)
+
+    const combinedItems = useMemo(() => [...entradas, ...saidas], [entradas, saidas])
+    const availableYears = useMemo(() => getAvailableYears(combinedItems), [combinedItems])
+    const availableMonth = useMemo(() => getAvailableMonth(combinedItems), [combinedItems])
+
+    const clientes = useMemo(() => {
+        const clientsMap = new Map<string, { id: string; nome: string; codigo?: number }>()
+
+        combinedItems.forEach((item) => {
+            if (!item.cliente_id || !item.cliente_nome) return
+            if (!clientsMap.has(item.cliente_id)) {
+                clientsMap.set(item.cliente_id, {
+                    id: item.cliente_id,
+                    nome: item.cliente_nome,
+                    codigo: item.cliente_codigo,
+                })
+            }
+        })
+
+        return Array.from(clientsMap.values()).sort((a, b) => a.nome.localeCompare(b.nome))
+    }, [combinedItems])
 
     const clearFilters = () => {
         setSearchTerm("")
-        setMaterialFilter("all")
-        setDateFrom("")
-        setDateTo("")
+        setFilters(INITIAL_MATERIAL_FILTERS)
     }
 
-    const filterItems = useMemo(() => {
-        return (items: (MaterialEntrada | MaterialSaida)[]) => {
-            return items.filter((item) => {
-                if (materialFilter !== "all" && item.material_id !== materialFilter) return false
-                if (dateFrom && item.data && item.data < dateFrom) return false
-                if (dateTo && item.data && item.data > dateTo) return false
+    const updateFilter = (key: keyof MaterialFiltersState, value: string) => {
+        setFilters((prev) => ({ ...prev, [key]: value }))
+    }
 
-                if (searchTerm) {
-                    const term = searchTerm.toLowerCase()
-                    const matchesMaterial = (item.material_nome || "").toLowerCase().includes(term)
-                    const matchesCliente = (item.cliente_nome || "").toLowerCase().includes(term)
-                    const matchesObservacao = (item.observacao || "").toLowerCase().includes(term)
-
-                    if (!matchesMaterial && !matchesCliente && !matchesObservacao) return false
-                }
-
-                return true
-            })
-        }
-    }, [dateFrom, dateTo, materialFilter, searchTerm])
-
-    const filteredEntradas = useMemo(() => filterItems(entradas), [entradas, filterItems])
-    const filteredSaidas = useMemo(() => filterItems(saidas), [saidas, filterItems])
+    const filteredEntradas = useMemo(() => filterMaterialItems(entradas, filters, searchTerm), [entradas, filters, searchTerm])
+    const filteredSaidas = useMemo(() => filterMaterialItems(saidas, filters, searchTerm), [saidas, filters, searchTerm])
     const filteredMateriais = useMemo(() => {
         return materiais.filter((item) => {
-            if (materialFilter !== "all" && item.id !== materialFilter) return false
+            if (filters.material !== "all" && item.id !== filters.material) return false
 
             if (searchTerm) {
                 const term = searchTerm.toLowerCase()
@@ -64,7 +70,7 @@ export default function FluxoMaterialPageContent({
 
             return true
         })
-    }, [materiais, materialFilter, searchTerm])
+    }, [filters.material, materiais, searchTerm])
 
     const filteredFluxo = useMemo(() => {
         const materialIds = new Set<string>()
@@ -72,8 +78,8 @@ export default function FluxoMaterialPageContent({
         filteredSaidas.forEach((s) => materialIds.add(s.material_id))
         filteredMateriais.forEach((item) => materialIds.add(item.id))
 
-        if (materialFilter !== "all") {
-            materialIds.add(materialFilter)
+        if (filters.material !== "all") {
+            materialIds.add(filters.material)
         }
 
         const result: FluxoMaterialResumo[] = []
@@ -102,7 +108,7 @@ export default function FluxoMaterialPageContent({
                 if (!materialNome.toLowerCase().includes(term) && !hasMovementOrStockMatch) return
             }
 
-            if (totalEntradas === 0 && totalSaidas === 0 && estoqueAtual === 0 && materialFilter === "all" && searchTerm) {
+            if (totalEntradas === 0 && totalSaidas === 0 && estoqueAtual === 0 && filters.material === "all" && searchTerm) {
                 return
             }
 
@@ -116,7 +122,7 @@ export default function FluxoMaterialPageContent({
         })
 
         return result.sort((a, b) => a.material_nome.localeCompare(b.material_nome))
-    }, [filteredEntradas, filteredMateriais, filteredSaidas, materiais, materialFilter, searchTerm])
+    }, [filteredEntradas, filteredMateriais, filteredSaidas, materiais, filters.material, searchTerm])
 
     return (
         <div className="flex min-h-screen flex-col bg-gray-50">
@@ -124,14 +130,17 @@ export default function FluxoMaterialPageContent({
                 totalMateriais={filteredFluxo.length}
                 searchTerm={searchTerm}
                 setSearchTerm={setSearchTerm}
-                materialFilter={materialFilter}
-                setMaterialFilter={setMaterialFilter}
-                dateFrom={dateFrom}
-                setDateFrom={setDateFrom}
-                dateTo={dateTo}
-                setDateTo={setDateTo}
+                materialFilter={filters.material}
+                setMaterialFilter={(value) => updateFilter("material", value)}
+                monthFilter={filters.month}
+                setMonthFilter={(value) => updateFilter("month", value)}
+                yearFilter={filters.year}
+                setYearFilter={(value) => updateFilter("year", value)}
                 clearFilters={clearFilters}
-                materiais={materiais}
+                materiais={materiais.map((item) => ({ id: item.id, nome: item.nome }))}
+                clientes={clientes}
+                availableYears={availableYears}
+                availableMonth={availableMonth}
             />
 
             <div className="flex-1 px-2 sm:px-4 lg:px-8 py-3 sm:py-6">
@@ -139,6 +148,7 @@ export default function FluxoMaterialPageContent({
                     data={filteredFluxo}
                     entradas={filteredEntradas}
                     saidas={filteredSaidas}
+                    materiais={filteredMateriais}
                 />
             </div>
         </div>

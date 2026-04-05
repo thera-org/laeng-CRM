@@ -121,6 +121,7 @@ export default function EntradaPageContent({
                 availableYears={availableYears}
                 availableMonth={availableMonth}
                 materiais={materiaisOptions}
+                clientes={clientes}
                 onNewEntrada={handleNewEntrada}
                 userPermissions={userPermissions}
                 userRole={userRole}

@@ -121,6 +121,7 @@ export default function SaidaPageContent({
                 availableYears={availableYears}
                 availableMonth={availableMonth}
                 materiais={materiaisOptions}
+                clientes={clientes}
                 onNewSaida={handleNewSaida}
                 userPermissions={userPermissions}
                 userRole={userRole}
