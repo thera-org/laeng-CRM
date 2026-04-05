@@ -49,7 +49,7 @@ export function AlmoxarifadoDeleteDialog({
           </AlertDialogTitle>
           <AlertDialogDescription className="text-base" asChild>
             <div>
-              Voce esta prestes a excluir:
+              Você está prestes a excluir:
               <br />
               <br />
               <div className="bg-white p-3 rounded-md border border-gray-200 shadow-sm">
@@ -62,9 +62,9 @@ export function AlmoxarifadoDeleteDialog({
               </div>
               <br />
               <span className="text-red-600 font-semibold">
-                Esta acao nao pode ser desfeita.
+                Esta ação não pode ser desfeita.
               </span>{" "}
-              O registro sera permanentemente removido do sistema.
+              O registro será permanentemente removido do sistema.
             </div>
           </AlertDialogDescription>
         </AlertDialogHeader>
