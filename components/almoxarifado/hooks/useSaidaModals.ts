@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { MaterialSaida } from "@/lib/types"
+import type { ClienteMaterialEstoque, MaterialSaida } from "@/lib/types"
 import { saveSaidaAction } from "@/components/almoxarifado/actions/saidaActions"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
@@ -26,7 +26,8 @@ export function useSaidaModals(
   isOpen: boolean,
   onClose: () => void,
   saida?: MaterialSaida | null,
-  clientes?: { id: string; nome: string; codigo?: number }[]
+  clientes?: { id: string; nome: string; codigo?: number }[],
+  estoques?: ClienteMaterialEstoque[]
 ) {
   const isEditing = !!saida
   const [formData, setFormData] = useState<SaidaFormData>(INITIAL_FORM)
@@ -68,6 +69,25 @@ export function useSaidaModals(
     [clientes, selectedClienteId]
   )
 
+  const selectedEstoque = useMemo(() => {
+    if (!selectedClienteId || !formData.material_id) return 0
+
+    const estoque = (estoques || []).find(
+      (item) => item.cliente_id === selectedClienteId && item.material_id === formData.material_id
+    )
+
+    return Number(estoque?.estoque || 0)
+  }, [estoques, formData.material_id, selectedClienteId])
+
+  const estoqueDisponivel = useMemo(() => {
+    const isSamePairAsOriginal =
+      !!saida &&
+      saida.cliente_id === selectedClienteId &&
+      saida.material_id === formData.material_id
+
+    return isSamePairAsOriginal ? selectedEstoque + saida.quantidade : selectedEstoque
+  }, [formData.material_id, saida, selectedClienteId, selectedEstoque])
+
   const selectFromSearch = useCallback((id: string) => {
     setSelectedClienteId(id)
     setFormData(prev => ({ ...prev, cliente_id: id }))
@@ -92,6 +112,14 @@ export function useSaidaModals(
     }
     if (!formData.quantidade || formData.quantidade <= 0) {
       toast({ title: "Erro", description: "Quantidade deve ser maior que zero.", variant: "destructive" })
+      return
+    }
+    if (formData.quantidade > estoqueDisponivel) {
+      toast({
+        title: "Erro",
+        description: "A quantidade informada excede o estoque disponível para este cliente.",
+        variant: "destructive",
+      })
       return
     }
 
@@ -135,6 +163,8 @@ export function useSaidaModals(
     setSearchTerm,
     filteredClientes,
     selectedCliente,
+    selectedEstoque,
+    estoqueDisponivel,
     selectedClienteId,
     setSelectedClienteId,
     selectFromSearch,

@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import type { MaterialEntrada, MaterialFiltersState } from "@/lib/types"
+import type { ClienteMaterialEstoque, MaterialEntrada, MaterialFiltersState } from "@/lib/types"
 import { EntradaHeader } from "@/components/almoxarifado/entrada-header"
 import { EntradaTable } from "@/components/almoxarifado/entrada-table"
 import { EntradaModal } from "@/components/almoxarifado/entrada-modal"
@@ -20,6 +20,7 @@ interface EntradaPageContentProps {
     entradas: MaterialEntrada[]
     materiais: { id: string; nome: string }[]
     clientes: { id: string; nome: string; codigo?: number }[]
+    estoques: ClienteMaterialEstoque[]
     userPermissions: Record<string, any>
 }
 
@@ -33,6 +34,7 @@ export default function EntradaPageContent({
     entradas,
     materiais,
     clientes,
+    estoques,
     userPermissions,
 }: EntradaPageContentProps) {
     const [searchTerm, setSearchTerm] = useState("")
@@ -159,6 +161,7 @@ export default function EntradaPageContent({
                 entrada={selectedEntrada}
                 materiais={materiais}
                 clientes={clientes}
+                estoques={estoques}
             />
         </div>
     )

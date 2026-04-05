@@ -287,6 +287,16 @@ export interface Material {
   updated_at: string;
 }
 
+export interface ClienteMaterialEstoque {
+  id: string;
+  material_id: string;
+  cliente_id: string;
+  estoque: number;
+  created_at?: string;
+  updated_at?: string;
+  material_nome?: string;
+}
+
 export interface MaterialMovimentacao {
   id: string;
   material_id: string;
@@ -300,6 +310,7 @@ export interface MaterialMovimentacao {
   material_nome?: string;
   cliente_nome?: string;
   cliente_codigo?: number;
+  estoque_cliente_material?: number;
 }
 
 export type MaterialEntrada = MaterialMovimentacao;

@@ -17,12 +17,15 @@ export default async function GestaoPage() {
     }
 
     const { data: materiaisData } = await supabase
-        .from("materiais")
-        .select("*")
-        .order("nome", { ascending: true })
+        .from("material_categoria")
+        .select("id, nome_do_material, created_at, updated_at")
+        .order("nome_do_material", { ascending: true })
 
     const materiais: Material[] = (materiaisData || []).map((m: any) => ({
-        ...m,
+        id: m.id,
+        nome: m.nome_do_material,
+        created_at: m.created_at,
+        updated_at: m.updated_at,
     }))
 
     return <GestaoPageContent materiais={materiais} />

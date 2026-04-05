@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import type { MaterialSaida, MaterialFiltersState } from "@/lib/types"
+import type { ClienteMaterialEstoque, MaterialSaida, MaterialFiltersState } from "@/lib/types"
 import { SaidaHeader } from "@/components/almoxarifado/saida-header"
 import { SaidaTable } from "@/components/almoxarifado/saida-table"
 import { SaidaModal } from "@/components/almoxarifado/saida-modal"
@@ -20,6 +20,7 @@ interface SaidaPageContentProps {
     saidas: MaterialSaida[]
     materiais: { id: string; nome: string }[]
     clientes: { id: string; nome: string; codigo?: number }[]
+    estoques: ClienteMaterialEstoque[]
     userPermissions: Record<string, any>
 }
 
@@ -33,6 +34,7 @@ export default function SaidaPageContent({
     saidas,
     materiais,
     clientes,
+    estoques,
     userPermissions,
 }: SaidaPageContentProps) {
     const [searchTerm, setSearchTerm] = useState("")
@@ -159,6 +161,7 @@ export default function SaidaPageContent({
                 saida={selectedSaida}
                 materiais={materiais}
                 clientes={clientes}
+                estoques={estoques}
             />
         </div>
     )

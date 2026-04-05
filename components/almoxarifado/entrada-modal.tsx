@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Search } from "lucide-react"
-import type { MaterialEntrada } from "@/lib/types"
+import type { ClienteMaterialEstoque, MaterialEntrada } from "@/lib/types"
 import { useEntradaModals } from "@/components/almoxarifado/hooks/useEntradaModals"
 
 interface EntradaModalProps {
@@ -22,9 +22,10 @@ interface EntradaModalProps {
   entrada?: MaterialEntrada | null
   materiais: { id: string; nome: string }[]
   clientes: { id: string; nome: string; codigo?: number }[]
+  estoques: ClienteMaterialEstoque[]
 }
 
-export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: EntradaModalProps) {
+export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes, estoques }: EntradaModalProps) {
   const {
     formData,
     updateField,
@@ -35,9 +36,10 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: 
     setSearchTerm,
     filteredClientes,
     selectedCliente,
+    selectedEstoque,
     setSelectedClienteId,
     selectFromSearch,
-  } = useEntradaModals(isOpen, onClose, entrada, clientes)
+  } = useEntradaModals(isOpen, onClose, entrada, clientes, estoques)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -58,6 +60,13 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: 
           {/* --- EDIT MODE --- */}
           {isEditing && (
             <div className="space-y-6">
+              {selectedCliente && (
+                <div className="rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-900">
+                  <div className="font-semibold">Cliente vinculado: {selectedCliente.nome}</div>
+                  <div className="mt-1">Estoque atual deste cliente para o material selecionado: {selectedEstoque}</div>
+                </div>
+              )}
+
               <div className="space-y-2">
                 <Label className="font-semibold text-sm text-gray-700">Material *</Label>
                 <Select
@@ -74,6 +83,12 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: 
                     ))}
                   </SelectContent>
                 </Select>
+
+                {formData.material_id && selectedCliente && (
+                  <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900">
+                    Estoque atual deste material para {selectedCliente.nome}: <span className="font-bold">{selectedEstoque}</span>
+                  </div>
+                )}
               </div>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -190,6 +205,12 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: 
                         ))}
                       </SelectContent>
                     </Select>
+
+                    {formData.material_id && (
+                      <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900">
+                        Estoque atual deste material para {selectedCliente.nome}: <span className="font-bold">{selectedEstoque}</span>
+                      </div>
+                    )}
                   </div>
 
                   <div className="space-y-2">

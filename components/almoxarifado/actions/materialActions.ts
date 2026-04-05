@@ -11,9 +11,9 @@ export async function saveMaterialAction(
   try {
     // Check for duplicate name (case-insensitive)
     let query = supabase
-      .from("materiais")
+      .from("material_categoria")
       .select("id")
-      .ilike("nome", data.nome)
+      .ilike("nome_do_material", data.nome)
 
     if (id) {
       query = query.neq("id", id)
@@ -27,23 +27,26 @@ export async function saveMaterialAction(
 
     if (id) {
       const { error } = await supabase
-        .from("materiais")
+        .from("material_categoria")
         .update({
-          nome: data.nome,
+          nome_do_material: data.nome,
           updated_at: new Date().toISOString(),
         })
         .eq("id", id)
 
       if (error) throw error
     } else {
-      const { error } = await supabase.from("materiais").insert({
-        nome: data.nome,
+      const { error } = await supabase.from("material_categoria").insert({
+        nome_do_material: data.nome,
       })
 
       if (error) throw error
     }
 
     revalidatePath("/materiais")
+    revalidatePath("/entrada")
+    revalidatePath("/saida")
+    revalidatePath("/fluxoDeMaterial")
     return { ok: true }
   } catch (e: any) {
     return { ok: false, error: e.message }
@@ -53,7 +56,7 @@ export async function saveMaterialAction(
 export async function deleteMaterialAction(id: string) {
   const supabase = await createClient()
   try {
-    const { error } = await supabase.from("materiais").delete().eq("id", id)
+    const { error } = await supabase.from("material_categoria").delete().eq("id", id)
 
     if (error) {
       if (error.message.includes("violates foreign key constraint")) {
@@ -66,6 +69,9 @@ export async function deleteMaterialAction(id: string) {
     }
 
     revalidatePath("/materiais")
+    revalidatePath("/entrada")
+    revalidatePath("/saida")
+    revalidatePath("/fluxoDeMaterial")
     return { ok: true }
   } catch (e: any) {
     return { ok: false, error: e.message }
@@ -76,9 +82,9 @@ export async function getMateriaisAtivosAction() {
   const supabase = await createClient()
   try {
     const { data, error } = await supabase
-      .from("materiais")
-      .select("id, nome")
-      .order("nome")
+      .from("material_categoria")
+      .select("id, nome_do_material")
+      .order("nome_do_material", { ascending: true })
 
     if (error) throw error
     return { ok: true, data: data || [] }

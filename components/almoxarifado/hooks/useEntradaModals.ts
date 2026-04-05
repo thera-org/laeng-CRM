@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { MaterialEntrada } from "@/lib/types"
+import type { ClienteMaterialEstoque, MaterialEntrada } from "@/lib/types"
 import { saveEntradaAction } from "@/components/almoxarifado/actions/entradaActions"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
@@ -26,7 +26,8 @@ export function useEntradaModals(
   isOpen: boolean,
   onClose: () => void,
   entrada?: MaterialEntrada | null,
-  clientes?: { id: string; nome: string; codigo?: number }[]
+  clientes?: { id: string; nome: string; codigo?: number }[],
+  estoques?: ClienteMaterialEstoque[]
 ) {
   const isEditing = !!entrada
   const [formData, setFormData] = useState<EntradaFormData>(INITIAL_FORM)
@@ -67,6 +68,16 @@ export function useEntradaModals(
     (clientes || []).find(c => c.id === selectedClienteId),
     [clientes, selectedClienteId]
   )
+
+  const selectedEstoque = useMemo(() => {
+    if (!selectedClienteId || !formData.material_id) return 0
+
+    const estoque = (estoques || []).find(
+      (item) => item.cliente_id === selectedClienteId && item.material_id === formData.material_id
+    )
+
+    return Number(estoque?.estoque || 0)
+  }, [estoques, formData.material_id, selectedClienteId])
 
   const selectFromSearch = useCallback((id: string) => {
     setSelectedClienteId(id)
@@ -135,6 +146,7 @@ export function useEntradaModals(
     setSearchTerm,
     filteredClientes,
     selectedCliente,
+    selectedEstoque,
     selectedClienteId,
     setSelectedClienteId,
     selectFromSearch,
