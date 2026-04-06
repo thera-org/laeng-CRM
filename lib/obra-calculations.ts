@@ -37,6 +37,7 @@ export function calculateEmpreiteiroPercentual(
  * @returns Custo total
  */
 export function calculateTotalCustos(custos: {
+  valor_terreno?: number;
   empreiteiro?: number;
   material?: number;
   mao_de_obra?: number;
@@ -48,6 +49,7 @@ export function calculateTotalCustos(custos: {
   manutencao?: number;
 }): number {
   return (
+    (custos.valor_terreno || 0) +
     (custos.empreiteiro || 0) +
     (custos.material || 0) +
     (custos.mao_de_obra || 0) +
@@ -111,6 +113,7 @@ export function calculateObraStatistics(obras: Array<{
   valor_total?: number;
   status?: string;
   valor_obra?: number;
+  valor_terreno?: number;
   empreiteiro?: number;
   material?: number;
   mao_de_obra?: number;

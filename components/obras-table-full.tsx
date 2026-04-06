@@ -100,7 +100,7 @@ export function ObrasTableFull({ obras, highlightId, userPermissions }: ObrasTab
                   TERRENO
                 </TableHead>
                 <TableHead className="text-center text-[#F5C800] font-bold py-3">
-                  VALOR TOTAL DA OBRA
+                  VALOR OBRA
                 </TableHead>
                 <TableHead className="text-center text-[#F5C800] font-bold py-3">AÇÕES</TableHead>
               </TableRow>
@@ -113,13 +113,18 @@ export function ObrasTableFull({ obras, highlightId, userPermissions }: ObrasTab
                 const totalTerceirizado = (obra.terceirizado || 0) + (obra.pintor || 0) + (obra.eletricista || 0) + (obra.gesseiro || 0) + (obra.azulejista || 0) + (obra.manutencao || 0)
 
                 // Calcular dados do empreiteiro (mão de obra = empreiteiro)
-                const valorEmpreiteiro = obra.empreiteiro || 0
                 const valorPago = obra.empreiteiro_valor_pago || 0
-                const saldo = valorEmpreiteiro - valorPago
-                const percentualPago = valorEmpreiteiro > 0 ? (valorPago / valorEmpreiteiro) * 100 : 0
+                const valorContratado = obra.empreiteiro || 0
+                // Para exibição no demonstrativo: se contratado não preenchido, usa o pago como referência
+                const valorEmpreiteiroDisplay = valorContratado || valorPago
+                const saldo = valorEmpreiteiroDisplay - valorPago
+                const percentualPago = valorEmpreiteiroDisplay > 0 ? (valorPago / valorEmpreiteiroDisplay) * 100 : 0
+                const percentualPagoDisplay = Math.min(100, percentualPago)
 
-                // Valor total da obra = Empreiteiro + Material + Terceirizado + Terreno
-                const valorTotalObra = valorEmpreiteiro + (obra.material || 0) + totalTerceirizado + (obra.valor_terreno || 0)
+                // Valor total da obra = custo_total do banco (autoritativo) ou recálculo incluindo mao_de_obra
+                const valorTotalObra = Number(obra.custo_total) || (
+                  valorContratado + (obra.material || 0) + (obra.mao_de_obra || 0) + totalTerceirizado + (obra.valor_terreno || 0)
+                )
 
                 const isHighlighted = highlightId === obra.id
 
@@ -144,7 +149,7 @@ export function ObrasTableFull({ obras, highlightId, userPermissions }: ObrasTab
                         <div className="flex items-center justify-center gap-2">
                           <div className="min-w-[110px] text-center flex flex-col items-center">
                             <div className="text-xs font-semibold text-gray-600 truncate max-w-[100px]">{obra.empreiteiro_nome || 'SEM EMPREITEIRO'}</div>
-                            <div className="text-sm font-bold text-black mt-1">{formatCurrency(valorEmpreiteiro)}</div>
+                            <div className="text-sm font-bold text-black mt-1">{formatCurrency(valorEmpreiteiroDisplay)}</div>
                           </div>
                           <Button
                             size="sm"
@@ -261,11 +266,11 @@ export function ObrasTableFull({ obras, highlightId, userPermissions }: ObrasTab
                                   <tbody>
                                     <tr className="border-b border-gray-200">
                                       <td className="py-3 px-3 text-sm font-semibold text-gray-700 uppercase">Empreiteiro</td>
-                                      <td className="py-3 px-3 text-sm font-semibold text-right">{obra.responsavel || '-'}</td>
+                                      <td className="py-3 px-3 text-sm font-semibold text-right">{obra.empreiteiro_nome || '-'}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200">
                                       <td className="py-3 px-3 text-sm font-semibold text-gray-700 uppercase">Valor da Empreitada</td>
-                                      <td className="py-3 px-3 text-sm font-bold text-right text-[#1E1E1E]">{formatCurrency(valorEmpreiteiro)}</td>
+                                      <td className="py-3 px-3 text-sm font-bold text-right text-[#1E1E1E]">{formatCurrency(valorEmpreiteiroDisplay)}</td>
                                     </tr>
                                     <tr className="border-b border-gray-200">
                                       <td className="py-3 px-3 text-sm font-semibold text-gray-700 uppercase">Valor Pago</td>
@@ -277,7 +282,7 @@ export function ObrasTableFull({ obras, highlightId, userPermissions }: ObrasTab
                                     </tr>
                                     <tr className="bg-[#F5C800]">
                                       <td className="py-3 px-3 text-sm font-bold text-[#1E1E1E] uppercase">Percentual Pago</td>
-                                      <td className="py-3 px-3 text-sm font-bold text-right text-[#1E1E1E]">{percentualPago.toFixed(2)}%</td>
+                                      <td className="py-3 px-3 text-sm font-bold text-right text-[#1E1E1E]">{percentualPagoDisplay.toFixed(2)}%</td>
                                     </tr>
                                   </tbody>
                                 </table>
@@ -305,12 +310,12 @@ export function ObrasTableFull({ obras, highlightId, userPermissions }: ObrasTab
                                       fill="none"
                                       stroke="#F5C800"
                                       strokeWidth="20"
-                                      strokeDasharray={`${percentualPago * 2.51327} 251.327`}
+                                      strokeDasharray={`${percentualPagoDisplay * 2.51327} 251.327`}
                                       className="transition-all duration-500"
                                     />
                                   </svg>
                                   <div className="absolute inset-0 flex flex-col items-center justify-center">
-                                    <span className="text-3xl font-bold text-[#F5C800]">{percentualPago.toFixed(0)}%</span>
+                                    <span className="text-3xl font-bold text-[#F5C800]">{percentualPagoDisplay.toFixed(0)}%</span>
                                     <span className="text-xs text-gray-600 mt-1 uppercase">Pago</span>
                                   </div>
                                 </div>

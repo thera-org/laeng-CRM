@@ -91,23 +91,7 @@ export function FinanceiraEditModal({ isOpen, onClose, obra }: FinanceiraEditMod
 
     setIsLoading(true)
     try {
-      // Calcular totais
-      const custoTotal = 
-        data.empreiteiro + 
-        data.terceirizado + 
-        data.material + 
-        data.mao_de_obra + 
-        data.pintor + 
-        data.eletricista + 
-        data.gesseiro + 
-        data.azulejista + 
-        data.manutencao
-
-      const resultado = data.entrada + data.valor_financiado + data.subsidio - custoTotal
-      const marginemLucro = data.entrada + data.valor_financiado + data.subsidio > 0
-        ? (resultado / (data.entrada + data.valor_financiado + data.subsidio)) * 100
-        : 0
-
+      // custo_total, resultado e margem_lucro são colunas GERADAS pelo banco — não enviar no update
       // Atualizar dados financeiros da obra
       const { error: obraError } = await supabase
         .from("obras")
@@ -118,14 +102,11 @@ export function FinanceiraEditModal({ isOpen, onClose, obra }: FinanceiraEditMod
           subsidio: data.subsidio,
           valor_total: data.entrada + data.valor_financiado + data.subsidio,
           valor_obra: data.valor_obra,
-          custo_total: custoTotal,
-          resultado: resultado,
-          margem_lucro: marginemLucro,
           empreiteiro: data.empreiteiro,
           empreiteiro_nome: data.empreiteiro_nome,
           empreiteiro_valor_pago: data.empreiteiro_valor_pago,
-          empreiteiro_saldo: data.empreiteiro - data.empreiteiro_valor_pago,
-          empreiteiro_percentual: data.empreiteiro > 0 ? (data.empreiteiro_valor_pago / data.empreiteiro) * 100 : 0,
+          empreiteiro_saldo: Math.max(0, data.empreiteiro - data.empreiteiro_valor_pago),
+          empreiteiro_percentual: data.empreiteiro > 0 ? Math.min(100, (data.empreiteiro_valor_pago / data.empreiteiro) * 100) : 0,
           terceirizado: data.terceirizado,
           material: data.material,
           mao_de_obra: data.mao_de_obra,
@@ -153,12 +134,6 @@ export function FinanceiraEditModal({ isOpen, onClose, obra }: FinanceiraEditMod
       await new Promise(resolve => setTimeout(resolve, 300))
       router.refresh()
       
-      // Forçar recarregamento completo para garantir sincronização
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.location.reload()
-        }
-      }, 500)
     } catch (error) {
       console.error("Erro ao salvar:", error)
       const errorMessage = error instanceof Error ? error.message : "Erro ao salvar dados financeiros"
@@ -242,9 +217,9 @@ export function FinanceiraEditModal({ isOpen, onClose, obra }: FinanceiraEditMod
               </div>
             </div>
 
-            {/* Valor Total Contratual */}
+            {/* Valor Contratual */}
             <div className="bg-[#F5C800] p-4 rounded-lg">
-              <p className="text-sm font-semibold text-[#1E1E1E] mb-1">Valor Total Contratual</p>
+              <p className="text-sm font-semibold text-[#1E1E1E] mb-1">Valor Contratual</p>
               <p className="text-3xl font-bold text-[#1E1E1E]">
                 R$ {formatMoneyInput(data.entrada + data.valor_financiado + data.subsidio)}
               </p>
@@ -335,7 +310,8 @@ export function FinanceiraEditModal({ isOpen, onClose, obra }: FinanceiraEditMod
                 <p className="text-2xl font-bold text-gray-900">
                   R$ {formatMoneyInput(
                     data.empreiteiro + data.terceirizado + data.material + data.mao_de_obra +
-                    data.pintor + data.eletricista + data.gesseiro + data.azulejista + data.manutencao
+                    data.pintor + data.eletricista + data.gesseiro + data.azulejista + data.manutencao +
+                    data.valor_terreno
                   )}
                 </p>
               </div>
@@ -345,22 +321,24 @@ export function FinanceiraEditModal({ isOpen, onClose, obra }: FinanceiraEditMod
                   R$ {formatMoneyInput(
                     (data.entrada + data.valor_financiado + data.subsidio) -
                     (data.empreiteiro + data.terceirizado + data.material + data.mao_de_obra +
-                     data.pintor + data.eletricista + data.gesseiro + data.azulejista + data.manutencao)
+                     data.pintor + data.eletricista + data.gesseiro + data.azulejista + data.manutencao +
+                     data.valor_terreno)
                   )}
                 </p>
               </div>
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">Margem de Lucro</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {data.entrada + data.valor_financiado + data.subsidio > 0 
+                  {(data.entrada + data.valor_financiado + data.subsidio > 0
                     ? (
                       ((data.entrada + data.valor_financiado + data.subsidio) -
                       (data.empreiteiro + data.terceirizado + data.material + data.mao_de_obra +
-                       data.pintor + data.eletricista + data.gesseiro + data.azulejista + data.manutencao)) /
+                       data.pintor + data.eletricista + data.gesseiro + data.azulejista + data.manutencao +
+                       data.valor_terreno)) /
                       (data.entrada + data.valor_financiado + data.subsidio)
-                    ) * 100
+                      ) * 100
                     : 0
-                  }
+                  ).toFixed(2)}
                   %
                 </p>
               </div>

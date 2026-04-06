@@ -37,7 +37,8 @@ export async function createBulkTransactionsAction(transactions: any[]) {
       if (error) throw error
     }
 
-    revalidatePath("/pagamentos")
+    revalidatePath("/receita")
+    revalidatePath("/fluxoDeCaixa")
     return {
       ok: true,
       insertedCount: toInsert.length,

@@ -75,7 +75,7 @@ export default async function DashboardPage() {
                 <CardTitle className="text-xs sm:text-sm font-bold text-black uppercase">Total de Clientes</CardTitle>
               </CardHeader>
               <CardContent className="flex-grow flex items-center">
-                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-black">{clientesComObrasList.length}</div>
+                <div className="text-3xl sm:text-4xl md:text-5xl font-bold text-black">{clientesTotal}</div>
               </CardContent>
             </Card>
 
@@ -108,36 +108,14 @@ export default async function DashboardPage() {
           </div>
 
           {/* SEGUNDA LINHA - FINANCEIRO */}
-          <div className="grid gap-3 sm:gap-4 grid-cols-2 sm:grid-cols-4 auto-rows-fr">
+          <div className="grid gap-3 sm:gap-4 grid-cols-1 sm:grid-cols-2 auto-rows-fr">
             <Card className="border-0 shadow-lg bg-gradient-to-br from-slate-50 to-slate-100/50 hover:shadow-xl transition-shadow flex flex-col h-full min-h-40">
               <CardHeader className="pb-2 sm:pb-3 flex-shrink-0">
                 <CardTitle className="text-xs sm:text-sm font-medium text-slate-600 uppercase">Receita</CardTitle>
               </CardHeader>
               <CardContent className="flex-grow flex items-center">
-                <div className="text-sm sm:text-base md:text-lg font-bold text-slate-700">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold text-slate-700">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(receitaTotal)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="border-0 shadow-lg bg-gradient-to-br from-green-50 to-green-100/50 hover:shadow-xl transition-shadow flex flex-col h-full min-h-40">
-              <CardHeader className="pb-2 sm:pb-3 flex-shrink-0">
-                <CardTitle className="text-xs sm:text-sm font-medium text-slate-600 uppercase">Recebido</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow flex items-center">
-                <div className="text-sm sm:text-base md:text-lg font-bold text-green-600">
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(totalRecebido)}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className={`border-0 shadow-lg bg-gradient-to-br ${lucroTotal >= 0 ? 'from-emerald-50 to-emerald-100/50' : 'from-red-50 to-red-100/50'} hover:shadow-xl transition-shadow flex flex-col h-full min-h-40`}>
-              <CardHeader className="pb-2 sm:pb-3 flex-shrink-0">
-                <CardTitle className="text-xs sm:text-sm font-medium text-slate-600 uppercase">Lucro</CardTitle>
-              </CardHeader>
-              <CardContent className="flex-grow flex items-center">
-                <div className={`text-sm sm:text-base md:text-lg font-bold ${lucroTotal >= 0 ? 'text-emerald-600' : 'text-red-600'}`}>
-                  {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(lucroTotal)}
                 </div>
               </CardContent>
             </Card>
@@ -147,7 +125,7 @@ export default async function DashboardPage() {
                 <CardTitle className="text-xs sm:text-sm font-medium text-slate-600 uppercase">Ticket Médio</CardTitle>
               </CardHeader>
               <CardContent className="flex-grow flex items-center">
-                <div className="text-sm sm:text-base md:text-lg font-bold text-indigo-600">
+                <div className="text-lg sm:text-xl md:text-2xl font-bold text-indigo-600">
                   {new Intl.NumberFormat('pt-BR', { style: 'currency', currency: 'BRL', minimumFractionDigits: 2, maximumFractionDigits: 2 }).format(ticketMedio)}
                 </div>
               </CardContent>

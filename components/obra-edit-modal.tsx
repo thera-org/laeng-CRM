@@ -80,12 +80,12 @@ export function ObraEditModal({ isOpen, onClose, obra}: ObraEditModalProps) {
     setIsLoading(true)
     try {
       // Calcular valores derivados do empreiteiro
-      const empreiteiro_saldo = obraData.empreiteiro - obraData.empreiteiro_valor_pago
-      const empreiteiro_percentual = obraData.empreiteiro > 0 
-        ? (obraData.empreiteiro_valor_pago / obraData.empreiteiro) * 100 
+      const empreiteiro_saldo = Math.max(0, obraData.empreiteiro - obraData.empreiteiro_valor_pago)
+      const empreiteiro_percentual = obraData.empreiteiro > 0
+        ? Math.min(100, (obraData.empreiteiro_valor_pago / obraData.empreiteiro) * 100)
         : 0
 
-      // Atualizar valores financeiros da obra
+      // custo_total, resultado e margem_lucro são colunas GERADAS pelo banco — não enviar no update
       const { error: obraError } = await supabase
         .from("obras")
         .update({
@@ -101,6 +101,7 @@ export function ObraEditModal({ isOpen, onClose, obra}: ObraEditModalProps) {
           manutencao: obraData.manutencao,
           empreiteiro_nome: obraData.empreiteiro_nome,
           empreiteiro_valor_pago: obraData.empreiteiro_valor_pago,
+          valor_obra: totalCustos,
           empreiteiro_saldo: empreiteiro_saldo,
           empreiteiro_percentual: empreiteiro_percentual,
           updated_at: new Date().toISOString()
@@ -137,16 +138,17 @@ export function ObraEditModal({ isOpen, onClose, obra}: ObraEditModalProps) {
     }))
   }
 
-  // Calcular total = Empreiteiro + Material + Terceirizado (com especialistas)
-  const totalCustos = 
-    obraData.empreiteiro + 
-    obraData.material + 
-    obraData.terceirizado + 
-    obraData.pintor + 
-    obraData.eletricista + 
-    obraData.gesseiro + 
-    obraData.azulejista + 
-    obraData.manutencao
+  // Calcular total = Empreiteiro (valor contratado) + Material + Terceirizado + Terreno
+  const totalCustos =
+    obraData.empreiteiro +
+    obraData.material +
+    obraData.terceirizado +
+    obraData.pintor +
+    obraData.eletricista +
+    obraData.gesseiro +
+    obraData.azulejista +
+    obraData.manutencao +
+    obraData.valor_terreno
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -169,23 +171,21 @@ export function ObraEditModal({ isOpen, onClose, obra}: ObraEditModalProps) {
               Custos Principais
             </h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-              {/* Empreiteiro */}
+              {/* Material */}
               <div className="space-y-1">
-                <Label htmlFor="empreiteiro" className="text-sm font-medium">
-                  Empreiteiro (R$)
+                <Label htmlFor="material" className="text-sm font-medium">
+                  Material (R$)
                 </Label>
                 <Input
-                  id="empreiteiro"
+                  id="material"
                   type="text"
-                  value={formatMoneyInput(obraData.empreiteiro)}
-                  onChange={(e) => handleInputChange('empreiteiro', e.target.value)}
+                  value={formatMoneyInput(obraData.material)}
+                  onChange={(e) => handleInputChange('material', e.target.value)}
                   disabled={isLoading}
                   className="border-2 focus:border-[#F5C800] font-mono text-lg h-12 px-4"
                   placeholder="0,00"
                 />
               </div>
-
-
 
               {/* Terreno */}
               <div className="space-y-1">
@@ -226,19 +226,53 @@ export function ObraEditModal({ isOpen, onClose, obra}: ObraEditModalProps) {
                   placeholder="Nome do empreiteiro"
                 />
               </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Valor da Empreitada */}
+                <div className="space-y-1">
+                  <Label htmlFor="empreiteiro" className="text-sm font-medium">
+                    Valor da Empreitada (R$)
+                  </Label>
+                  <Input
+                    id="empreiteiro"
+                    type="text"
+                    value={formatMoneyInput(obraData.empreiteiro)}
+                    onChange={(e) => handleInputChange('empreiteiro', e.target.value)}
+                    disabled={isLoading}
+                    className="border-2 focus:border-[#F5C800] font-mono text-lg h-12 px-4"
+                    placeholder="0,00"
+                  />
+                </div>
+
+                {/* Valor Pago */}
+                <div className="space-y-1">
+                  <Label htmlFor="empreiteiro_valor_pago" className="text-sm font-medium">
+                    Valor Pago (R$)
+                  </Label>
+                  <Input
+                    id="empreiteiro_valor_pago"
+                    type="text"
+                    value={formatMoneyInput(obraData.empreiteiro_valor_pago)}
+                    onChange={(e) => handleInputChange('empreiteiro_valor_pago', e.target.value)}
+                    disabled={isLoading}
+                    className="border-2 focus:border-[#F5C800] font-mono text-lg h-12 px-4"
+                    placeholder="0,00"
+                  />
+                </div>
+              </div>
             </div>
           </div>
 
           {/* Total de Custos */}
           <div className="bg-[#F5C800] p-6 rounded-lg">
             <p className="text-sm font-semibold text-[#1E1E1E] mb-2">
-              Valor Total da Obra
+              Valor Obra
             </p>
             <p className="text-3xl font-bold text-[#1E1E1E]">
               R$ {totalCustos.toLocaleString('pt-BR', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </p>
             <p className="text-xs text-[#1E1E1E]/70 mt-2">
-              = Empreiteiro + Material + Terceirizado
+              = Empreiteiro + Material + Terceirizado + Terreno
             </p>
           </div>
 
