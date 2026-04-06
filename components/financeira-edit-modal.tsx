@@ -329,16 +329,16 @@ export function FinanceiraEditModal({ isOpen, onClose, obra }: FinanceiraEditMod
               <div className="bg-gray-100 p-4 rounded-lg">
                 <p className="text-sm text-gray-600">Margem de Lucro</p>
                 <p className="text-2xl font-bold text-gray-900">
-                  {data.entrada + data.valor_financiado + data.subsidio > 0
+                  {(data.entrada + data.valor_financiado + data.subsidio > 0
                     ? (
                       ((data.entrada + data.valor_financiado + data.subsidio) -
                       (data.empreiteiro + data.terceirizado + data.material + data.mao_de_obra +
                        data.pintor + data.eletricista + data.gesseiro + data.azulejista + data.manutencao +
                        data.valor_terreno)) /
                       (data.entrada + data.valor_financiado + data.subsidio)
-                    ) * 100).toFixed(2)
-                    : (0).toFixed(2)
-                  }
+                      ) * 100
+                    : 0
+                  ).toFixed(2)}
                   %
                 </p>
               </div>
