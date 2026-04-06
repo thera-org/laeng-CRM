@@ -86,7 +86,7 @@ export function ClientesTable({ clientes, searchTerm = "" , userPermissions}: Cl
               SUBSÍDIO 
             </TableHead>
             <TableHead className="text-center text-[#F5C800] font-bold py-3">
-              VALOR TOTAL 
+              VALOR CONTRATUAL
             </TableHead>
             <TableHead className="text-center text-[#F5C800] font-bold py-3">AÇÕES</TableHead>
           </TableRow>

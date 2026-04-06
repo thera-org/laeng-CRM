@@ -59,6 +59,13 @@ export function formatMoneyInput(value: number): string {
 
 // Converter string de input monetário para número
 export function parseMoneyInput(value: string): number {
+  if (!value) return 0
+  // Se tem vírgula, já está no formato pt-BR (ex: "1.500,00")
+  if (value.includes(',')) {
+    const cleaned = value.replace(/\./g, '').replace(',', '.').replace(/[^\d.]/g, '')
+    return Number(cleaned) || 0
+  }
+  // Sem vírgula: assume formato de máscara progressiva (ex: "150000" → 1500.00)
   const numericValue = value.replace(/\D/g, '')
   return Number(numericValue) / 100
 }

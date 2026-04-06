@@ -25,20 +25,12 @@ export function ClienteStatusSelect({ cliente }: ClienteStatusSelectProps) {
     try {
       // Usar server action para atualizar e revalidar cache
       await updateClienteStatus(cliente.id, newStatus);
-
-      // Aguardar um momento e fazer reload para sincronizar UI
-      // Recarrega também o dashboard se aberto em outra aba
-      setTimeout(() => {
-        if (typeof window !== 'undefined') {
-          window.location.reload();
-          // Se o dashboard está aberto, também recarrega
-          window.opener?.location?.reload?.();
-        }
-      }, 500);
+      router.refresh();
     } catch (error) {
       console.error("Erro ao atualizar status:", error);
       // Reverter para o status anterior em caso de erro
       setCurrentStatus(cliente.status || "PENDENTE");
+    } finally {
       setIsUpdating(false);
     }
   };

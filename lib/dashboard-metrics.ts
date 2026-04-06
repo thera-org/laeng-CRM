@@ -52,11 +52,11 @@ export function calculateDashboardMetrics(
 
   // ========== ANÁLISE FINANCEIRA ==========
   const receitaTotal = obras?.reduce((sum, obra) => sum + (Number(obra.valor_total) || 0), 0) || 0;
-  const custoTotal = obras?.reduce((sum, obra) => sum + (Number(obra.valor_obra) || 0), 0) || 0;
+  const custoTotal = obras?.reduce((sum, obra) => sum + (Number(obra.custo_total) || 0), 0) || 0;
   const lucroTotal = receitaTotal - custoTotal;
   const margemLucro = receitaTotal > 0 ? (lucroTotal / receitaTotal) * 100 : 0;
 
-  const totalRecebido = obras?.reduce((sum, obra) => sum + (Number(obra.empreiteiro_valor_pago) || 0), 0) || 0;
+  const totalRecebido = obras?.reduce((sum, obra) => sum + (Number(obra.total_medicoes_pagas) || 0), 0) || 0;
 
   // Clientes com obras ativas
   const clientesComObrasList = [...new Set(obras?.map(o => o.cliente_id) || [])];

@@ -45,8 +45,10 @@ export async function saveTransactionAction(data: TransactionPayload, id?: strin
       if (error) throw error
     }
 
-    // Atualiza a página/cache para mostrar os novos dados
-    revalidatePath("/pagamentos") // Ajuste para a rota onde sua lista aparece
+    // Atualiza o cache das rotas que exibem transações
+    revalidatePath("/despesas")
+    revalidatePath("/receita")
+    revalidatePath("/fluxoDeCaixa")
 
     return { success: true, message: "Salvo com sucesso" }
 

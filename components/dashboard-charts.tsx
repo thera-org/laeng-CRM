@@ -7,6 +7,7 @@ interface ObraComClientes extends Obra {
   clientes?: {
     data_contrato?: string;
   };
+  created_at?: string;
 }
 
 interface DashboardChartsProps {
@@ -69,14 +70,12 @@ export function DashboardCharts({ obras }: DashboardChartsProps) {
     const obrasPorAnoMap: { [key: number]: number } = {};
     
     obras.forEach((obra) => {
-      // Extrair ano da data_contrato do cliente
-      let ano = new Date().getFullYear(); // fallback
-      
+      // Extrair ano: data_contrato do cliente (preferencial) ou created_at da obra (fallback)
+      let ano = new Date(obra.created_at!).getFullYear()
       if (obra.clientes && obra.clientes.data_contrato) {
-        const anoStr = obra.clientes.data_contrato.split('-')[0];
-        ano = parseInt(anoStr, 10) || ano;
+        ano = new Date(obra.clientes.data_contrato).getFullYear()
       }
-      
+
       if (!obrasPorAnoMap[ano]) {
         obrasPorAnoMap[ano] = 0;
       }
@@ -115,14 +114,12 @@ export function DashboardCharts({ obras }: DashboardChartsProps) {
     const obrasPorAno: { [key: number]: number } = {};
     
     obras.forEach((obra) => {
-      // Extrair ano da data_contrato do cliente
-      let ano = new Date().getFullYear(); // fallback
-      
+      // Extrair ano: data_contrato do cliente (preferencial) ou created_at da obra (fallback)
+      let ano = new Date(obra.created_at!).getFullYear()
       if (obra.clientes && obra.clientes.data_contrato) {
-        const anoStr = obra.clientes.data_contrato.split('-')[0];
-        ano = parseInt(anoStr, 10) || ano;
+        ano = new Date(obra.clientes.data_contrato).getFullYear()
       }
-      
+
       const valor = Number(obra.valor_total) || 0;
       
       if (!obrasPorAno[ano]) {

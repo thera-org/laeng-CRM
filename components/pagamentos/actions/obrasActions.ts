@@ -14,7 +14,9 @@ export async function createBulkTransactionsAction(transactions: any[]) {
     const { error } = await supabase.from("transactions").insert(transactions)
     if (error) throw error
 
-    revalidatePath("/pagamentos")
+    revalidatePath("/despesas")
+    revalidatePath("/obras")
+    revalidatePath("/fluxoDeCaixa")
     return {
       ok: true,
       insertedCount: transactions.length,

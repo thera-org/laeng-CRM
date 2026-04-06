@@ -17,7 +17,9 @@ export async function deletarPagamentoAction(id: string) {
       return { ok: false, error: "Erro ao excluir o lançamento do banco de dados." }
     }
 
-    revalidatePath("/pagamentos") 
+    revalidatePath("/despesas")
+    revalidatePath("/receita")
+    revalidatePath("/fluxoDeCaixa")
     return { ok: true }
   } catch (error) {
     console.error("Erro servidor:", error)

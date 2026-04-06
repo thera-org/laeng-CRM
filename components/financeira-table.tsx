@@ -158,7 +158,7 @@ export function FinanceiraTable({ obras , userPermissions}: FinanceiraTableProps
               <TableHead 
                 className="text-left text-[#F5C800] font-bold py-3"
               >
-                VALOR TOTAL
+                VALOR CONTRATUAL
               </TableHead>
               <TableHead 
                 className="text-left text-[#F5C800] font-bold py-3"
@@ -217,19 +217,28 @@ export function FinanceiraTable({ obras , userPermissions}: FinanceiraTableProps
                         {getStatusBadge(obra.status)}
                       </TableCell>
 
-                      {/* Valor Total */}
+                      {/* Valor Contratual */}
                       <TableCell className="py-3 text-left min-w-[140px]">
                         <span className="text-sm font-bold text-black">
                           {formatCurrency(obra.valor_total || 0)}
                         </span>
                       </TableCell>
 
-                      {/* Recebido */}
+                      {/* Recebido = medições + terreno (terreno é quitado no início do contrato) */}
                       <TableCell className="py-3 text-left min-w-[120px]">
                         <div className="flex items-center justify-between gap-1">
-                          <div className="text-sm font-bold text-green-600">{formatCurrency(obra.total_medicoes_pagas || 0)}</div>
-                          <ExpandToggleButton 
-                            isExpanded={isExpanded(obra.id)} 
+                          <div>
+                            <div className="text-sm font-bold text-green-600">
+                              {formatCurrency((obra.total_medicoes_pagas || 0) + (obra.valor_terreno || 0))}
+                            </div>
+                            {(obra.valor_terreno || 0) > 0 && (
+                              <div className="text-xs text-gray-400 mt-0.5">
+                                terreno: {formatCurrency(obra.valor_terreno || 0)}
+                              </div>
+                            )}
+                          </div>
+                          <ExpandToggleButton
+                            isExpanded={isExpanded(obra.id)}
                             onClick={() => toggleRow(obra.id)}
                             title={isExpanded(obra.id) ? "Recolher detalhes" : "Ver detalhes das medições"}
                           />
