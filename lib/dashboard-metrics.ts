@@ -56,7 +56,15 @@ export function calculateDashboardMetrics(
   const lucroTotal = receitaTotal - custoTotal;
   const margemLucro = receitaTotal > 0 ? (lucroTotal / receitaTotal) * 100 : 0;
 
-  const totalRecebido = obras?.reduce((sum, obra) => sum + (Number(obra.total_medicoes_pagas) || 0), 0) || 0;
+  const totalRecebido = obras?.reduce((sum, obra) => {
+    // Usa total_medicoes_pagas da view se disponível, senão soma os campos individuais
+    const medicoes = obra.total_medicoes_pagas != null
+      ? Number(obra.total_medicoes_pagas)
+      : (Number(obra.medicao_01) || 0) + (Number(obra.medicao_02) || 0) +
+        (Number(obra.medicao_03) || 0) + (Number(obra.medicao_04) || 0) +
+        (Number(obra.medicao_05) || 0);
+    return sum + medicoes;
+  }, 0) || 0;
 
   // Clientes com obras ativas
   const clientesComObrasList = [...new Set(obras?.map(o => o.cliente_id) || [])];

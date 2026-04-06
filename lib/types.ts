@@ -91,6 +91,8 @@ export interface Obra extends ObraFinanceiro, ObraCustos, ObraMedicoes {
   custo_total?: number;
   resultado?: number;
   margem_lucro?: number;
+  // Campo calculado pela view vw_obras_financeiro (não existe na tabela direta)
+  total_medicoes_pagas?: number;
 }
 
 export interface ObraComCliente extends Obra {
