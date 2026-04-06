@@ -87,6 +87,10 @@ export interface Obra extends ObraFinanceiro, ObraCustos, ObraMedicoes {
   updated_by_name?: string;
   created_at: string;
   updated_at: string;
+  // Colunas GENERATED ALWAYS pelo banco (calculadas automaticamente, nunca enviar no update)
+  custo_total?: number;
+  resultado?: number;
+  margem_lucro?: number;
 }
 
 export interface ObraComCliente extends Obra {
