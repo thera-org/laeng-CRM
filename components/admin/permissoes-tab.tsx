@@ -1,9 +1,8 @@
 "use client"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, Plus, Trash2, LayoutDashboard, Users, Building2, DollarSign, LogsIcon, Pencil } from "lucide-react"
+import { Eye, Plus, Trash2, LayoutDashboard, Users, Building2, DollarSign, LogsIcon, Pencil, Package } from "lucide-react"
 import type { PermissoesUsuario } from "@/lib/types"
-import { icon } from "leaflet"
 
 interface PermissoesTabProps {
   permissoes: PermissoesUsuario
@@ -24,6 +23,13 @@ const MODULOS = [
     label: "Logs",
     descricao: "Acesso aos logs do sistema",
     icon: LogsIcon,
+    acoes: ["view"],
+  },
+  {
+    id: "estoque",
+    label: "Controle de Estoque",
+    descricao: "Gerenciamento de estoque de materiais",
+    icon: Package,
     acoes: ["view"],
   },
   {

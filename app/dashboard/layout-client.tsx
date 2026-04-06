@@ -16,7 +16,11 @@ import {
   Shield,
   TrendingUp,
   TrendingDown,
-  BarChart3
+  BarChart3,
+  Package,
+  PackagePlus,
+  PackageMinus,
+  ArrowLeftRight
 } from 'lucide-react';
 import Link from "next/link";
 import Image from "next/image";
@@ -71,16 +75,40 @@ const menuItems = [
     group: 2
   },
   {
+    title: "Materiais",
+    icon: Package,
+    href: "/materiais",
+    group: 3
+  },
+  {
+    title: "Entrada",
+    icon: PackagePlus,
+    href: "/entrada",
+    group: 3
+  },
+  {
+    title: "Saida",
+    icon: PackageMinus,
+    href: "/saida",
+    group: 3
+  },
+  {
+    title: "Fluxo Material",
+    icon: ArrowLeftRight,
+    href: "/fluxoDeMaterial",
+    group: 3
+  },
+  {
     title: "Admin",
     icon: Shield,
     href: "/admin",
-    group: 3
+    group: 4
   },
   {
     title: "Logs",
     icon: ScrollText,
     href: "/logs",
-    group: 3
+    group: 4
   },
 ];
 
@@ -121,7 +149,7 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
   let items =
     userRole === "admin"
       ? menuItems
-      : menuItems.filter((i) => i.title !== "Admin" && i.title !== "Receita" && i.title !== "Despesas" && i.title !== "Fluxo de Caixa");
+      : menuItems.filter((i) => i.title !== "Admin" && i.title !== "Receita" && i.title !== "Despesas" && i.title !== "Fluxo de Caixa" && i.title !== "Materiais" && i.title !== "Fluxo Material");
 
   if (!userPermissions?.dashboard?.view) {
     items = items.filter((i) => i.title !== "Dashboard")
@@ -141,6 +169,14 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
 
   if (!userPermissions?.logs?.view) {
     items = items.filter((i) => i.title !== "Logs")
+  }
+
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Entrada")
+  }
+
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Saida")
   }
 
   return (
@@ -262,7 +298,7 @@ function MobileSidebar({ isOpen, onClose, user, userRole, userPermissions }: { i
   let items =
     userRole === "admin"
       ? menuItems
-      : menuItems.filter((i) => i.title !== "Admin");
+      : menuItems.filter((i) => i.title !== "Admin" && i.title !== "Receita" && i.title !== "Despesas" && i.title !== "Fluxo de Caixa" && i.title !== "Materiais" && i.title !== "Fluxo Material");
 
   if (!userPermissions?.dashboard?.view) {
     items = items.filter((i) => i.title !== "Dashboard")
@@ -276,12 +312,20 @@ function MobileSidebar({ isOpen, onClose, user, userRole, userPermissions }: { i
     items = items.filter((i) => i.title !== "Obras")
   }
 
-  if (!userPermissions?.financeiras?.view) {
+  if (!userPermissions?.financeira?.view) {
     items = items.filter((i) => i.title !== "Financeiro")
   }
 
   if (!userPermissions?.logs?.view) {
     items = items.filter((i) => i.title !== "Logs")
+  }
+
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Entrada")
+  }
+
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Saida")
   }
 
 
