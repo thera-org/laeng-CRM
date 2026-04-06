@@ -7,7 +7,6 @@ interface ObraComClientes extends Obra {
   clientes?: {
     data_contrato?: string;
   };
-  created_at?: string;
 }
 
 interface DashboardChartsProps {
