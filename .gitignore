@@ -28,4 +28,5 @@ next-env.d.ts
 
 # vscode AI rules (keep for reference)
 # .github/instructions/codacy.instructions.md
-.env*.local
+CLAUDE.md
+.claude

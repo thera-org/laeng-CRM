@@ -214,7 +214,9 @@ export interface PermissoesUsuario {
     delete: boolean;
     edit: boolean;
   };
-
+  estoque?: {
+    view: boolean;
+  };
 }
 
 //TIPOS PARA O MÓDULO DE PAGAMENTOS
@@ -271,4 +273,107 @@ export interface FinancialMetrics {
   despesaCount: number;
   receitaCount: number;
   saldo: number;
+}
+
+// ============ TIPOS PARA O MODULO DE ALMOXARIFADO ============
+
+export type TipoMovimentacaoMaterial = 'ENTRADA' | 'SAIDA';
+
+export type TipoUnidadeMedida =
+  | 'UN'
+  | 'PÇ'
+  | 'KG'
+  | 'G'
+  | 'TON'
+  | 'L'
+  | 'ML'
+  | 'M'
+  | 'M2'
+  | 'M3'
+  | 'CX'
+  | 'PCT'
+  | 'SC'
+  | 'PR'
+  | 'CJ';
+
+export type MaterialManagementMode = 'material' | 'classe' | 'grupo';
+
+export interface MaterialClasse {
+  id: string;
+  nome: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface MaterialGrupo {
+  id: string;
+  nome: string;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface Material {
+  id: string;
+  nome: string;
+  classe_id: string;
+  grupo_id: string;
+  classe_nome: string;
+  grupo_nome: string;
+  unidade: TipoUnidadeMedida;
+  estoque_global: number;
+  quant_por_obra: number;
+  created_at: string;
+  updated_at: string;
+}
+
+export interface ClienteMaterialEstoque {
+  id: string;
+  material_id: string;
+  cliente_id: string;
+  estoque: number;
+  created_at?: string;
+  updated_at?: string;
+  material_nome?: string;
+  cliente_nome?: string;
+}
+
+export interface MaterialMovimentacao {
+  id: string;
+  material_id: string;
+  quantidade: number;
+  data: string;
+  cliente_id?: string;
+  justificativa?: string;
+  observacao?: string;
+  created_at: string;
+  updated_at: string;
+  type: TipoMovimentacaoMaterial;
+  material_nome?: string;
+  material_unidade?: TipoUnidadeMedida;
+  cliente_nome?: string;
+  cliente_codigo?: number;
+  estoque_cliente_material?: number;
+}
+
+export type MaterialEntrada = MaterialMovimentacao;
+export type MaterialSaida = MaterialMovimentacao;
+
+export interface MaterialFiltersState {
+  material: string;
+  month: string;
+  year: string;
+  week: string;
+}
+
+export interface MaterialCatalogFiltersState {
+  classe: string;
+  grupo: string;
+}
+
+export interface FluxoMaterialResumo {
+  material_id: string;
+  material_nome: string;
+  total_entradas: number;
+  total_saidas: number;
+  estoque_atual: number;
 }

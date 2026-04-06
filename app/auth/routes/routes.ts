@@ -19,4 +19,12 @@ export const ROUTES = [
     path: "/obras",
     permission: (p: any) => p?.obras?.view,
   },
+  {
+    path: "/entrada",
+    permission: (p: any) => p?.estoque?.view,
+  },
+  {
+    path: "/saida",
+    permission: (p: any) => p?.estoque?.view,
+  },
 ];

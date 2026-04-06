@@ -33,6 +33,9 @@ export function mapPermissoesToModulos(permissoes: PermissoesUsuario) {
       create: permissoes.clientes?.create ?? false,
       edit: permissoes.clientes?.edit ?? false,
       delete: permissoes.clientes?.delete ?? false
+    },
+    estoque: {
+      view: permissoes.estoque?.view ?? false,
     }
   }
 }
