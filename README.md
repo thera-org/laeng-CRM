@@ -241,22 +241,22 @@ Sistema de autenticação completo com Supabase Auth:
 - **UI Components**: Shadcn/ui + Radix UI
 - **Formulários**: React Hook Form + Zod
 - **Ícones**: Lucide React
-- **Gerenciador**: pnpm
+- **Gerenciador**: npm
 
 ## 📦 Scripts Disponíveis
 
 ```bash
 # Desenvolvimento
-pnpm dev
+npm run dev
 
 # Build de produção
-pnpm build
+npm run build
 
 # Iniciar produção
-pnpm start
+npm run start
 
 # Lint
-pnpm lint
+npm run lint
 ```
 
 ## 🔧 Configuração do Projeto
@@ -274,13 +274,13 @@ SUPABASE_SERVICE_ROLE_KEY=sua_chave_service_role
 
 ```bash
 # Instalar dependências
-pnpm install
+npm install
 
 # Configurar banco de dados (já criado via MCP)
 # As tabelas, triggers e políticas RLS já foram criadas
 
 # Executar projeto
-pnpm dev
+npm run dev
 ```
 
 ## 📈 Próximas Melhorias Sugeridas
