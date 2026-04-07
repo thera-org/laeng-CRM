@@ -2,7 +2,7 @@
 
 ## 📋 Visão Geral
 
-Sistema completo de gestão para construtoras desenvolvido com Next.js 15, React 19, TypeScript, Tailwind CSS e Supabase. O sistema oferece controle total de clientes, obras, contratos e finanças com visualizações avançadas e análises de dados.
+Sistema completo de gestão para construtoras desenvolvido com Next.js 15 React 19, TypeScript, Tailwind CSS e Supabase. O sistema oferece controle total de clientes, obras, contratos e finanças com visualizações avançadas e análises de dados.
 
 ## 🎨 Identidade Visual
 
