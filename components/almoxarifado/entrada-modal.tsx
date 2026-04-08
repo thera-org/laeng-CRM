@@ -13,7 +13,7 @@ import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, User } from "lucide-react"
-import type { Material, MaterialEntrada } from "@/lib/types"
+import type { Material, MaterialEntrada, MaterialGrupo } from "@/lib/types"
 import { useEntradaModals } from "@/components/almoxarifado/hooks/useEntradaModals"
 
 interface EntradaModalProps {
@@ -21,11 +21,12 @@ interface EntradaModalProps {
   onClose: () => void
   entrada?: MaterialEntrada | null
   materiais: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[]
+  groups: MaterialGrupo[]
   clientes: { id: string; nome: string; codigo?: number }[]
   currentUser: { id: string; nome: string }
 }
 
-export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes, currentUser }: EntradaModalProps) {
+export function EntradaModal({ isOpen, onClose, entrada, materiais, groups, clientes, currentUser }: EntradaModalProps) {
   const {
     formData,
     updateField,
@@ -39,7 +40,7 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes, cu
     responsavelNome,
     selectedCliente,
     selectedEstoque,
-  } = useEntradaModals(isOpen, onClose, entrada, clientes, materiais, currentUser)
+  } = useEntradaModals(isOpen, onClose, entrada, clientes, materiais, groups, currentUser)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

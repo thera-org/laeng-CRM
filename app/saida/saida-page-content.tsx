@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import type { Material, MaterialSaida, MaterialFiltersState, PermissoesUsuario } from "@/lib/types"
+import type { Material, MaterialSaida, MaterialFiltersState, MaterialGrupo, PermissoesUsuario } from "@/lib/types"
 import { SaidaHeader } from "@/components/almoxarifado/saida-header"
 import { SaidaTable } from "@/components/almoxarifado/saida-table"
 import { SaidaModal } from "@/components/almoxarifado/saida-modal"
@@ -19,6 +19,7 @@ import { toast } from "@/hooks/use-toast"
 interface SaidaPageContentProps {
     saidas: MaterialSaida[]
     materiais: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[]
+    groups: MaterialGrupo[]
     clientes: { id: string; nome: string; codigo?: number }[]
     currentUser: { id: string; nome: string }
     userPermissions: Partial<PermissoesUsuario>
@@ -34,6 +35,7 @@ interface DeleteState {
 export default function SaidaPageContent({
     saidas,
     materiais,
+    groups,
     clientes,
     currentUser,
     userPermissions,
@@ -165,6 +167,7 @@ export default function SaidaPageContent({
                 onClose={() => setIsModalOpen(false)}
                 saida={selectedSaida}
                 materiais={materiais}
+                groups={groups}
                 clientes={clientes}
                 currentUser={currentUser}
             />

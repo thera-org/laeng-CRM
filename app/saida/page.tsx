@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server"
 import { getUserContext } from "@/app/auth/context/userContext"
-import type { Material, MaterialSaida } from "@/lib/types"
+import type { Material, MaterialSaida, MaterialGrupo } from "@/lib/types"
 import SaidaPageContent from "./saida-page-content"
 
 export const dynamic = "force-dynamic"
@@ -82,6 +82,18 @@ export default async function SaidaPage() {
         .select("id, nome, codigo")
         .order("nome")
 
+    const { data: groupsData } = await supabase
+        .from("material_grupo")
+        .select("id, nome_do_grupo, created_at, updated_at")
+        .order("nome_do_grupo")
+
+    const groups: MaterialGrupo[] = (groupsData || []).map((group) => ({
+        id: group.id,
+        nome: group.nome_do_grupo,
+        created_at: group.created_at,
+        updated_at: group.updated_at,
+    }))
+
     const { data: profileData } = await supabase
         .from("profiles")
         .select("id, nome_completo, login, email")
@@ -102,6 +114,7 @@ export default async function SaidaPage() {
         <SaidaPageContent
             saidas={saidas}
             materiais={materiais}
+            groups={groups}
             clientes={clientesData || []}
             currentUser={currentUser}
             userPermissions={userPermissions}

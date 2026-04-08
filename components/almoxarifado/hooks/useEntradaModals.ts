@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { Material, MaterialEntrada } from "@/lib/types"
+import type { Material, MaterialEntrada, MaterialGrupo } from "@/lib/types"
 import { saveEntradaAction } from "@/components/almoxarifado/actions/entradaActions"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
@@ -28,6 +28,7 @@ export function useEntradaModals(
   entrada?: MaterialEntrada | null,
   clientes?: { id: string; nome: string; codigo?: number }[],
   materiais?: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[],
+  groups?: MaterialGrupo[],
   currentUser?: { id: string; nome: string }
 ) {
   const isEditing = !!entrada
@@ -82,18 +83,13 @@ export function useEntradaModals(
     return Number(material?.estoque_global || 0)
   }, [formData.material_id, materiais])
 
-  const grupos = useMemo(() => {
-    const seen = new Map<string, string>()
-
-    for (const material of materiais || []) {
-      if (!material.grupo_id || seen.has(material.grupo_id)) continue
-      seen.set(material.grupo_id, material.grupo_nome)
-    }
-
-    return Array.from(seen.entries())
-      .map(([id, nome]) => ({ id, nome }))
-      .sort((a, b) => a.nome.localeCompare(b.nome))
-  }, [materiais])
+  const grupos = useMemo(
+    () =>
+      (groups || [])
+        .map((group) => ({ id: group.id, nome: group.nome }))
+        .sort((a, b) => a.nome.localeCompare(b.nome)),
+    [groups]
+  )
 
   const filteredMateriais = useMemo(() => {
     if (!selectedGrupoId) return []
