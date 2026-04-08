@@ -182,7 +182,7 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
   return (
     <aside
       className={cn(
-        "hidden lg:flex flex-col bg-[#1E1E1E] border-r border-gray-800 transition-all duration-300 ease-in-out relative",
+        "hidden lg:flex flex-col h-dvh min-h-0 bg-[#1E1E1E] border-r border-gray-800 transition-all duration-300 ease-in-out relative overflow-visible",
         collapsed ? "w-20" : "w-72"
       )}
     >
@@ -200,7 +200,7 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
         )}
       </button>
 
-      <nav className="flex-1 p-3 space-y-1">
+      <nav className="flex-1 min-h-0 overflow-y-auto scrollbar-thin p-2 space-y-1">
         {items.map((item, index) => {
           const isActive = pathname === item.href;
           const showSeparator = index > 0 && item.group !== items[index - 1].group;
@@ -213,7 +213,7 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
               <Link
                 href={item.href}
                 className={cn(
-                  "flex items-center gap-3 rounded-lg px-3 py-3 text-sm font-medium transition-all",
+                  "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all",
                   collapsed ? "justify-center" : "",
                   isActive
                     ? "bg-[#F5C800] text-black shadow-lg"
@@ -231,7 +231,7 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
 
       {/* Usuário Autenticado */}
       {user && !collapsed && (
-        <div className="border-t border-gray-800 p-3 bg-[#2A2A2A]">
+        <div className="shrink-0 border-t border-gray-800 p-3 bg-[#2A2A2A]">
           <div className="flex items-center gap-3 p-2 rounded-lg">
             <div className="w-10 h-10 rounded-full bg-[#F5C800] flex items-center justify-center flex-shrink-0">
               <User className="h-5 w-5 text-[#1E1E1E]" />
@@ -247,14 +247,14 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
       )}
 
       {collapsed && user && (
-        <div className="border-t border-gray-800 p-3 bg-[#2A2A2A] flex justify-center">
+        <div className="shrink-0 border-t border-gray-800 p-3 bg-[#2A2A2A] flex justify-center">
           <div className="w-10 h-10 rounded-full bg-[#F5C800] flex items-center justify-center">
             <User className="h-5 w-5 text-[#1E1E1E]" />
           </div>
         </div>
       )}
 
-      <div className="border-t border-gray-800 p-3">
+      <div className="shrink-0 border-t border-gray-800 p-3">
         <form action="/auth/signout" method="post">
           <Button
             variant="ghost"
@@ -273,7 +273,7 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
 
       {/* Créditos do Desenvolvedor */}
       {!collapsed && (
-        <div className="border-t border-gray-800 p-3 bg-[#2A2A2A]">
+        <div className="shrink-0 border-t border-gray-800 p-3 bg-[#2A2A2A]">
           <p className="text-xs text-center text-gray-400">
             Desenvolvido por{" "}
             <a
@@ -462,7 +462,7 @@ export default function DashboardLayoutClient({
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
 
   return (
-    <div className="flex h-screen overflow-hidden bg-gray-50">
+    <div className="flex h-dvh overflow-hidden bg-gray-50">
       <Sidebar collapsed={sidebarCollapsed} onToggle={() => setSidebarCollapsed(!sidebarCollapsed)} user={user} userRole={userRole} userPermissions={userPermissions} />
       <MobileSidebar isOpen={mobileSidebarOpen} onClose={() => setMobileSidebarOpen(false)} user={user} userRole={userRole} userPermissions={userPermissions} />
 
