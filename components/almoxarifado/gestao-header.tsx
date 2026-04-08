@@ -5,8 +5,7 @@ import type { MaterialCatalogFiltersState } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Boxes, Layers3, Package, Plus, RotateCcw } from "lucide-react"
-import type { LucideIcon } from "lucide-react"
+import { Boxes, Layers3, Package, Plus, RotateCcw, type LucideIcon } from "lucide-react"
 
 interface GestaoHeaderProps {
   totalMateriais: number
@@ -91,7 +90,7 @@ export function GestaoHeader({
             )}
           </div>
 
-          <div className="grid grid-cols-2 gap-2 w-full max-w-[230px]">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
             <FilterSelect
               value={filters.classe}
               onChange={(value: string) => updateFilter("classe", value)}
