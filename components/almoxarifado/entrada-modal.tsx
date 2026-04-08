@@ -12,7 +12,7 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Search } from "lucide-react"
+import { Loader2, User } from "lucide-react"
 import type { Material, MaterialEntrada } from "@/lib/types"
 import { useEntradaModals } from "@/components/almoxarifado/hooks/useEntradaModals"
 
@@ -20,25 +20,26 @@ interface EntradaModalProps {
   isOpen: boolean
   onClose: () => void
   entrada?: MaterialEntrada | null
-  materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
+  materiais: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[]
   clientes: { id: string; nome: string; codigo?: number }[]
+  currentUser: { id: string; nome: string }
 }
 
-export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: EntradaModalProps) {
+export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes, currentUser }: EntradaModalProps) {
   const {
     formData,
     updateField,
     saveEntrada,
     isLoading,
     isEditing,
-    searchTerm,
-    setSearchTerm,
-    filteredClientes,
+    grupos,
+    selectedGrupoId,
+    setSelectedGrupoId,
+    filteredMateriais,
+    responsavelNome,
     selectedCliente,
     selectedEstoque,
-    selectFromSearch,
-    clearSelectedCliente,
-  } = useEntradaModals(isOpen, onClose, entrada, clientes, materiais)
+  } = useEntradaModals(isOpen, onClose, entrada, clientes, materiais, currentUser)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -48,7 +49,7 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: 
             {isEditing ? "Editar Entrada" : "Nova Entrada de Material"}
           </DialogTitle>
           <p className="text-sm text-muted-foreground">
-            O cliente e opcional para entradas. Sem cliente, o registro abastece o almoxarifado geral.
+            O registro de entrada abastece o almoxarifado geral e identifica automaticamente o responsável pela criação.
           </p>
         </DialogHeader>
 
@@ -65,21 +66,48 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: 
               </div>
 
               <div className="space-y-2">
+                <Label className="font-semibold text-sm text-gray-700">Responsável</Label>
+                <div className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <span className="font-medium">{responsavelNome}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label className="font-semibold text-sm text-gray-700">Material *</Label>
-                <Select
-                  value={formData.material_id}
-                  onValueChange={(v) => updateField("material_id", v)}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
-                    <SelectValue placeholder="Selecione o material..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {materiais.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Todos os Grupos</Label>
+                    <Select value={selectedGrupoId} onValueChange={setSelectedGrupoId} disabled={isLoading}>
+                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                        <SelectValue placeholder="Selecione o grupo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {grupos.map((grupo) => (
+                          <SelectItem key={grupo.id} value={grupo.id}>{grupo.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Selecione o Material</Label>
+                    <Select
+                      value={formData.material_id}
+                      onValueChange={(v) => updateField("material_id", v)}
+                      disabled={isLoading || !selectedGrupoId}
+                    >
+                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                        <SelectValue placeholder={selectedGrupoId ? "Selecione o material..." : "Escolha um grupo primeiro"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredMateriais.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
                 {formData.material_id && selectedCliente && (
                   <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900">
@@ -136,48 +164,13 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: 
           {/* --- NEW MODE --- */}
           {!isEditing && (
             <div className="space-y-6">
-
-              {/* Search Client */}
-              <div className="space-y-2 relative">
-                <Label className="text-base font-semibold">Cliente (opcional)</Label>
-                <div className="relative">
-                  <Search className="absolute left-3 top-3 h-4 w-4 text-gray-400" />
-                  <Input
-                    placeholder="Buscar cliente por nome ou deixar em branco..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                    className="pl-9 border-gray-300 focus:border-[#F5C800]"
-                  />
+              <div className="space-y-2">
+                <Label className="font-semibold text-sm text-gray-700">Responsável</Label>
+                <div className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <span className="font-medium">{responsavelNome}</span>
                 </div>
-
-                {searchTerm.length >= 2 && (
-                  <div className="mt-1 w-full z-50 bg-white border border-gray-200 rounded-md shadow-sm max-h-60 overflow-y-auto">
-                    {filteredClientes.length === 0 ? (
-                      <div className="p-3 text-sm text-gray-500 text-center">Nenhum cliente encontrado.</div>
-                    ) : (
-                      filteredClientes.map((cliente) => (
-                        <div
-                          key={cliente.id}
-                          onClick={() => selectFromSearch(cliente.id)}
-                          className="px-4 py-3 hover:bg-gray-50 cursor-pointer text-sm text-[#1E1E1E] border-b border-gray-100 last:border-0 transition-colors"
-                        >
-                          {cliente.nome}
-                        </div>
-                      ))
-                    )}
-                  </div>
-                )}
-
-                {selectedCliente && (
-                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-md flex justify-between items-center text-blue-800">
-                    <span className="font-bold">{selectedCliente.nome}</span>
-                    <Button variant="ghost" size="sm" onClick={clearSelectedCliente} className="h-6 text-blue-600 hover:text-blue-900">Remover</Button>
-                  </div>
-                )}
-
-                {!selectedCliente && (
-                  <p className="text-xs text-gray-500">Sem cliente, a entrada vai direto para o estoque global.</p>
-                )}
+                <p className="text-xs text-gray-500">A entrada será registrada no estoque global do almoxarifado.</p>
               </div>
 
               <div className="h-[1px] bg-gray-200"></div>
@@ -195,20 +188,39 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, clientes }: 
 
               <div className="space-y-2">
                 <Label className="font-semibold text-sm text-gray-700">Material *</Label>
-                <Select
-                  value={formData.material_id}
-                  onValueChange={(v) => updateField("material_id", v)}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
-                    <SelectValue placeholder="Selecione o material..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {materiais.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Todos os Grupos</Label>
+                    <Select value={selectedGrupoId} onValueChange={setSelectedGrupoId} disabled={isLoading}>
+                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                        <SelectValue placeholder="Selecione o grupo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {grupos.map((grupo) => (
+                          <SelectItem key={grupo.id} value={grupo.id}>{grupo.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Selecione o Material</Label>
+                    <Select
+                      value={formData.material_id}
+                      onValueChange={(v) => updateField("material_id", v)}
+                      disabled={isLoading || !selectedGrupoId}
+                    >
+                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                        <SelectValue placeholder={selectedGrupoId ? "Selecione o material..." : "Escolha um grupo primeiro"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredMateriais.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
                 {formData.material_id && (
                   <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900">

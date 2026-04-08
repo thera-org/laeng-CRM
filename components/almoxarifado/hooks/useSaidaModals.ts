@@ -27,11 +27,13 @@ export function useSaidaModals(
   onClose: () => void,
   saida?: MaterialSaida | null,
   clientes?: { id: string; nome: string; codigo?: number }[],
-  materiais?: Pick<Material, "id" | "nome" | "estoque_global">[]
+  materiais?: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[],
+  currentUser?: { id: string; nome: string }
 ) {
   const isEditing = !!saida
   const [formData, setFormData] = useState<SaidaFormData>(INITIAL_FORM)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedGrupoId, setSelectedGrupoId] = useState("")
 
   // Client search state
   const [searchTerm, setSearchTerm] = useState("")
@@ -39,6 +41,8 @@ export function useSaidaModals(
 
   useEffect(() => {
     if (isOpen && saida) {
+      const selectedMaterial = (materiais || []).find((item) => item.id === saida.material_id)
+
       setFormData({
         material_id: saida.material_id,
         quantidade: saida.quantidade,
@@ -46,14 +50,16 @@ export function useSaidaModals(
         cliente_id: saida.cliente_id || "",
         justificativa: saida.justificativa || saida.observacao || "",
       })
+      setSelectedGrupoId(selectedMaterial?.grupo_id || "")
       setSelectedClienteId(saida.cliente_id || null)
       setSearchTerm("")
     } else if (isOpen) {
       setFormData(INITIAL_FORM)
+      setSelectedGrupoId("")
       setSelectedClienteId(null)
       setSearchTerm("")
     }
-  }, [isOpen, saida])
+  }, [isOpen, saida, materiais])
 
   // Filter clients by search term
   const filteredClientes = useMemo(() => {
@@ -76,6 +82,33 @@ export function useSaidaModals(
     return Number(material?.estoque_global || 0)
   }, [formData.material_id, materiais])
 
+  const grupos = useMemo(() => {
+    const seen = new Map<string, string>()
+
+    for (const material of materiais || []) {
+      if (!material.grupo_id || seen.has(material.grupo_id)) continue
+      seen.set(material.grupo_id, material.grupo_nome)
+    }
+
+    return Array.from(seen.entries())
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+  }, [materiais])
+
+  const filteredMateriais = useMemo(() => {
+    if (!selectedGrupoId) return []
+    return (materiais || []).filter((material) => material.grupo_id === selectedGrupoId)
+  }, [materiais, selectedGrupoId])
+
+  useEffect(() => {
+    if (!formData.material_id) return
+
+    const hasSelectedMaterial = filteredMateriais.some((material) => material.id === formData.material_id)
+    if (!hasSelectedMaterial) {
+      setFormData((prev) => ({ ...prev, material_id: "" }))
+    }
+  }, [filteredMateriais, formData.material_id])
+
   const estoqueDisponivel = useMemo(() => {
     const isSameMaterialAsOriginal = !!saida && saida.material_id === formData.material_id
     return isSameMaterialAsOriginal ? selectedEstoque + saida.quantidade : selectedEstoque
@@ -86,9 +119,27 @@ export function useSaidaModals(
     return estoqueDisponivel - formData.quantidade
   }, [estoqueDisponivel, formData.quantidade])
 
+  const responsavelNome = isEditing
+    ? saida?.criado_por_nome || "Não informado"
+    : currentUser?.nome || "Não informado"
+
+  const handleGrupoChange = useCallback((grupoId: string) => {
+    setSelectedGrupoId(grupoId)
+    setFormData((prev) => ({
+      ...prev,
+      material_id: "",
+    }))
+  }, [])
+
   const selectFromSearch = useCallback((id: string) => {
     setSelectedClienteId(id)
     setFormData(prev => ({ ...prev, cliente_id: id }))
+    setSearchTerm("")
+  }, [])
+
+  const clearSelectedCliente = useCallback(() => {
+    setSelectedClienteId(null)
+    setFormData((prev) => ({ ...prev, cliente_id: "" }))
     setSearchTerm("")
   }, [])
 
@@ -148,6 +199,11 @@ export function useSaidaModals(
     saveSaida,
     isLoading,
     isEditing,
+    grupos,
+    selectedGrupoId,
+    setSelectedGrupoId: handleGrupoChange,
+    filteredMateriais,
+    responsavelNome,
     searchTerm,
     setSearchTerm,
     filteredClientes,
@@ -158,5 +214,6 @@ export function useSaidaModals(
     selectedClienteId,
     setSelectedClienteId,
     selectFromSearch,
+    clearSelectedCliente,
   }
 }

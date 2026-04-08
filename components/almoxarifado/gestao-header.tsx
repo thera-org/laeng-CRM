@@ -1,10 +1,11 @@
 "use client"
 
+import type { ReactNode } from "react"
 import type { MaterialCatalogFiltersState } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Boxes, Layers3, Package, Plus, RotateCcw } from "lucide-react"
+import { Boxes, Layers3, Package, Plus, RotateCcw, type LucideIcon } from "lucide-react"
 
 interface GestaoHeaderProps {
   totalMateriais: number
@@ -120,13 +121,21 @@ export function GestaoHeader({
   )
 }
 
-function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: any) {
+interface FilterSelectProps {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  icon: LucideIcon
+  children: ReactNode
+}
+
+function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 h-10 text-xs w-full px-2">
-        <div className="flex items-center truncate">
-          <Icon className="h-3 w-3 mr-2 text-[#F5C800] shrink-0" />
-          <span className="truncate block text-left">
+      <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 min-h-10 h-auto w-full px-3 py-2 text-sm">
+        <div className="flex min-w-0 items-start gap-2 text-left">
+          <Icon className="mt-0.5 h-3 w-3 text-[#F5C800] shrink-0" />
+          <span className="min-w-0 flex-1 whitespace-normal break-words leading-tight">
             <SelectValue placeholder={placeholder} />
           </span>
         </div>

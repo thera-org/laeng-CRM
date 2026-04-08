@@ -1,10 +1,11 @@
 "use client"
 
-import { PackageMinus, Plus, RotateCcw, Calendar, Package } from "lucide-react"
+import type { ReactNode } from "react"
+import { PackageMinus, Plus, RotateCcw, Calendar, Package, type LucideIcon } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { MaterialFiltersState } from "@/lib/types"
+import type { MaterialFiltersState, PermissoesUsuario } from "@/lib/types"
 import { MONTHS } from "@/components/almoxarifado/types/almoxarifadoTypes"
 import { ClientSearchInput } from "@/components/almoxarifado/client-search-input"
 
@@ -20,7 +21,7 @@ interface SaidaHeaderProps {
   materiais: { id: string; nome: string }[]
   clientes: { id: string; nome: string; codigo?: number }[]
   onNewSaida: () => void
-  userPermissions: Record<string, any>
+  userPermissions: Partial<PermissoesUsuario>
   userRole: string
 }
 
@@ -137,13 +138,21 @@ export function SaidaHeader({
   )
 }
 
-function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: any) {
+interface FilterSelectProps {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  icon: LucideIcon
+  children: ReactNode
+}
+
+function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 h-10 text-xs w-full px-2">
-        <div className="flex items-center truncate">
+        <div className="flex min-w-0 items-center w-full">
           <Icon className="h-3 w-3 mr-2 text-[#F5C800] shrink-0" />
-          <span className="truncate block text-left">
+          <span className="block text-left leading-none">
             <SelectValue placeholder={placeholder} />
           </span>
         </div>

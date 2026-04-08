@@ -2,7 +2,7 @@
 
 import { useState, useMemo, useCallback } from "react"
 import { Card, CardContent } from "@/components/ui/card"
-import type { Material, MaterialEntrada, MaterialFiltersState } from "@/lib/types"
+import type { Material, MaterialEntrada, MaterialFiltersState, PermissoesUsuario } from "@/lib/types"
 import { EntradaHeader } from "@/components/almoxarifado/entrada-header"
 import { EntradaTable } from "@/components/almoxarifado/entrada-table"
 import { EntradaModal } from "@/components/almoxarifado/entrada-modal"
@@ -18,9 +18,10 @@ import { toast } from "@/hooks/use-toast"
 
 interface EntradaPageContentProps {
     entradas: MaterialEntrada[]
-    materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
+    materiais: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[]
     clientes: { id: string; nome: string; codigo?: number }[]
-    userPermissions: Record<string, any>
+    currentUser: { id: string; nome: string }
+    userPermissions: Partial<PermissoesUsuario>
     userRole: string
 }
 
@@ -34,6 +35,7 @@ export default function EntradaPageContent({
     entradas,
     materiais,
     clientes,
+    currentUser,
     userPermissions,
     userRole,
 }: EntradaPageContentProps) {
@@ -164,6 +166,7 @@ export default function EntradaPageContent({
                 entrada={selectedEntrada}
                 materiais={materiais}
                 clientes={clientes}
+                currentUser={currentUser}
             />
         </div>
     )

@@ -4,14 +4,13 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
 import { Pencil, Trash2, PackagePlus, User, CalendarDays, Package, FileText } from "lucide-react"
-import type { MaterialEntrada } from "@/lib/types"
+import type { MaterialEntrada, PermissoesUsuario } from "@/lib/types"
 import { usePagination } from "@/lib/table-utils"
 import { PagamentosPagination } from "@/components/pagamentos/pagamentos-pagination"
-import { format, parseISO } from "date-fns"
 
 interface EntradaTableProps {
   data: MaterialEntrada[]
-  userPermissions: Record<string, any>
+  userPermissions: Partial<PermissoesUsuario>
   userRole: string
   onEdit: (entrada: MaterialEntrada) => void
   onDelete: (entrada: MaterialEntrada) => void
@@ -51,7 +50,7 @@ export function EntradaTable({ data, userPermissions, userRole, onEdit, onDelete
                 <TableHead className="text-[#F5C800] font-bold py-3 pl-4 w-[70px]">CÓD.</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 w-[150px]">MATERIAL</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 w-[110px]">QUANTIDADE</TableHead>
-                <TableHead className="text-[#F5C800] font-bold py-3 min-w-[200px]">CLIENTE</TableHead>
+                <TableHead className="text-[#F5C800] font-bold py-3 min-w-[200px]">RESPONSÁVEL</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 min-w-[200px]">OBSERVAÇÃO</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 text-center w-[110px]">DATA</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 text-right pr-6 w-[130px]">AÇÕES</TableHead>
@@ -85,12 +84,12 @@ export function EntradaTable({ data, userPermissions, userRole, onEdit, onDelete
                     </span>
                   </TableCell>
 
-                  {/* CLIENTE */}
+                  {/* RESPONSÁVEL */}
                   <TableCell>
                     <div className="flex items-center gap-1.5">
                       <User className="h-3 w-3 text-gray-400" />
-                      <span className="text-sm font-semibold text-gray-800 truncate" title={row.cliente_nome}>
-                        {row.cliente_nome || "-"}
+                      <span className="text-sm font-semibold text-gray-800 truncate" title={row.criado_por_nome}>
+                        {row.criado_por_nome || "-"}
                       </span>
                     </div>
                   </TableCell>

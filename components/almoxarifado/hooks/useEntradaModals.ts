@@ -27,11 +27,13 @@ export function useEntradaModals(
   onClose: () => void,
   entrada?: MaterialEntrada | null,
   clientes?: { id: string; nome: string; codigo?: number }[],
-  materiais?: Pick<Material, "id" | "nome" | "estoque_global">[]
+  materiais?: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[],
+  currentUser?: { id: string; nome: string }
 ) {
   const isEditing = !!entrada
   const [formData, setFormData] = useState<EntradaFormData>(INITIAL_FORM)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedGrupoId, setSelectedGrupoId] = useState("")
 
   // Client search state
   const [searchTerm, setSearchTerm] = useState("")
@@ -39,6 +41,8 @@ export function useEntradaModals(
 
   useEffect(() => {
     if (isOpen && entrada) {
+      const selectedMaterial = (materiais || []).find((item) => item.id === entrada.material_id)
+
       setFormData({
         material_id: entrada.material_id,
         quantidade: entrada.quantidade,
@@ -46,14 +50,16 @@ export function useEntradaModals(
         cliente_id: entrada.cliente_id || "",
         justificativa: entrada.justificativa || entrada.observacao || "",
       })
+      setSelectedGrupoId(selectedMaterial?.grupo_id || "")
       setSelectedClienteId(entrada.cliente_id || null)
       setSearchTerm("")
     } else if (isOpen) {
       setFormData(INITIAL_FORM)
+      setSelectedGrupoId("")
       setSelectedClienteId(null)
       setSearchTerm("")
     }
-  }, [isOpen, entrada])
+  }, [isOpen, entrada, materiais])
 
   // Filter clients by search term
   const filteredClientes = useMemo(() => {
@@ -75,6 +81,45 @@ export function useEntradaModals(
     const material = (materiais || []).find((item) => item.id === formData.material_id)
     return Number(material?.estoque_global || 0)
   }, [formData.material_id, materiais])
+
+  const grupos = useMemo(() => {
+    const seen = new Map<string, string>()
+
+    for (const material of materiais || []) {
+      if (!material.grupo_id || seen.has(material.grupo_id)) continue
+      seen.set(material.grupo_id, material.grupo_nome)
+    }
+
+    return Array.from(seen.entries())
+      .map(([id, nome]) => ({ id, nome }))
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+  }, [materiais])
+
+  const filteredMateriais = useMemo(() => {
+    if (!selectedGrupoId) return []
+    return (materiais || []).filter((material) => material.grupo_id === selectedGrupoId)
+  }, [materiais, selectedGrupoId])
+
+  useEffect(() => {
+    if (!formData.material_id) return
+
+    const hasSelectedMaterial = filteredMateriais.some((material) => material.id === formData.material_id)
+    if (!hasSelectedMaterial) {
+      setFormData((prev) => ({ ...prev, material_id: "" }))
+    }
+  }, [filteredMateriais, formData.material_id])
+
+  const responsavelNome = isEditing
+    ? entrada?.criado_por_nome || "Não informado"
+    : currentUser?.nome || "Não informado"
+
+  const handleGrupoChange = useCallback((grupoId: string) => {
+    setSelectedGrupoId(grupoId)
+    setFormData((prev) => ({
+      ...prev,
+      material_id: "",
+    }))
+  }, [])
 
   const selectFromSearch = useCallback((id: string) => {
     setSelectedClienteId(id)
@@ -141,6 +186,11 @@ export function useEntradaModals(
     saveEntrada,
     isLoading,
     isEditing,
+    grupos,
+    selectedGrupoId,
+    setSelectedGrupoId: handleGrupoChange,
+    filteredMateriais,
+    responsavelNome,
     searchTerm,
     setSearchTerm,
     filteredClientes,

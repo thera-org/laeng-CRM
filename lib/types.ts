@@ -343,6 +343,7 @@ export interface MaterialMovimentacao {
   quantidade: number;
   data: string;
   cliente_id?: string;
+  criado_por?: string;
   justificativa?: string;
   observacao?: string;
   created_at: string;
@@ -352,6 +353,7 @@ export interface MaterialMovimentacao {
   material_unidade?: TipoUnidadeMedida;
   cliente_nome?: string;
   cliente_codigo?: number;
+  criado_por_nome?: string;
   estoque_cliente_material?: number;
 }
 
