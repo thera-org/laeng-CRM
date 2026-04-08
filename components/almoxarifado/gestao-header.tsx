@@ -90,7 +90,7 @@ export function GestaoHeader({
             )}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 md:grid-cols-2 lg:grid-cols-4 gap-2">
             <FilterSelect
               value={filters.classe}
               onChange={(value: string) => updateFilter("classe", value)}

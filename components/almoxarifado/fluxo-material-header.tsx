@@ -101,7 +101,7 @@ export function FluxoMaterialHeader({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-5 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
             <FilterSelect
               value={materialFilter}
               onChange={setMaterialFilter}

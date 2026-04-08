@@ -95,7 +95,7 @@ export function EntradaHeader({
           </div>
 
           {/* LINHA 2: Grid de Filtros */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
             <FilterSelect
               value={filters.month}
               onChange={(v: string) => { updateFilter("month", v); updateFilter("week", "all") }}
@@ -149,10 +149,10 @@ interface FilterSelectProps {
 function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
-      <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 h-10 text-xs w-full px-2">
-        <div className="flex min-w-0 items-center w-full">
-          <Icon className="h-3 w-3 mr-2 text-[#F5C800] shrink-0" />
-          <span className="block text-left leading-none">
+      <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 min-h-10 h-auto w-full px-3 py-2 text-sm">
+        <div className="flex min-w-0 items-start w-full gap-2">
+          <Icon className="mt-0.5 h-3 w-3 text-[#F5C800] shrink-0" />
+          <span className="min-w-0 flex-1 whitespace-normal break-words text-left leading-tight">
             <SelectValue placeholder={placeholder} />
           </span>
         </div>

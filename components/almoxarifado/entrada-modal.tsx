@@ -27,6 +27,11 @@ interface EntradaModalProps {
 }
 
 export function EntradaModal({ isOpen, onClose, entrada, materiais, groups, clientes, currentUser }: EntradaModalProps) {
+  const groupSelectTriggerClass =
+    "w-full min-w-0 border-gray-300 focus:border-[#F5C800] overflow-hidden [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:flex-1 [&_[data-slot=select-value]]:overflow-hidden [&_[data-slot=select-value]]:text-ellipsis [&_[data-slot=select-value]]:whitespace-nowrap"
+  const materialSelectTriggerClass =
+    "w-full min-w-0 border-gray-300 focus:border-[#F5C800] overflow-hidden [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:flex-1 [&_[data-slot=select-value]]:overflow-hidden [&_[data-slot=select-value]]:text-ellipsis [&_[data-slot=select-value]]:whitespace-nowrap"
+
   const {
     formData,
     updateField,
@@ -49,9 +54,6 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, groups, clie
           <DialogTitle className="text-2xl font-bold text-[#1E1E1E]">
             {isEditing ? "Editar Entrada" : "Nova Entrada de Material"}
           </DialogTitle>
-          <p className="text-sm text-muted-foreground">
-            O registro de entrada abastece o almoxarifado geral e identifica automaticamente o responsável pela criação.
-          </p>
         </DialogHeader>
 
         <div className="overflow-y-auto px-6 py-6 space-y-6 scrollbar-thin flex-10">
@@ -77,10 +79,10 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, groups, clie
               <div className="space-y-2">
                 <Label className="font-semibold text-sm text-gray-700">Material *</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Todos os Grupos</Label>
                     <Select value={selectedGrupoId} onValueChange={setSelectedGrupoId} disabled={isLoading}>
-                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                      <SelectTrigger className={groupSelectTriggerClass}>
                         <SelectValue placeholder="Selecione o grupo..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -91,14 +93,14 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, groups, clie
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Selecione o Material</Label>
                     <Select
                       value={formData.material_id}
                       onValueChange={(v) => updateField("material_id", v)}
                       disabled={isLoading || !selectedGrupoId}
                     >
-                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                      <SelectTrigger className={materialSelectTriggerClass}>
                         <SelectValue placeholder={selectedGrupoId ? "Selecione o material..." : "Escolha um grupo primeiro"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -171,7 +173,7 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, groups, clie
                   <User className="h-4 w-4 text-gray-400" />
                   <span className="font-medium">{responsavelNome}</span>
                 </div>
-                <p className="text-xs text-gray-500">A entrada será registrada no estoque global do almoxarifado.</p>
+                
               </div>
 
               <div className="h-[1px] bg-gray-200"></div>
@@ -190,10 +192,10 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, groups, clie
               <div className="space-y-2">
                 <Label className="font-semibold text-sm text-gray-700">Material *</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Todos os Grupos</Label>
                     <Select value={selectedGrupoId} onValueChange={setSelectedGrupoId} disabled={isLoading}>
-                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                      <SelectTrigger className={groupSelectTriggerClass}>
                         <SelectValue placeholder="Selecione o grupo..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -204,14 +206,14 @@ export function EntradaModal({ isOpen, onClose, entrada, materiais, groups, clie
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Selecione o Material</Label>
                     <Select
                       value={formData.material_id}
                       onValueChange={(v) => updateField("material_id", v)}
                       disabled={isLoading || !selectedGrupoId}
                     >
-                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                      <SelectTrigger className={materialSelectTriggerClass}>
                         <SelectValue placeholder={selectedGrupoId ? "Selecione o material..." : "Escolha um grupo primeiro"} />
                       </SelectTrigger>
                       <SelectContent>

@@ -27,6 +27,11 @@ interface SaidaModalProps {
 }
 
 export function SaidaModal({ isOpen, onClose, saida, materiais, groups, clientes, currentUser }: SaidaModalProps) {
+  const groupSelectTriggerClass =
+    "w-full min-w-0 border-gray-300 focus:border-[#F5C800] overflow-hidden [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:flex-1 [&_[data-slot=select-value]]:overflow-hidden [&_[data-slot=select-value]]:text-ellipsis [&_[data-slot=select-value]]:whitespace-nowrap"
+  const materialSelectTriggerClass =
+    "w-full min-w-0 border-gray-300 focus:border-[#F5C800] overflow-hidden [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:flex-1 [&_[data-slot=select-value]]:overflow-hidden [&_[data-slot=select-value]]:text-ellipsis [&_[data-slot=select-value]]:whitespace-nowrap"
+
   const {
     formData,
     updateField,
@@ -86,10 +91,10 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, groups, clientes
               <div className="space-y-2">
                 <Label className="font-semibold text-sm text-gray-700">Material *</Label>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Todos os Grupos</Label>
                     <Select value={selectedGrupoId} onValueChange={setSelectedGrupoId} disabled={isLoading}>
-                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                      <SelectTrigger className={groupSelectTriggerClass}>
                         <SelectValue placeholder="Selecione o grupo..." />
                       </SelectTrigger>
                       <SelectContent>
@@ -100,14 +105,14 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, groups, clientes
                     </Select>
                   </div>
 
-                  <div className="space-y-2">
+                  <div className="min-w-0 space-y-2">
                     <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Selecione o Material</Label>
                     <Select
                       value={formData.material_id}
                       onValueChange={(v) => updateField("material_id", v)}
                       disabled={isLoading || !selectedGrupoId}
                     >
-                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                      <SelectTrigger className={materialSelectTriggerClass}>
                         <SelectValue placeholder={selectedGrupoId ? "Selecione o material..." : "Escolha um grupo primeiro"} />
                       </SelectTrigger>
                       <SelectContent>
@@ -235,10 +240,10 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, groups, clientes
                   <div className="space-y-2">
                     <Label className="font-semibold text-sm text-gray-700">Material *</Label>
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                      <div className="space-y-2">
+                      <div className="min-w-0 space-y-2">
                         <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Todos os Grupos</Label>
                         <Select value={selectedGrupoId} onValueChange={setSelectedGrupoId} disabled={isLoading}>
-                          <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                          <SelectTrigger className={groupSelectTriggerClass}>
                             <SelectValue placeholder="Selecione o grupo..." />
                           </SelectTrigger>
                           <SelectContent>
@@ -249,14 +254,14 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, groups, clientes
                         </Select>
                       </div>
 
-                      <div className="space-y-2">
+                      <div className="min-w-0 space-y-2">
                         <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Selecione o Material</Label>
                         <Select
                           value={formData.material_id}
                           onValueChange={(v) => updateField("material_id", v)}
                           disabled={isLoading || !selectedGrupoId}
                         >
-                          <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
+                          <SelectTrigger className={materialSelectTriggerClass}>
                             <SelectValue placeholder={selectedGrupoId ? "Selecione o material..." : "Escolha um grupo primeiro"} />
                           </SelectTrigger>
                           <SelectContent>

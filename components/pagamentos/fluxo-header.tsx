@@ -117,7 +117,7 @@ export function PagamentosHeader({
           </div>
 
           {/* LINHA 2: Grid de Filtros (Abaixo da busca) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 2xl:grid-cols-5 gap-2">
             <div className={!isWeekEnabled ? "opacity-50 pointer-events-none" : ""}>
               <FilterSelect
                 value={filters.week}

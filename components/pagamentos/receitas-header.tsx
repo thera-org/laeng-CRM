@@ -97,7 +97,7 @@ export function ReceitasHeader({
           </div>
 
           {/* LINHA 2: Grid de Filtros (Abaixo da busca) */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-9 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
             <FilterSelect
               value={filters.month}
               onChange={(v: string) => {
