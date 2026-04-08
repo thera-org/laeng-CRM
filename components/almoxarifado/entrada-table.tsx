@@ -50,6 +50,7 @@ export function EntradaTable({ data, userPermissions, userRole, onEdit, onDelete
                 <TableHead className="text-[#F5C800] font-bold py-3 pl-4 w-[70px]">CÓD.</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 w-[150px]">MATERIAL</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 w-[110px]">QUANTIDADE</TableHead>
+                <TableHead className="text-[#F5C800] font-bold py-3 min-w-[200px]">CLIENTE</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 min-w-[200px]">RESPONSÁVEL</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 min-w-[200px]">OBSERVAÇÃO</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3 text-center w-[110px]">DATA</TableHead>
@@ -82,6 +83,16 @@ export function EntradaTable({ data, userPermissions, userRole, onEdit, onDelete
                     <span className="font-bold text-sm text-green-600">
                       +{row.quantidade}
                     </span>
+                  </TableCell>
+
+                  {/* CLIENTE */}
+                  <TableCell>
+                    <div className="flex items-center gap-1.5">
+                      <User className="h-3 w-3 text-gray-400" />
+                      <span className="text-sm font-semibold text-gray-800 truncate" title={row.cliente_nome}>
+                        {row.cliente_nome || "-"}
+                      </span>
+                    </div>
                   </TableCell>
 
                   {/* RESPONSÁVEL */}
