@@ -30,11 +30,21 @@ export async function saveSaidaAction(
 
       if (error) throw error
     } else {
+      const {
+        data: { user },
+        error: authError,
+      } = await supabase.auth.getUser()
+
+      if (authError || !user) {
+        throw new Error("Usuário não autenticado.")
+      }
+
       const { error } = await supabase.from("material_movimentacoes").insert({
         material_categoria_id: data.material_id,
         quantidade: data.quantidade,
         data: data.data,
         cliente_id: data.cliente_id,
+        criado_por: user.id,
         justificativa: data.justificativa || null,
         tipo: "SAIDA",
       })
@@ -45,8 +55,8 @@ export async function saveSaidaAction(
     revalidatePath("/saida")
     revalidatePath("/fluxoDeMaterial")
     return { ok: true }
-  } catch (e: any) {
-    return { ok: false, error: e.message }
+  } catch (error: unknown) {
+    return { ok: false, error: error instanceof Error ? error.message : "Erro ao salvar saída." }
   }
 }
 
@@ -59,7 +69,7 @@ export async function deleteSaidaAction(id: string) {
     revalidatePath("/saida")
     revalidatePath("/fluxoDeMaterial")
     return { ok: true }
-  } catch (e: any) {
-    return { ok: false, error: e.message }
+  } catch (error: unknown) {
+    return { ok: false, error: error instanceof Error ? error.message : "Erro ao excluir saída." }
   }
 }

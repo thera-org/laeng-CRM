@@ -12,35 +12,47 @@ import { Label } from "@/components/ui/label"
 import { Button } from "@/components/ui/button"
 import { Textarea } from "@/components/ui/textarea"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Loader2, Search } from "lucide-react"
-import type { Material, MaterialSaida } from "@/lib/types"
+import { Loader2, Search, User } from "lucide-react"
+import type { Material, MaterialGrupo, MaterialSaida } from "@/lib/types"
 import { useSaidaModals } from "@/components/almoxarifado/hooks/useSaidaModals"
 
 interface SaidaModalProps {
   isOpen: boolean
   onClose: () => void
   saida?: MaterialSaida | null
-  materiais: Pick<Material, "id" | "nome" | "estoque_global">[]
+  materiais: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[]
+  groups: MaterialGrupo[]
   clientes: { id: string; nome: string; codigo?: number }[]
+  currentUser: { id: string; nome: string }
 }
 
-export function SaidaModal({ isOpen, onClose, saida, materiais, clientes }: SaidaModalProps) {
+export function SaidaModal({ isOpen, onClose, saida, materiais, groups, clientes, currentUser }: SaidaModalProps) {
+  const groupSelectTriggerClass =
+    "w-full min-w-0 border-gray-300 focus:border-[#F5C800] overflow-hidden [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:flex-1 [&_[data-slot=select-value]]:overflow-hidden [&_[data-slot=select-value]]:text-ellipsis [&_[data-slot=select-value]]:whitespace-nowrap"
+  const materialSelectTriggerClass =
+    "w-full min-w-0 border-gray-300 focus:border-[#F5C800] overflow-hidden [&_[data-slot=select-value]]:min-w-0 [&_[data-slot=select-value]]:flex-1 [&_[data-slot=select-value]]:overflow-hidden [&_[data-slot=select-value]]:text-ellipsis [&_[data-slot=select-value]]:whitespace-nowrap"
+
   const {
     formData,
     updateField,
     saveSaida,
     isLoading,
     isEditing,
+    grupos,
+    selectedGrupoId,
+    setSelectedGrupoId,
+    filteredMateriais,
+    responsavelNome,
     searchTerm,
     setSearchTerm,
     filteredClientes,
     selectedCliente,
     selectedEstoque,
     estoqueDisponivel,
-    setSelectedClienteId,
     selectFromSearch,
     projectedBalance,
-  } = useSaidaModals(isOpen, onClose, saida, clientes, materiais)
+    clearSelectedCliente,
+  } = useSaidaModals(isOpen, onClose, saida, clientes, materiais, groups, currentUser)
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -69,21 +81,48 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes }: Said
               )}
 
               <div className="space-y-2">
+                <Label className="font-semibold text-sm text-gray-700">Responsável</Label>
+                <div className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <span className="font-medium">{responsavelNome}</span>
+                </div>
+              </div>
+
+              <div className="space-y-2">
                 <Label className="font-semibold text-sm text-gray-700">Material *</Label>
-                <Select
-                  value={formData.material_id}
-                  onValueChange={(v) => updateField("material_id", v)}
-                  disabled={isLoading}
-                >
-                  <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
-                    <SelectValue placeholder="Selecione o material..." />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {materiais.map((m) => (
-                      <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="min-w-0 space-y-2">
+                    <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Todos os Grupos</Label>
+                    <Select value={selectedGrupoId} onValueChange={setSelectedGrupoId} disabled={isLoading}>
+                      <SelectTrigger className={groupSelectTriggerClass}>
+                        <SelectValue placeholder="Selecione o grupo..." />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {grupos.map((grupo) => (
+                          <SelectItem key={grupo.id} value={grupo.id}>{grupo.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+
+                  <div className="min-w-0 space-y-2">
+                    <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Selecione o Material</Label>
+                    <Select
+                      value={formData.material_id}
+                      onValueChange={(v) => updateField("material_id", v)}
+                      disabled={isLoading || !selectedGrupoId}
+                    >
+                      <SelectTrigger className={materialSelectTriggerClass}>
+                        <SelectValue placeholder={selectedGrupoId ? "Selecione o material..." : "Escolha um grupo primeiro"} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {filteredMateriais.map((m) => (
+                          <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
 
                 {formData.material_id && selectedCliente && (
                   <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900">
@@ -136,6 +175,13 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes }: Said
           {/* --- NEW MODE --- */}
           {!isEditing && (
             <div className="space-y-6">
+              <div className="space-y-2">
+                <Label className="font-semibold text-sm text-gray-700">Responsável</Label>
+                <div className="flex items-center gap-2 rounded-md border border-gray-300 bg-gray-50 px-3 py-2 text-sm text-gray-700">
+                  <User className="h-4 w-4 text-gray-400" />
+                  <span className="font-medium">{responsavelNome}</span>
+                </div>
+              </div>
 
               {/* Search Client */}
               <div className="space-y-2 relative">
@@ -171,7 +217,7 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes }: Said
                 {selectedCliente && (
                   <div className="bg-blue-50 border border-blue-200 p-3 rounded-md flex justify-between items-center text-blue-800">
                     <span className="font-bold">{selectedCliente.nome}</span>
-                    <Button variant="ghost" size="sm" onClick={() => setSelectedClienteId(null)} className="h-6 text-blue-600 hover:text-blue-900">Trocar</Button>
+                    <Button variant="ghost" size="sm" onClick={clearSelectedCliente} className="h-6 text-blue-600 hover:text-blue-900">Trocar</Button>
                   </div>
                 )}
               </div>
@@ -193,20 +239,39 @@ export function SaidaModal({ isOpen, onClose, saida, materiais, clientes }: Said
 
                   <div className="space-y-2">
                     <Label className="font-semibold text-sm text-gray-700">Material *</Label>
-                    <Select
-                      value={formData.material_id}
-                      onValueChange={(v) => updateField("material_id", v)}
-                      disabled={isLoading}
-                    >
-                      <SelectTrigger className="border-gray-300 focus:border-[#F5C800]">
-                        <SelectValue placeholder="Selecione o material..." />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {materiais.map((m) => (
-                          <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                      <div className="min-w-0 space-y-2">
+                        <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Todos os Grupos</Label>
+                        <Select value={selectedGrupoId} onValueChange={setSelectedGrupoId} disabled={isLoading}>
+                          <SelectTrigger className={groupSelectTriggerClass}>
+                            <SelectValue placeholder="Selecione o grupo..." />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {grupos.map((grupo) => (
+                              <SelectItem key={grupo.id} value={grupo.id}>{grupo.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+
+                      <div className="min-w-0 space-y-2">
+                        <Label className="font-semibold text-xs text-gray-500 uppercase tracking-wide">Selecione o Material</Label>
+                        <Select
+                          value={formData.material_id}
+                          onValueChange={(v) => updateField("material_id", v)}
+                          disabled={isLoading || !selectedGrupoId}
+                        >
+                          <SelectTrigger className={materialSelectTriggerClass}>
+                            <SelectValue placeholder={selectedGrupoId ? "Selecione o material..." : "Escolha um grupo primeiro"} />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {filteredMateriais.map((m) => (
+                              <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
 
                     {formData.material_id && (
                       <div className="rounded-md border border-yellow-200 bg-yellow-50 px-3 py-2 text-sm text-yellow-900">

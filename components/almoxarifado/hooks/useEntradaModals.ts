@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect, useCallback, useMemo } from "react"
-import type { Material, MaterialEntrada } from "@/lib/types"
+import type { Material, MaterialEntrada, MaterialGrupo } from "@/lib/types"
 import { saveEntradaAction } from "@/components/almoxarifado/actions/entradaActions"
 import { toast } from "@/hooks/use-toast"
 import { format } from "date-fns"
@@ -22,16 +22,21 @@ const INITIAL_FORM: EntradaFormData = {
   justificativa: "",
 }
 
+const SEM_GRUPO_ID = "__SEM_GRUPO__"
+
 export function useEntradaModals(
   isOpen: boolean,
   onClose: () => void,
   entrada?: MaterialEntrada | null,
   clientes?: { id: string; nome: string; codigo?: number }[],
-  materiais?: Pick<Material, "id" | "nome" | "estoque_global">[]
+  materiais?: Pick<Material, "id" | "nome" | "estoque_global" | "grupo_id" | "grupo_nome">[],
+  groups?: MaterialGrupo[],
+  currentUser?: { id: string; nome: string }
 ) {
   const isEditing = !!entrada
   const [formData, setFormData] = useState<EntradaFormData>(INITIAL_FORM)
   const [isLoading, setIsLoading] = useState(false)
+  const [selectedGrupoId, setSelectedGrupoId] = useState("")
 
   // Client search state
   const [searchTerm, setSearchTerm] = useState("")
@@ -39,6 +44,8 @@ export function useEntradaModals(
 
   useEffect(() => {
     if (isOpen && entrada) {
+      const selectedMaterial = (materiais || []).find((item) => item.id === entrada.material_id)
+
       setFormData({
         material_id: entrada.material_id,
         quantidade: entrada.quantidade,
@@ -46,14 +53,16 @@ export function useEntradaModals(
         cliente_id: entrada.cliente_id || "",
         justificativa: entrada.justificativa || entrada.observacao || "",
       })
+      setSelectedGrupoId(selectedMaterial?.grupo_id || SEM_GRUPO_ID)
       setSelectedClienteId(entrada.cliente_id || null)
       setSearchTerm("")
     } else if (isOpen) {
       setFormData(INITIAL_FORM)
+      setSelectedGrupoId("")
       setSelectedClienteId(null)
       setSearchTerm("")
     }
-  }, [isOpen, entrada])
+  }, [isOpen, entrada, materiais])
 
   // Filter clients by search term
   const filteredClientes = useMemo(() => {
@@ -75,6 +84,46 @@ export function useEntradaModals(
     const material = (materiais || []).find((item) => item.id === formData.material_id)
     return Number(material?.estoque_global || 0)
   }, [formData.material_id, materiais])
+
+  const grupos = useMemo(
+    () =>
+      [{ id: SEM_GRUPO_ID, nome: "Sem grupo" }, ...(groups || []).map((group) => ({ id: group.id, nome: group.nome }))]
+        .sort((a, b) => a.nome.localeCompare(b.nome)),
+    [groups]
+  )
+
+  const filteredMateriais = useMemo(() => {
+    const allMateriais = materiais || []
+
+    if (!selectedGrupoId) return allMateriais
+
+    if (selectedGrupoId === SEM_GRUPO_ID) {
+      return allMateriais.filter((material) => material.grupo_id === null || material.grupo_id === "")
+    }
+
+    return allMateriais.filter((material) => material.grupo_id === selectedGrupoId)
+  }, [materiais, selectedGrupoId])
+
+  useEffect(() => {
+    if (!formData.material_id) return
+
+    const hasSelectedMaterial = filteredMateriais.some((material) => material.id === formData.material_id)
+    if (!hasSelectedMaterial) {
+      setFormData((prev) => ({ ...prev, material_id: "" }))
+    }
+  }, [filteredMateriais, formData.material_id])
+
+  const responsavelNome = isEditing
+    ? entrada?.criado_por_nome || "Não informado"
+    : currentUser?.nome || "Não informado"
+
+  const handleGrupoChange = useCallback((grupoId: string) => {
+    setSelectedGrupoId(grupoId)
+    setFormData((prev) => ({
+      ...prev,
+      material_id: "",
+    }))
+  }, [])
 
   const selectFromSearch = useCallback((id: string) => {
     setSelectedClienteId(id)
@@ -141,6 +190,11 @@ export function useEntradaModals(
     saveEntrada,
     isLoading,
     isEditing,
+    grupos,
+    selectedGrupoId,
+    setSelectedGrupoId: handleGrupoChange,
+    filteredMateriais,
+    responsavelNome,
     searchTerm,
     setSearchTerm,
     filteredClientes,
