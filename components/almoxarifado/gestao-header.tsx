@@ -7,7 +7,6 @@ import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Boxes, Layers3, Package, Plus, RotateCcw } from "lucide-react"
 import type { LucideIcon } from "lucide-react"
-import type { ReactNode } from "react"
 
 interface GestaoHeaderProps {
   totalMateriais: number
