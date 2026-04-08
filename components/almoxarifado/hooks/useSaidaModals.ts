@@ -22,6 +22,8 @@ const INITIAL_FORM: SaidaFormData = {
   justificativa: "",
 }
 
+const SEM_GRUPO_ID = "__SEM_GRUPO__"
+
 export function useSaidaModals(
   isOpen: boolean,
   onClose: () => void,
@@ -51,7 +53,7 @@ export function useSaidaModals(
         cliente_id: saida.cliente_id || "",
         justificativa: saida.justificativa || saida.observacao || "",
       })
-      setSelectedGrupoId(selectedMaterial?.grupo_id || "")
+      setSelectedGrupoId(selectedMaterial?.grupo_id || SEM_GRUPO_ID)
       setSelectedClienteId(saida.cliente_id || null)
       setSearchTerm("")
     } else if (isOpen) {
@@ -85,15 +87,21 @@ export function useSaidaModals(
 
   const grupos = useMemo(
     () =>
-      (groups || [])
-        .map((group) => ({ id: group.id, nome: group.nome }))
+      [{ id: SEM_GRUPO_ID, nome: "Sem grupo" }, ...(groups || []).map((group) => ({ id: group.id, nome: group.nome }))]
         .sort((a, b) => a.nome.localeCompare(b.nome)),
     [groups]
   )
 
   const filteredMateriais = useMemo(() => {
-    if (!selectedGrupoId) return []
-    return (materiais || []).filter((material) => material.grupo_id === selectedGrupoId)
+    const allMateriais = materiais || []
+
+    if (!selectedGrupoId) return allMateriais
+
+    if (selectedGrupoId === SEM_GRUPO_ID) {
+      return allMateriais.filter((material) => material.grupo_id === null || material.grupo_id === "")
+    }
+
+    return allMateriais.filter((material) => material.grupo_id === selectedGrupoId)
   }, [materiais, selectedGrupoId])
 
   useEffect(() => {
