@@ -5,6 +5,8 @@ import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Boxes, Layers3, Package, Plus, RotateCcw } from "lucide-react"
+import type { LucideIcon } from "lucide-react"
+import type { ReactNode } from "react"
 
 interface GestaoHeaderProps {
   totalMateriais: number
@@ -89,7 +91,7 @@ export function GestaoHeader({
             )}
           </div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-2">
+          <div className="grid grid-cols-2 gap-2 w-full max-w-[230px]">
             <FilterSelect
               value={filters.classe}
               onChange={(value: string) => updateFilter("classe", value)}
@@ -120,7 +122,15 @@ export function GestaoHeader({
   )
 }
 
-function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: any) {
+interface FilterSelectProps {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  icon: LucideIcon
+  children: ReactNode
+}
+
+function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 h-10 text-xs w-full px-2">
