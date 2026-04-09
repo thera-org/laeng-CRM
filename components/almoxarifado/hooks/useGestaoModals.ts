@@ -34,7 +34,18 @@ export function useGestaoModals(
   const material = options?.material
   const classe = options?.classe
   const grupo = options?.grupo
-  const isEditing = !!material
+  const isEditing =
+    mode === "material"
+      ? !!material
+      : mode === "classe"
+        ? !!classe
+        : !!grupo
+  const entityId =
+    mode === "material"
+      ? material?.id
+      : mode === "classe"
+        ? classe?.id
+        : grupo?.id
   const [formData, setFormData] = useState<GestaoFormData>(INITIAL_FORM)
   const [isLoading, setIsLoading] = useState(false)
 
@@ -118,7 +129,7 @@ export function useGestaoModals(
               entityType: mode,
               nome: formData.nome.trim(),
             },
-        material?.id
+        entityId
       )
 
       if (!result.ok) {
@@ -133,8 +144,12 @@ export function useGestaoModals(
               ? "Material atualizado!"
               : "Material cadastrado!"
             : mode === "classe"
-              ? "Classe cadastrada!"
-              : "Grupo cadastrado!",
+              ? isEditing
+                ? "Classe atualizada!"
+                : "Classe cadastrada!"
+              : isEditing
+                ? "Grupo atualizado!"
+                : "Grupo cadastrado!",
         description: `${formData.nome} salvo com sucesso.`,
       })
       onClose()
@@ -143,7 +158,7 @@ export function useGestaoModals(
     } finally {
       setIsLoading(false)
     }
-  }, [formData, isEditing, material, mode, onClose])
+  }, [entityId, formData, isEditing, mode, onClose])
 
   return {
     formData,

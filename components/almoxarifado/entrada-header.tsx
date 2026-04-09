@@ -1,11 +1,11 @@
 "use client"
 
-import type { ReactNode } from "react"
-import { PackagePlus, Plus, RotateCcw, Calendar, Package, type LucideIcon } from "lucide-react"
+import { useMemo, type ReactNode } from "react"
+import { PackagePlus, Plus, RotateCcw, Calendar, Package, Boxes, type LucideIcon } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import type { MaterialFiltersState, PermissoesUsuario } from "@/lib/types"
+import type { MaterialFiltersState, MaterialGrupo, PermissoesUsuario } from "@/lib/types"
 import { MONTHS } from "@/components/almoxarifado/types/almoxarifadoTypes"
 import { ClientSearchInput } from "@/components/almoxarifado/client-search-input"
 
@@ -18,7 +18,8 @@ interface EntradaHeaderProps {
   clearFilters: () => void
   availableYears: number[]
   availableMonth: number[]
-  materiais: { id: string; nome: string }[]
+  groups: MaterialGrupo[]
+  materiais: { id: string; nome: string; grupo_id: string }[]
   clientes: { id: string; nome: string; codigo?: number }[]
   onNewEntrada: () => void
   userPermissions: Partial<PermissoesUsuario>
@@ -34,6 +35,7 @@ export function EntradaHeader({
   clearFilters,
   availableYears,
   availableMonth,
+  groups,
   materiais,
   clientes,
   onNewEntrada,
@@ -43,6 +45,19 @@ export function EntradaHeader({
   const activeFiltersCount = Object.values(filters).filter(v => v !== "all").length
 
   const canCreate = userRole === "admin" || userPermissions?.estoque?.view
+  const selectedGrupoId = filters.grupo === "all" ? "" : filters.grupo
+
+  const grupos = useMemo(
+    () => [...groups].sort((a, b) => a.nome.localeCompare(b.nome)),
+    [groups]
+  )
+
+  const filteredMateriais = useMemo(() => {
+    if (!selectedGrupoId) return []
+    return materiais
+      .filter((material) => material.grupo_id === selectedGrupoId)
+      .sort((a, b) => a.nome.localeCompare(b.nome))
+  }, [materiais, selectedGrupoId])
 
   return (
     <div className="bg-[#1E1E1E] border-b-2 sm:border-b-4 border-[#F5C800] shadow-lg">
@@ -121,13 +136,28 @@ export function EntradaHeader({
               ))}
             </FilterSelect>
             <FilterSelect
+              value={filters.grupo}
+              onChange={(v: string) => {
+                updateFilter("grupo", v)
+                updateFilter("material", "all")
+              }}
+              placeholder="Grupo"
+              icon={Boxes}
+            >
+              <SelectItem value="all">Todos Grupos</SelectItem>
+              {grupos.map((grupo) => (
+                <SelectItem key={grupo.id} value={grupo.id}>{grupo.nome}</SelectItem>
+              ))}
+            </FilterSelect>
+            <FilterSelect
               value={filters.material}
               onChange={(v: string) => updateFilter("material", v)}
-              placeholder="Material"
+              placeholder={selectedGrupoId ? "Material" : "Escolha um grupo primeiro"}
               icon={Package}
+              disabled={!selectedGrupoId}
             >
               <SelectItem value="all">Todos Materiais</SelectItem>
-              {materiais.map((m) => (
+              {filteredMateriais.map((m) => (
                 <SelectItem key={m.id} value={m.id}>{m.nome}</SelectItem>
               ))}
             </FilterSelect>
@@ -144,11 +174,12 @@ interface FilterSelectProps {
   placeholder: string
   icon: LucideIcon
   children: ReactNode
+  disabled?: boolean
 }
 
-function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: FilterSelectProps) {
+function FilterSelect({ value, onChange, placeholder, icon: Icon, children, disabled = false }: FilterSelectProps) {
   return (
-    <Select value={value} onValueChange={onChange}>
+    <Select value={value} onValueChange={onChange} disabled={disabled}>
       <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 min-h-10 h-auto w-full px-3 py-2 text-sm">
         <div className="flex min-w-0 items-start w-full gap-2">
           <Icon className="mt-0.5 h-3 w-3 text-[#F5C800] shrink-0" />

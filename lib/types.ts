@@ -362,6 +362,7 @@ export type MaterialSaida = MaterialMovimentacao;
 
 export interface MaterialFiltersState {
   material: string;
+  grupo: string;
   month: string;
   year: string;
   week: string;

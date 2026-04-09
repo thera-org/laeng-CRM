@@ -6,6 +6,7 @@ const today = new Date()
 
 export const INITIAL_MATERIAL_FILTERS: MaterialFiltersState = {
   material: "all",
+  grupo: "all",
   month: String(getMonth(today)),
   year: String(getYear(today)),
   week: "all",

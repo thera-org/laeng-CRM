@@ -1,7 +1,8 @@
 "use client"
 
-import { useMemo } from "react"
+import { useMemo, useState } from "react"
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import {
   ResponsiveContainer,
   LineChart,
@@ -15,8 +16,8 @@ import {
   Pie,
   Cell,
 } from "recharts"
-import { Package, TrendingUp, TrendingDown, Warehouse } from "lucide-react"
-import type { FluxoMaterialResumo, Material, MaterialEntrada, MaterialSaida } from "@/lib/types"
+import { ChevronDown, ChevronUp, TrendingUp, TrendingDown, Warehouse, type LucideIcon } from "lucide-react"
+import type { FluxoMaterialResumo, MaterialEntrada, MaterialSaida } from "@/lib/types"
 
 const MONTH_LABELS = [
   "Janeiro",
@@ -38,19 +39,23 @@ const CHART_COLORS = {
   saidas: "#ef4444",
   estoque: "#eab308",
   palette: ["#0088FE", "#00C49F", "#FFBB28", "#FF8042", "#8884d8", "#82ca9d", "#ff7300", "#387908"],
+  others: "#94a3b8",
 }
+
+const DEFAULT_DISTRIBUTION_ITEMS = 8
 
 interface FluxoMaterialDashboardProps {
   data: FluxoMaterialResumo[]
   entradas: MaterialEntrada[]
   saidas: MaterialSaida[]
-  materiais: Pick<Material, "id" | "nome" | "classe_id" | "grupo_id" | "classe_nome" | "grupo_nome">[]
+  materiais: Array<{ id: string }>
 }
 
 export function FluxoMaterialDashboard({ data, entradas, saidas, materiais }: FluxoMaterialDashboardProps) {
   const totalEntradas = data.reduce((sum, d) => sum + d.total_entradas, 0)
   const totalSaidas = data.reduce((sum, d) => sum + d.total_saidas, 0)
   const totalEstoqueAtual = data.reduce((sum, d) => sum + d.estoque_atual, 0)
+  const totalMateriaisFiltrados = materiais.length
 
   const monthlyFlow = useMemo(() => {
     const byMonth = MONTH_LABELS.map((label, index) => ({
@@ -255,12 +260,14 @@ export function FluxoMaterialDashboard({ data, entradas, saidas, materiais }: Fl
                   titleClass="text-green-600"
                   data={distributionEntradas}
                   emptyText="Sem entradas"
+                  totalMateriaisFiltrados={totalMateriaisFiltrados}
                 />
                 <DistributionChart
                   title="Saídas"
                   titleClass="text-red-600"
                   data={distributionSaidas}
                   emptyText="Sem saídas"
+                  totalMateriaisFiltrados={totalMateriaisFiltrados}
                   bordered
                 />
               </div>
@@ -283,7 +290,7 @@ function SummaryCard({
 }: {
   title: string
   value: number
-  icon: any
+  icon: LucideIcon
   accentClass: string
   iconClass: string
   valueClass: string
@@ -308,34 +315,106 @@ function DistributionChart({
   titleClass,
   data,
   emptyText,
+  totalMateriaisFiltrados,
   bordered = false,
 }: {
   title: string
   titleClass: string
   data: Array<{ name: string; value: number }>
   emptyText: string
+  totalMateriaisFiltrados: number
   bordered?: boolean
 }) {
+  const [showAll, setShowAll] = useState(false)
+  const hasOverflow = data.length > DEFAULT_DISTRIBUTION_ITEMS
+
+  const chartData = useMemo(() => {
+    if (showAll || !hasOverflow) return data
+
+    const visibleItems = data.slice(0, DEFAULT_DISTRIBUTION_ITEMS)
+    const remainingTotal = data.slice(DEFAULT_DISTRIBUTION_ITEMS).reduce((sum, item) => sum + item.value, 0)
+
+    return remainingTotal > 0
+      ? [...visibleItems, { name: "Outros", value: remainingTotal }]
+      : visibleItems
+  }, [data, hasOverflow, showAll])
+
+  const legendItems = useMemo(() => {
+    if (showAll || !hasOverflow) return data
+
+    const visibleItems = data.slice(0, DEFAULT_DISTRIBUTION_ITEMS)
+    const remainingItems = data.slice(DEFAULT_DISTRIBUTION_ITEMS)
+    const remainingTotal = remainingItems.reduce((sum, item) => sum + item.value, 0)
+
+    return remainingTotal > 0
+      ? [...visibleItems, { name: `Outros (${remainingItems.length})`, value: remainingTotal }]
+      : visibleItems
+  }, [data, hasOverflow, showAll])
+
   return (
-    <div className={`flex flex-col items-center ${bordered ? "border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4" : ""}`}>
-      <h4 className={`text-sm font-semibold mb-2 ${titleClass}`}>{title}</h4>
+    <div className={`flex flex-col items-center min-w-0 ${bordered ? "border-t md:border-t-0 md:border-l pt-4 md:pt-0 md:pl-4" : ""}`}>
+      <div className="mb-2 flex w-full items-center justify-between gap-3">
+        <h4 className={`text-sm font-semibold ${titleClass}`}>{title}</h4>
+        {hasOverflow && (
+          <Button
+            type="button"
+            variant="outline"
+            size="sm"
+            onClick={() => setShowAll((prev) => !prev)}
+            className="h-8 border-gray-200 text-xs text-slate-600"
+          >
+            {showAll ? (
+              <>
+                <ChevronUp className="mr-1 h-3.5 w-3.5" />
+                Mostrar menos
+              </>
+            ) : (
+              <>
+                <ChevronDown className="mr-1 h-3.5 w-3.5" />
+                Ver restantes
+              </>
+            )}
+          </Button>
+        )}
+      </div>
       <div className="h-[250px] w-full">
         {data.length > 0 ? (
           <ResponsiveContainer width="100%" height="100%">
             <PieChart>
-              <Pie data={data} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={2} dataKey="value">
-                {data.map((entry, index) => (
-                  <Cell key={`${title}-${entry.name}-${index}`} fill={CHART_COLORS.palette[index % CHART_COLORS.palette.length]} stroke="none" />
+              <Pie data={chartData} cx="50%" cy="50%" innerRadius={50} outerRadius={75} paddingAngle={2} dataKey="value">
+                {chartData.map((entry, index) => (
+                  <Cell key={`${title}-${entry.name}-${index}`} fill={getDistributionColor(entry.name)} stroke="none" />
                 ))}
               </Pie>
               <Tooltip formatter={(value: number) => formatQuantity(value)} />
-              <Legend verticalAlign="bottom" height={36} iconType="circle" wrapperStyle={{ fontSize: "11px" }} />
             </PieChart>
           </ResponsiveContainer>
         ) : (
-          <div className="h-full flex items-center justify-center text-gray-400 text-xs">{emptyText}</div>
+          <div className="h-full flex items-center justify-center px-4 text-center text-gray-400 text-xs">
+            {totalMateriaisFiltrados > 0 ? emptyText : "Sem materiais no filtro atual"}
+          </div>
         )}
       </div>
+      {data.length > 0 && (
+        <div className={`mt-3 w-full rounded-lg border border-slate-100 bg-slate-50/70 p-3 ${showAll ? "max-h-64 overflow-y-auto" : ""}`}>
+          <div className="space-y-2">
+            {legendItems.map((item, index) => (
+              <div key={`${title}-legend-${item.name}-${index}`} className="flex items-start justify-between gap-3 text-xs">
+                <div className="flex min-w-0 items-start gap-2">
+                  <span
+                    className="mt-0.5 h-2.5 w-2.5 shrink-0 rounded-full"
+                    style={{ backgroundColor: getDistributionColor(item.name) }}
+                  />
+                  <span className="min-w-0 break-words text-slate-600">
+                    {item.name}
+                  </span>
+                </div>
+                <span className="shrink-0 font-semibold text-slate-700">{formatQuantity(item.value)}</span>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
     </div>
   )
 }
@@ -344,4 +423,19 @@ function formatQuantity(value: number) {
   return new Intl.NumberFormat("pt-BR", {
     maximumFractionDigits: 2,
   }).format(value)
+}
+
+function getDistributionColor(name: string) {
+  if (name.toLowerCase().startsWith("outros")) {
+    return CHART_COLORS.others
+  }
+
+  let hash = 0
+  const normalizedName = name.normalize("NFD").replace(/[\u0300-\u036f]/g, "").toLowerCase().trim()
+
+  for (let index = 0; index < normalizedName.length; index += 1) {
+    hash = (hash * 31 + normalizedName.charCodeAt(index)) >>> 0
+  }
+
+  return CHART_COLORS.palette[hash % CHART_COLORS.palette.length]
 }
