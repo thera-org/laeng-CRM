@@ -51,15 +51,23 @@ export default function EntradaPageContent({
         isDeleting: false,
     })
 
+    const materialGroupMap = useMemo(
+        () => new Map(materiais.map((material) => [material.id, material.grupo_id])),
+        [materiais]
+    )
+
     const availableYears = useMemo(() => getAvailableYears(entradas), [entradas])
     const availableMonth = useMemo(() => getAvailableMonth(entradas), [entradas])
 
     const filteredEntradas = useMemo(() => {
-        return filterMaterialItems(entradas, filters, searchTerm)
-    }, [entradas, filters, searchTerm])
+        return filterMaterialItems(entradas, filters, searchTerm).filter((entrada) => {
+            if (filters.grupo === "all") return true
+            return materialGroupMap.get(entrada.material_id) === filters.grupo
+        })
+    }, [entradas, filters, searchTerm, materialGroupMap])
 
     const materiaisOptions = useMemo(
-        () => materiais.map((m) => ({ id: m.id, nome: m.nome })),
+        () => materiais.map((m) => ({ id: m.id, nome: m.nome, grupo_id: m.grupo_id })),
         [materiais]
     )
 
@@ -124,6 +132,7 @@ export default function EntradaPageContent({
                 clearFilters={clearFilters}
                 availableYears={availableYears}
                 availableMonth={availableMonth}
+                groups={groups}
                 materiais={materiaisOptions}
                 clientes={clientes}
                 onNewEntrada={handleNewEntrada}

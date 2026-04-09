@@ -5,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { Package } from "lucide-react"
 import type { Material, MaterialCatalogFiltersState, MaterialClasse, MaterialGrupo, MaterialManagementMode } from "@/lib/types"
 import { GestaoHeader } from "@/components/almoxarifado/gestao-header"
+import { GroupSelectorModal } from "@/components/almoxarifado/group-selector-modal"
 import { MaterialModal } from "@/components/almoxarifado/material-modal"
 import { MaterialTable } from "@/components/almoxarifado/material-table"
 import { AlmoxarifadoDeleteDialog } from "@/components/almoxarifado/almoxarifado-delete-dialog"
@@ -30,8 +31,10 @@ const INITIAL_FILTERS: MaterialCatalogFiltersState = {
 
 export default function GestaoPageContent({ materiais, classes, groups }: GestaoPageContentProps) {
     const [isModalOpen, setIsModalOpen] = useState(false)
+    const [isGroupSelectorOpen, setIsGroupSelectorOpen] = useState(false)
     const [modalMode, setModalMode] = useState<MaterialManagementMode>("material")
     const [selectedMaterial, setSelectedMaterial] = useState<Material | null>(null)
+    const [selectedGroup, setSelectedGroup] = useState<MaterialGrupo | null>(null)
     const [filters, setFilters] = useState<MaterialCatalogFiltersState>(INITIAL_FILTERS)
     const [deleteState, setDeleteState] = useState<DeleteState>({
         isOpen: false,
@@ -56,26 +59,57 @@ export default function GestaoPageContent({ materiais, classes, groups }: Gestao
     }
 
     const handleNewMaterial = () => {
+        setIsGroupSelectorOpen(false)
         setModalMode("material")
         setSelectedMaterial(null)
+        setSelectedGroup(null)
         setIsModalOpen(true)
     }
 
     const handleNewClasse = () => {
+        setIsGroupSelectorOpen(false)
         setModalMode("classe")
         setSelectedMaterial(null)
+        setSelectedGroup(null)
         setIsModalOpen(true)
     }
 
     const handleNewGrupo = () => {
+        setIsGroupSelectorOpen(false)
         setModalMode("grupo")
         setSelectedMaterial(null)
+        setSelectedGroup(null)
         setIsModalOpen(true)
     }
 
     const handleEditMaterial = (material: Material) => {
+        setIsGroupSelectorOpen(false)
         setModalMode("material")
         setSelectedMaterial(material)
+        setSelectedGroup(null)
+        setIsModalOpen(true)
+    }
+
+    const handleEditGrupo = () => {
+        setIsGroupSelectorOpen(true)
+    }
+
+    const handleSelectGroupToEdit = (groupId: string) => {
+        const group = groups.find((item) => item.id === groupId)
+
+        if (!group) {
+            toast({
+                title: "Grupo não encontrado",
+                description: "Selecione um grupo válido para editar.",
+                variant: "destructive",
+            })
+            return
+        }
+
+        setIsGroupSelectorOpen(false)
+        setModalMode("grupo")
+        setSelectedMaterial(null)
+        setSelectedGroup(group)
         setIsModalOpen(true)
     }
 
@@ -122,6 +156,7 @@ export default function GestaoPageContent({ materiais, classes, groups }: Gestao
                 onNewMaterial={handleNewMaterial}
                 onNewClasse={handleNewClasse}
                 onNewGrupo={handleNewGrupo}
+                onEditGrupo={handleEditGrupo}
             />
 
             <div className="flex-1 px-2 sm:px-4 lg:px-8 py-3 sm:py-6">
@@ -153,11 +188,19 @@ export default function GestaoPageContent({ materiais, classes, groups }: Gestao
                 isDeleting={deleteState.isDeleting}
             />
 
+            <GroupSelectorModal
+                isOpen={isGroupSelectorOpen}
+                onClose={() => setIsGroupSelectorOpen(false)}
+                groups={groups}
+                onConfirm={handleSelectGroupToEdit}
+            />
+
             <MaterialModal
                 isOpen={isModalOpen}
                 onClose={() => setIsModalOpen(false)}
                 mode={modalMode}
                 material={selectedMaterial}
+                grupo={selectedGroup}
                 classes={classes}
                 groups={groups}
             />

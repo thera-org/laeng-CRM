@@ -51,15 +51,23 @@ export default function SaidaPageContent({
         isDeleting: false,
     })
 
+    const materialGroupMap = useMemo(
+        () => new Map(materiais.map((material) => [material.id, material.grupo_id])),
+        [materiais]
+    )
+
     const availableYears = useMemo(() => getAvailableYears(saidas), [saidas])
     const availableMonth = useMemo(() => getAvailableMonth(saidas), [saidas])
 
     const filteredSaidas = useMemo(() => {
-        return filterMaterialItems(saidas, filters, searchTerm)
-    }, [saidas, filters, searchTerm])
+        return filterMaterialItems(saidas, filters, searchTerm).filter((saida) => {
+            if (filters.grupo === "all") return true
+            return materialGroupMap.get(saida.material_id) === filters.grupo
+        })
+    }, [saidas, filters, searchTerm, materialGroupMap])
 
     const materiaisOptions = useMemo(
-        () => materiais.map((m) => ({ id: m.id, nome: m.nome })),
+        () => materiais.map((m) => ({ id: m.id, nome: m.nome, grupo_id: m.grupo_id })),
         [materiais]
     )
 
@@ -124,6 +132,7 @@ export default function SaidaPageContent({
                 clearFilters={clearFilters}
                 availableYears={availableYears}
                 availableMonth={availableMonth}
+                groups={groups}
                 materiais={materiaisOptions}
                 clientes={clientes}
                 onNewSaida={handleNewSaida}

@@ -5,7 +5,7 @@ import type { MaterialCatalogFiltersState } from "@/lib/types"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Boxes, Layers3, Package, Plus, RotateCcw, type LucideIcon } from "lucide-react"
+import { Boxes, Layers3, Package, Pencil, Plus, RotateCcw, type LucideIcon } from "lucide-react"
 
 interface GestaoHeaderProps {
   totalMateriais: number
@@ -17,6 +17,7 @@ interface GestaoHeaderProps {
   onNewMaterial: () => void
   onNewClasse: () => void
   onNewGrupo: () => void
+  onEditGrupo: () => void
 }
 
 export function GestaoHeader({
@@ -29,6 +30,7 @@ export function GestaoHeader({
   onNewMaterial,
   onNewClasse,
   onNewGrupo,
+  onEditGrupo,
 }: GestaoHeaderProps) {
   const activeFiltersCount = Object.values(filters).filter((value) => value !== "all").length
 
@@ -76,6 +78,13 @@ export function GestaoHeader({
             >
               <Plus className="h-4 w-4 mr-2" />
               Novo Grupo
+            </Button>
+            <Button
+              onClick={onEditGrupo}
+              className="h-10 bg-[#1E1E1E] text-white hover:bg-[#333] font-bold px-4 border border-[#F5C800] justify-center lg:w-auto"
+            >
+              <Pencil className="h-4 w-4 mr-2" />
+              Editar Grupo
             </Button>
             {activeFiltersCount > 0 && (
               <Button

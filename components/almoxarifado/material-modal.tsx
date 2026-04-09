@@ -21,6 +21,8 @@ interface MaterialModalProps {
   onClose: () => void
   mode: MaterialManagementMode
   material?: Material | null
+  classe?: MaterialClasse | null
+  grupo?: MaterialGrupo | null
   classes: MaterialClasse[]
   groups: MaterialGrupo[]
 }
@@ -31,12 +33,12 @@ const TITLES: Record<MaterialManagementMode, { create: string; edit: string }> =
   grupo: { create: "Novo Grupo", edit: "Editar Grupo" },
 }
 
-export function MaterialModal({ isOpen, onClose, mode, material, classes, groups }: MaterialModalProps) {
+export function MaterialModal({ isOpen, onClose, mode, material, classe, grupo, classes, groups }: MaterialModalProps) {
   const { formData, updateField, saveMaterial, isLoading, isEditing } = useGestaoModals(
     isOpen,
     onClose,
     mode,
-    { material }
+    { material, classe, grupo }
   )
 
   const title = isEditing ? TITLES[mode].edit : TITLES[mode].create
