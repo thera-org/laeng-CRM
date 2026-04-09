@@ -82,3 +82,6 @@ export function GroupSelectorModal({ isOpen, onClose, groups, onConfirm }: Group
     </Dialog>
   )
 }
+
+
+//teste
