@@ -439,3 +439,5 @@ function getDistributionColor(name: string) {
 
   return CHART_COLORS.palette[hash % CHART_COLORS.palette.length]
 }
+
+//teste

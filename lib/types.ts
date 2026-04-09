@@ -380,3 +380,5 @@ export interface FluxoMaterialResumo {
   total_saidas: number;
   estoque_atual: number;
 }
+
+// teste

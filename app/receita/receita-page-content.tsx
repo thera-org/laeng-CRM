@@ -13,6 +13,9 @@ import { toast } from "@/hooks/use-toast"
 import { PagamentosDeleteDialog } from "@/components/pagamentos/pagamentos-delete-dialog"
 import { ReceitasHeader } from "../../components/pagamentos/receitas-header"
 
+
+//teste
+
 interface ReceitaPageContentProps {
     pagamentos: Pagamentos[]
     categories: { label: string; value: string }[]
