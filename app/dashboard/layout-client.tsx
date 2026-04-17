@@ -53,18 +53,6 @@ const menuItems = [
     group: 1
   },
   {
-    title: "Diário de Obras",
-    icon: ClipboardList,
-    href: "/diarioDeObras",
-    group: 1
-  },
-  {
-    title: "Planejamento",
-    icon: CalendarRange,
-    href: "/planejamentoDeObras",
-    group: 1
-  },
-  {
     title: "Financeiro",
     icon: DollarSign,
     href: "/financeira",
@@ -111,6 +99,18 @@ const menuItems = [
     icon: ArrowLeftRight,
     href: "/fluxoDeMaterial",
     group: 3
+  },
+  {
+    title: "Diário de Obras",
+    icon: ClipboardList,
+    href: "/diarioDeObras",
+    group: 1
+  },
+  {
+    title: "Planejamento",
+    icon: CalendarRange,
+    href: "/planejamentoDeObras",
+    group: 1
   },
   {
     title: "Admin",

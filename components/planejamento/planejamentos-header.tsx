@@ -1,11 +1,11 @@
 "use client"
 
 import { Input } from "@/components/ui/input"
-import { Search, CalendarRange, Calendar, RotateCcw, Plus } from "lucide-react"
+import { Search, CalendarRange, Calendar, RotateCcw, Plus, type LucideIcon } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
-import { useMemo } from "react"
+import { useMemo, type ReactNode } from "react"
 import { getWeeksOptions } from "./libs/planejamento-filter-logic"
 import { MONTHS } from "@/components/pagamentos/types/pagamentosTypes"
 import type { PlanejamentoFiltersState } from "@/lib/types"
@@ -41,7 +41,7 @@ export function PlanejamentosHeader({
   )
 
   return (
-    <div className="bg-[#1E1E1E] border-b-2 sm:border-b-4 border-[#F5C800] shadow-lg">
+    <div className="-mt-4 -mx-4 bg-[#1E1E1E] border-b-2 md:-mt-6 md:-mx-6 sm:border-b-4 border-[#F5C800] shadow-lg">
       <div className="px-3 sm:px-6 lg:px-8 py-4">
         <div className="mb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-4">
           <h1 className="text-xl sm:text-2xl lg:text-3xl font-bold text-white tracking-tight uppercase flex items-center gap-3">
@@ -61,7 +61,7 @@ export function PlanejamentosHeader({
             <div className="flex-1 relative group">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-[#F5C800]" />
               <Input
-                placeholder="Buscar por cliente, responsável ou código..."
+                placeholder="Buscar por cliente..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="pl-10 h-10 bg-white border-0 text-gray-900 placeholder:text-gray-500 rounded-md shadow-sm w-full"
@@ -70,10 +70,8 @@ export function PlanejamentosHeader({
             <div className="flex gap-2 w-full sm:w-auto">
               <Button
                 onClick={onNew}
-                className="h-10 bg-[#F5C800] sm:w-[100px] hover:bg-[#F5C800]/90 text-[#1E1E1E] font-bold px-4 shadow-sm"
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Novo
+                className="h-10 bg-[#F5C800] sm:w-[220px] hover:bg-[#F5C800]/90 text-[#1E1E1E] font-bold px-4 shadow-sm">
+                <Plus className="h-4 w-4 mr-2" />Novo Planejamento
               </Button>
               {activeFiltersCount > 0 && (
                 <Button
@@ -89,7 +87,7 @@ export function PlanejamentosHeader({
             </div>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-2">
             <div className={!isWeekEnabled ? "opacity-50 pointer-events-none" : ""}>
               <FilterSelect
                 value={filters.week}
@@ -143,7 +141,15 @@ export function PlanejamentosHeader({
   )
 }
 
-function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: any) {
+interface FilterSelectProps {
+  value: string
+  onChange: (value: string) => void
+  placeholder: string
+  icon: LucideIcon
+  children: ReactNode
+}
+
+function FilterSelect({ value, onChange, placeholder, icon: Icon, children }: FilterSelectProps) {
   return (
     <Select value={value} onValueChange={onChange}>
       <SelectTrigger className="bg-gray-700/50 border-gray-600 text-gray-200 h-10 text-xs w-full px-2">
