@@ -9,11 +9,10 @@ import {
   MAX_FOTO_BYTES,
 } from "../types/diarioTypes"
 import type {
-  Clima,
+  DiarioClimaPorTurno,
   DiarioColaboradores,
   DiarioObras,
   DiarioProgresso,
-  Turno,
 } from "@/lib/types"
 
 const REVALIDATE_PATHS = ["/diarioDeObras"]
@@ -27,8 +26,7 @@ export interface DiarioPayload {
   responsavel: string
   responsavel_id?: string | null
   data: string
-  turnos: Turno[]
-  climas: Clima[]
+  clima_por_turno: DiarioClimaPorTurno
   colaboradores: DiarioColaboradores
   atividade?: string | null
   progresso: DiarioProgresso
@@ -47,8 +45,7 @@ export async function saveDiarioAction(payload: DiarioPayload, id?: string) {
       responsavel: payload.responsavel,
       responsavel_id: payload.responsavel_id ?? user?.id ?? null,
       data: payload.data,
-      turnos: payload.turnos ?? [],
-      climas: payload.climas ?? [],
+      clima_por_turno: payload.clima_por_turno ?? {},
       colaboradores: payload.colaboradores ?? {},
       atividade: (payload.atividade ?? "").slice(0, 2000),
       progresso: payload.progresso ?? {},
@@ -111,8 +108,7 @@ export async function deleteDiarioAction(id: string) {
 const ALLOWED_INLINE_FIELDS = new Set<string>([
   "responsavel",
   "data",
-  "turnos",
-  "climas",
+  "clima_por_turno",
   "colaboradores",
   "atividade",
   "progresso",

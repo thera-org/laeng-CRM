@@ -26,7 +26,7 @@ import {
   CLIMA_LABEL,
   COLABORADOR_ROLES,
   PROGRESSO_ITEMS,
-  TURNO_LABEL,
+  TURNOS,
 } from "./types/diarioTypes"
 import { calcDiarioProgressPct, totalColaboradores } from "./libs/diario-progress"
 import { Gauge360 } from "@/components/gauge-360"
@@ -111,7 +111,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                 <TableHead className="text-[#F5C800] font-bold py-3">CÓD.</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3">CLIENTE</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3">RESPONSÁVEL</TableHead>
-                <TableHead className="text-[#F5C800] font-bold py-3">TURNO</TableHead>
+                <TableHead className="text-[#F5C800] font-bold py-3">TURNO / CLIMA</TableHead>
                 <TableHead className="text-center text-[#F5C800] font-bold py-3">COLABORADORES</TableHead>
                 <TableHead className="text-[#F5C800] font-bold py-3">ATIVIDADE</TableHead>
                 <TableHead className="text-center text-[#F5C800] font-bold py-3">PROGRESSO</TableHead>
@@ -131,8 +131,13 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                 const isAtvOpen = expandedAtv.has(d.id)
                 const isFotosOpen = expandedFotos.has(d.id)
 
-                const turnoStr = (d.turnos || []).map((t) => TURNO_LABEL[t]).join(", ") || "-"
-                const climaStr = (d.climas || []).map((c) => CLIMA_LABEL[c]).join(", ") || "-"
+                const turnoClimaEntries = TURNOS
+                  .filter(({ value }) => Object.prototype.hasOwnProperty.call(d.clima_por_turno || {}, value))
+                  .map(({ value, label }) => ({
+                    turno: value,
+                    turnoLabel: label,
+                    clima: d.clima_por_turno?.[value] ?? null,
+                  }))
 
                 return (
                   <Fragment key={d.id}>
@@ -147,18 +152,31 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                       </TableCell>
                       <TableCell className="py-3 text-sm">{d.responsavel}</TableCell>
                       <TableCell className="py-3 text-xs">
-                        <div className="flex items-center gap-2">
-                          <span className="font-semibold">{turnoStr}</span>
-                          <span className="text-gray-400">/</span>
-                          <div className="flex items-center gap-1">
-                            {(d.climas || []).map((c) => {
-                              const Icon = CLIMA_ICON[c]
-                              return <Icon key={c} className="h-4 w-4 text-[#F5C800]" />
+                        {turnoClimaEntries.length === 0 ? (
+                          <span className="text-gray-400">-</span>
+                        ) : (
+                          <div className="space-y-1">
+                            {turnoClimaEntries.map(({ turno, turnoLabel, clima }) => {
+                              const hasClima = clima !== null
+                              const Icon = hasClima ? CLIMA_ICON[clima] : null
+
+                              return (
+                                <div key={turno} className="flex items-center gap-2">
+                                  <span className="font-semibold">{turnoLabel}</span>
+                                  <span className="text-gray-400">:</span>
+                                  {hasClima && Icon ? (
+                                    <>
+                                      <Icon className="h-4 w-4 text-[#F5C800]" />
+                                      <span className="text-[10px] text-gray-500">{CLIMA_LABEL[clima]}</span>
+                                    </>
+                                  ) : (
+                                    <span className="text-[10px] text-gray-500">Nao definido</span>
+                                  )}
+                                </div>
+                              )
                             })}
-                            {(d.climas || []).length === 0 && <span className="text-gray-400">-</span>}
                           </div>
-                        </div>
-                        <span className="text-[10px] text-gray-500">{climaStr}</span>
+                        )}
                       </TableCell>
                       <TableCell className="text-center py-3">
                         <Button

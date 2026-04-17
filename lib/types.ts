@@ -385,6 +385,7 @@ export interface FluxoMaterialResumo {
 
 export type Turno = 'manha' | 'tarde' | 'noite';
 export type Clima = 'sol' | 'nublado' | 'chuva' | 'impraticavel';
+export type DiarioClimaPorTurno = Partial<Record<Turno, Clima | null>>;
 
 export interface DiarioColaboradores {
   pedreiro?: number;
@@ -411,8 +412,7 @@ export interface DiarioObras {
   responsavel: string;
   responsavel_id?: string | null;
   data: string;
-  turnos: Turno[];
-  climas: Clima[];
+  clima_por_turno: DiarioClimaPorTurno;
   colaboradores: DiarioColaboradores;
   atividade?: string | null;
   progresso: DiarioProgresso;

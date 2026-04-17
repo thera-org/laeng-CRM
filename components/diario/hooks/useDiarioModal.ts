@@ -15,6 +15,7 @@ import {
 } from "../types/diarioTypes"
 import type {
   Clima,
+  DiarioClimaPorTurno,
   DiarioColaboradores,
   DiarioComCliente,
   DiarioProgresso,
@@ -33,6 +34,20 @@ export interface PendingFoto {
   previewUrl: string
 }
 
+const TURNO_KEYS: Turno[] = ["manha", "tarde", "noite"]
+
+function normalizeClimaPorTurno(value?: DiarioClimaPorTurno | null): DiarioClimaPorTurno {
+  const next: DiarioClimaPorTurno = {}
+
+  for (const turno of TURNO_KEYS) {
+    if (value && Object.prototype.hasOwnProperty.call(value, turno)) {
+      next[turno] = value[turno] ?? null
+    }
+  }
+
+  return next
+}
+
 export function useDiarioModal(
   isOpen: boolean,
   onClose: () => void,
@@ -45,8 +60,7 @@ export function useDiarioModal(
   const [clienteId, setClienteId] = useState<string>("")
   const [responsavel, setResponsavel] = useState<string>(defaultResponsavel || "")
   const [data, setData] = useState<string>(new Date().toISOString().split("T")[0])
-  const [turnos, setTurnos] = useState<Turno[]>([])
-  const [climas, setClimas] = useState<Clima[]>([])
+  const [climaPorTurno, setClimaPorTurno] = useState<DiarioClimaPorTurno>({})
   const [colaboradores, setColaboradores] = useState<DiarioColaboradores>({})
   const [atividade, setAtividade] = useState<string>("")
   const [progresso, setProgresso] = useState<DiarioProgresso>({})
@@ -67,8 +81,7 @@ export function useDiarioModal(
       setClienteId(diario.cliente_id)
       setResponsavel(diario.responsavel || defaultResponsavel || "")
       setData(diario.data?.split("T")[0] || new Date().toISOString().split("T")[0])
-      setTurnos((diario.turnos as Turno[]) || [])
-      setClimas((diario.climas as Clima[]) || [])
+      setClimaPorTurno(normalizeClimaPorTurno(diario.clima_por_turno))
       setColaboradores(diario.colaboradores || {})
       setAtividade(diario.atividade || "")
       setProgresso(diario.progresso || {})
@@ -77,8 +90,7 @@ export function useDiarioModal(
       setClienteId("")
       setResponsavel(defaultResponsavel || "")
       setData(new Date().toISOString().split("T")[0])
-      setTurnos([])
-      setClimas([])
+      setClimaPorTurno({})
       setColaboradores({})
       setAtividade("")
       setProgresso({})
@@ -119,13 +131,31 @@ export function useDiarioModal(
     [clientes, clienteId]
   )
 
+  const selectedTurnos = useMemo(
+    () => TURNO_KEYS.filter((turno) => Object.prototype.hasOwnProperty.call(climaPorTurno, turno)),
+    [climaPorTurno]
+  )
+
   // ---------- mutators ----------
-  const toggleTurno = (t: Turno) => {
-    setTurnos((prev) => (prev.includes(t) ? prev.filter((x) => x !== t) : [...prev, t]))
+  const addTurno = (turno: Turno) => {
+    setClimaPorTurno((prev) => {
+      if (Object.prototype.hasOwnProperty.call(prev, turno)) return prev
+      return { ...prev, [turno]: null }
+    })
   }
 
-  const toggleClima = (c: Clima) => {
-    setClimas((prev) => (prev.includes(c) ? prev.filter((x) => x !== c) : [...prev, c]))
+  const removeTurno = (turno: Turno) => {
+    setClimaPorTurno((prev) => {
+      if (!Object.prototype.hasOwnProperty.call(prev, turno)) return prev
+
+      const next = { ...prev }
+      delete next[turno]
+      return next
+    })
+  }
+
+  const setTurnoClima = (turno: Turno, clima: Clima | null) => {
+    setClimaPorTurno((prev) => ({ ...prev, [turno]: clima }))
   }
 
   const setColaborador = (key: keyof DiarioColaboradores, value: number) => {
@@ -201,8 +231,7 @@ export function useDiarioModal(
         cliente_id: clienteId,
         responsavel: responsavel.trim(),
         data,
-        turnos,
-        climas,
+        clima_por_turno: climaPorTurno,
         colaboradores,
         atividade,
         progresso,
@@ -247,8 +276,8 @@ export function useDiarioModal(
     setResponsavel,
     data,
     setData,
-    turnos,
-    climas,
+    climaPorTurno,
+    selectedTurnos,
     colaboradores,
     atividade,
     progresso,
@@ -261,8 +290,9 @@ export function useDiarioModal(
     selectedCliente,
     selectClienteFromSearch,
     // mutators
-    toggleTurno,
-    toggleClima,
+    addTurno,
+    removeTurno,
+    setTurnoClima,
     setColaborador,
     toggleProgresso,
     setAtividadeBounded,

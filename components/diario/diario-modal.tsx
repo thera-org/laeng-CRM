@@ -52,6 +52,8 @@ export function DiarioModal({ isOpen, onClose, diario, defaultResponsavel }: Dia
   const m = useDiarioModal(isOpen, onClose, diario, defaultResponsavel)
   const showFormFields = m.isEditing || !!m.selectedCliente
   const linkedClienteNome = diario?.cliente_nome || m.selectedCliente?.nome || ""
+  const selectedTurnos = TURNOS.filter((turno) => m.selectedTurnos.includes(turno.value))
+  const availableTurnos = TURNOS.filter((turno) => !m.selectedTurnos.includes(turno.value))
 
   const progressoTotal = PROGRESSO_ITEMS.length
   const progressoChecked = PROGRESSO_ITEMS.reduce(
@@ -201,56 +203,107 @@ export function DiarioModal({ isOpen, onClose, diario, defaultResponsavel }: Dia
 
           {showFormFields && (
             <>
-              {/* Turno (multi) */}
+              {/* Turnos e Clima por turno */}
               <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-gray-500 tracking-wider">Turno</Label>
-                <div className="flex flex-wrap gap-2">
-                  {TURNOS.map((t) => {
-                    const active = m.turnos.includes(t.value)
-                    return (
-                      <button
-                        key={t.value}
-                        type="button"
-                        onClick={() => m.toggleTurno(t.value)}
-                        className={cn(
-                          "px-4 py-2 rounded-full border-2 text-sm font-semibold transition",
-                          active
-                            ? "bg-[#F5C800] border-[#F5C800] text-black"
-                            : "bg-white border-gray-300 text-gray-700 hover:border-[#F5C800]"
-                        )}
-                      >
-                        {t.label}
-                      </button>
-                    )
-                  })}
+                <div className="flex items-center justify-between gap-3">
+                  <Label className="text-xs font-bold uppercase text-gray-500 tracking-wider">
+                    Turnos e Clima
+                  </Label>
+                  {availableTurnos.length > 0 && (
+                    <span className="text-[11px] text-gray-500">
+                      Adicione apenas os turnos restantes.
+                    </span>
+                  )}
                 </div>
-              </div>
+                <div className="flex flex-wrap gap-2">
+                  {availableTurnos.map((turno) => (
+                    <button
+                      key={turno.value}
+                      type="button"
+                      onClick={() => m.addTurno(turno.value)}
+                      className="px-4 py-2 rounded-full border-2 text-sm font-semibold transition bg-white border-gray-300 text-gray-700 hover:border-[#F5C800]"
+                    >
+                      {turno.label}
+                    </button>
+                  ))}
+                </div>
+                {availableTurnos.length === 0 && (
+                  <p className="text-xs text-gray-500">Todos os turnos foram adicionados.</p>
+                )}
 
-              {/* Clima (multi, icons) */}
-              <div className="space-y-2">
-                <Label className="text-xs font-bold uppercase text-gray-500 tracking-wider">Clima</Label>
-                <div className="flex flex-wrap gap-3">
-                  {CLIMAS.map((c) => {
-                    const Icon = CLIMA_ICON[c.value]
-                    const active = m.climas.includes(c.value)
-                    return (
-                      <button
-                        key={c.value}
-                        type="button"
-                        title={c.label}
-                        onClick={() => m.toggleClima(c.value)}
-                        className={cn(
-                          "flex flex-col items-center justify-center gap-1 w-20 h-20 rounded-lg border-2 transition",
-                          active
-                            ? "bg-[#F5C800]/10 border-[#F5C800] text-[#1E1E1E]"
-                            : "bg-white border-gray-300 text-gray-600 hover:border-[#F5C800]"
-                        )}
-                      >
-                        <Icon className="h-7 w-7" />
-                        <span className="text-[10px] font-bold uppercase tracking-wide">{c.label}</span>
-                      </button>
-                    )
-                  })}
+                <div className="space-y-3">
+                  {selectedTurnos.length === 0 ? (
+                    <div className="rounded-md border border-dashed border-gray-300 bg-white/80 px-4 py-3 text-sm text-gray-500">
+                      Selecione um turno para definir o clima correspondente.
+                    </div>
+                  ) : (
+                    selectedTurnos.map((turno) => {
+                      const selectedClima = m.climaPorTurno[turno.value] ?? null
+
+                      return (
+                        <div
+                          key={turno.value}
+                          className="rounded-lg border border-gray-200 bg-white p-4 shadow-sm space-y-3"
+                        >
+                          <div className="flex items-center justify-between gap-3">
+                            <div>
+                              <p className="text-sm font-semibold text-[#1E1E1E]">{turno.label}</p>
+                              <p className="text-xs text-gray-500">
+                                Defina o clima deste turno ou deixe como não definido.
+                              </p>
+                            </div>
+                            <Button
+                              type="button"
+                              size="sm"
+                              variant="ghost"
+                              onClick={() => m.removeTurno(turno.value)}
+                              className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                            >
+                              <Trash2 className="h-4 w-4 mr-1" />
+                              Remover
+                            </Button>
+                          </div>
+
+                          <div className="flex flex-wrap gap-2">
+                            <button
+                              type="button"
+                              onClick={() => m.setTurnoClima(turno.value, null)}
+                              className={cn(
+                                "px-4 py-2 rounded-full border-2 text-sm font-semibold transition",
+                                selectedClima === null
+                                  ? "bg-[#F5C800] border-[#F5C800] text-black"
+                                  : "bg-white border-gray-300 text-gray-700 hover:border-[#F5C800]"
+                              )}
+                            >
+                              Não definido
+                            </button>
+                            {CLIMAS.map((clima) => {
+                              const Icon = CLIMA_ICON[clima.value]
+                              const active = selectedClima === clima.value
+
+                              return (
+                                <button
+                                  key={clima.value}
+                                  type="button"
+                                  title={clima.label}
+                                  onClick={() => m.setTurnoClima(turno.value, clima.value)}
+                                  className={cn(
+                                    "flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-semibold transition",
+                                    active
+                                      ? "bg-[#F5C800]/10 border-[#F5C800] text-[#1E1E1E]"
+                                      : "bg-white border-gray-300 text-gray-600 hover:border-[#F5C800]"
+                                  )}
+                                >
+                                  <Icon className="h-4 w-4" />
+                                  {clima.label}
+                                </button>
+                              )
+                            })}
+                          </div>
+                        </div>
+                      )
+                    })
+                  )}
                 </div>
               </div>
 
@@ -335,6 +388,7 @@ export function DiarioModal({ isOpen, onClose, diario, defaultResponsavel }: Dia
                             <Checkbox
                               checked={!!m.progresso[it.key]}
                               onCheckedChange={() => m.toggleProgresso(it.key)}
+                              className="border-2 border-gray-600 data-[state=checked]:border-[#F5C800] data-[state=checked]:bg-[#F5C800] data-[state=unchecked]:bg-gray-400"
                             />
                           </td>
                         </tr>
