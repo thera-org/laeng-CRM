@@ -20,7 +20,9 @@ import {
   Package,
   PackagePlus,
   PackageMinus,
-  ArrowLeftRight
+  ArrowLeftRight,
+  ClipboardList,
+  CalendarRange
 } from 'lucide-react';
 import Link from "next/link";
 import Image from "next/image";
@@ -48,6 +50,18 @@ const menuItems = [
     title: "Obras",
     icon: Building2,
     href: "/obras",
+    group: 1
+  },
+  {
+    title: "Diário de Obras",
+    icon: ClipboardList,
+    href: "/diarioDeObras",
+    group: 1
+  },
+  {
+    title: "Planejamento",
+    icon: CalendarRange,
+    href: "/planejamentoDeObras",
     group: 1
   },
   {
