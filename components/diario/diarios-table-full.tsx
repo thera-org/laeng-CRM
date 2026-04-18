@@ -1,9 +1,17 @@
 "use client"
 
-import { Fragment, useState, useEffect } from "react"
+import { Fragment, useEffect, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog"
 import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
@@ -33,7 +41,16 @@ import { Gauge360 } from "@/components/gauge-360"
 import { useDiarioInlineEdit } from "./hooks/useDiarioInlineEdit"
 import { getSignedFotoUrlsAction } from "./actions/diarioActions"
 import { FotoViewerModal } from "./foto-viewer-modal"
-import type { Clima, DiarioColaboradores, DiarioComCliente, DiarioObrasFoto, DiarioProgresso } from "@/lib/types"
+import { cn } from "@/lib/utils"
+import type {
+  Clima,
+  DiarioClimaPorTurno,
+  DiarioColaboradores,
+  DiarioComCliente,
+  DiarioObrasFoto,
+  DiarioProgresso,
+  Turno,
+} from "@/lib/types"
 
 interface DiariosTableFullProps {
   diarios: DiarioComCliente[]
@@ -48,29 +65,29 @@ const CLIMA_ICON: Record<Clima, React.ComponentType<{ className?: string }>> = {
   impraticavel: CloudLightning,
 }
 
+function cloneClimaPorTurno(value?: DiarioClimaPorTurno | null): DiarioClimaPorTurno {
+  const next: DiarioClimaPorTurno = {}
+
+  for (const { value: turno } of TURNOS) {
+    if (Object.prototype.hasOwnProperty.call(value ?? {}, turno)) {
+      next[turno] = value?.[turno] ?? null
+    }
+  }
+
+  return next
+}
+
 export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFullProps) {
   const inline = useDiarioInlineEdit()
   const expandButtonClassName =
     "h-8 w-8 p-0 bg-[#F5C800] hover:bg-[#F5C800]/90 rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
 
+  const [climaPorTurnoLocal, setClimaPorTurnoLocal] = useState<Record<string, DiarioClimaPorTurno>>({})
   const [colaboradoresLocal, setColaboradoresLocal] = useState<Record<string, DiarioColaboradores>>({})
   const [progressoLocal, setProgressoLocal] = useState<Record<string, DiarioProgresso>>({})
   const [atividadeLocal, setAtividadeLocal] = useState<Record<string, string>>({})
-
-  // Sync local mirrors when diarios change
-  useEffect(() => {
-    const c: Record<string, DiarioColaboradores> = {}
-    const p: Record<string, DiarioProgresso> = {}
-    const a: Record<string, string> = {}
-    for (const d of diarios) {
-      c[d.id] = d.colaboradores || {}
-      p[d.id] = d.progresso || {}
-      a[d.id] = d.atividade || ""
-    }
-    setColaboradoresLocal(c)
-    setProgressoLocal(p)
-    setAtividadeLocal(a)
-  }, [diarios])
+  const [editingClimaDiario, setEditingClimaDiario] = useState<DiarioComCliente | null>(null)
+  const [editingClimaValue, setEditingClimaValue] = useState<DiarioClimaPorTurno>({})
 
   const { expandedRows: expandedColab, toggleRow: toggleColab } = useExpandableRows()
   const { expandedRows: expandedAtv, toggleRow: toggleAtv } = useExpandableRows()
@@ -99,6 +116,61 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
     setViewerOpen(true)
   }
 
+  const resetClimaEditor = () => {
+    setEditingClimaDiario(null)
+    setEditingClimaValue({})
+  }
+
+  const openClimaEditor = (diario: DiarioComCliente) => {
+    setEditingClimaDiario(diario)
+    setEditingClimaValue(cloneClimaPorTurno(climaPorTurnoLocal[diario.id] ?? diario.clima_por_turno))
+  }
+
+  const addTurnoToEditor = (turno: Turno) => {
+    setEditingClimaValue((prev) => ({ ...prev, [turno]: null }))
+  }
+
+  const removeTurnoFromEditor = (turno: Turno) => {
+    setEditingClimaValue((prev) => {
+      const next = { ...prev }
+      delete next[turno]
+      return next
+    })
+  }
+
+  const setTurnoClimaInEditor = (turno: Turno, clima: Clima | null) => {
+    setEditingClimaValue((prev) => ({ ...prev, [turno]: clima }))
+  }
+
+  const availableTurnosInEditor = TURNOS.filter(
+    ({ value }) => !Object.prototype.hasOwnProperty.call(editingClimaValue, value)
+  )
+
+  const selectedTurnosInEditor = TURNOS.filter(({ value }) =>
+    Object.prototype.hasOwnProperty.call(editingClimaValue, value)
+  )
+
+  const isSavingClima = editingClimaDiario
+    ? inline.savingField === `${editingClimaDiario.id}:clima_por_turno`
+    : false
+
+  const saveClimaEditor = async () => {
+    if (!editingClimaDiario) return
+
+    const nextValue = cloneClimaPorTurno(editingClimaValue)
+    const ok = await inline.updateField(
+      editingClimaDiario.id,
+      "clima_por_turno",
+      nextValue,
+      "Turno / Clima"
+    )
+
+    if (!ok) return
+
+    setClimaPorTurnoLocal((prev) => ({ ...prev, [editingClimaDiario.id]: nextValue }))
+    resetClimaEditor()
+  }
+
   if (diarios.length === 0) {
     return <div className="text-center py-8 text-muted-foreground">Nenhum diário cadastrado ainda.</div>
   }
@@ -123,9 +195,10 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
             </TableHeader>
             <TableBody>
               {paginatedData.map((d) => {
-                const colab = colaboradoresLocal[d.id] || {}
-                const prog = progressoLocal[d.id] || {}
-                const atv = atividadeLocal[d.id] ?? ""
+                const climaPorTurno = climaPorTurnoLocal[d.id] ?? cloneClimaPorTurno(d.clima_por_turno)
+                const colab = colaboradoresLocal[d.id] ?? d.colaboradores ?? {}
+                const prog = progressoLocal[d.id] ?? d.progresso ?? {}
+                const atv = atividadeLocal[d.id] ?? d.atividade ?? ""
                 const colabTotal = totalColaboradores(colab)
                 const progPct = calcDiarioProgressPct(prog)
 
@@ -136,7 +209,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                 const turnoClimaEntries = TURNOS.map(({ value, label }) => ({
                   turno: value,
                   turnoLabel: label,
-                  clima: d.clima_por_turno?.[value] ?? null,
+                  clima: climaPorTurno[value] ?? null,
                 }))
 
                 return (
@@ -154,7 +227,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                       <TableCell className="py-3 text-xs min-w-[220px]">
                         <button
                           type="button"
-                          onClick={() => onEdit(d)}
+                          onClick={() => openClimaEditor(d)}
                           className="w-full rounded-lg border border-transparent px-3 py-2 text-left transition-colors hover:border-[#F5C800]/30 hover:bg-[#F5C800]/10"
                           title="Clique para editar turno e clima"
                         >
@@ -282,8 +355,11 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                             </h4>
                             <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
                               {COLABORADOR_ROLES.map((r) => (
-                                <div key={r.key} className="bg-yellow-50 rounded-lg p-3 border border-gray-200">
-                                  <div className="text-[11px] uppercase text-gray-500 font-semibold mb-1">
+                                <div
+                                  key={r.key}
+                                  className="rounded-lg border border-gray-200 bg-[#F5C800] p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
+                                >
+                                  <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#1E1E1E]/70">
                                     {r.label}
                                   </div>
                                   <Input
@@ -302,7 +378,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                                       const next = { ...(colaboradoresLocal[d.id] || {}), [r.key]: value }
                                       await inline.updateField(d.id, "colaboradores", next, "Colaboradores")
                                     }}
-                                    className="h-9 text-right font-bold"
+                                    className="h-10 border-black/15 bg-white text-right font-bold text-[#1E1E1E] shadow-sm focus-visible:ring-[#1E1E1E]/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                                   />
                                 </div>
                               ))}
@@ -476,6 +552,140 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
           if (ok) setViewerFotos((prev) => prev.filter((f) => f.id !== foto.id))
         }}
       />
+
+      <Dialog
+        open={!!editingClimaDiario}
+        onOpenChange={(open) => {
+          if (!open && !isSavingClima) resetClimaEditor()
+        }}
+      >
+        <DialogContent className="gap-0 p-0 sm:max-w-2xl" showCloseButton={!isSavingClima}>
+          <DialogHeader className="border-b border-gray-200 bg-[#1E1E1E] px-6 py-5">
+            <DialogTitle className="text-[#F5C800]">Editar Turno / Clima</DialogTitle>
+            <DialogDescription className="text-white/70">
+              {editingClimaDiario
+                ? `Diário #${String(editingClimaDiario.codigo || 0).padStart(3, "0")} - ${editingClimaDiario.cliente_nome}`
+                : "Ajuste apenas os turnos e seus climas deste diário."}
+            </DialogDescription>
+          </DialogHeader>
+
+          <div className="space-y-5 px-6 py-5">
+            <div className="flex items-center justify-between gap-3">
+              <div>
+                <p className="text-sm font-semibold text-[#1E1E1E]">Turnos do dia</p>
+                <p className="text-xs text-gray-500">
+                  Adicione somente os turnos necessários e defina o clima de cada um.
+                </p>
+              </div>
+              {availableTurnosInEditor.length > 0 && (
+                <span className="text-[11px] text-gray-500">Turnos restantes disponíveis.</span>
+              )}
+            </div>
+
+            <div className="flex flex-wrap gap-2">
+              {availableTurnosInEditor.map((turno) => (
+                <button
+                  key={turno.value}
+                  type="button"
+                  onClick={() => addTurnoToEditor(turno.value)}
+                  className="rounded-full border-2 border-gray-300 bg-white px-4 py-2 text-sm font-semibold text-gray-700 transition hover:border-[#F5C800]"
+                >
+                  {turno.label}
+                </button>
+              ))}
+            </div>
+
+            {selectedTurnosInEditor.length === 0 ? (
+              <div className="rounded-lg border border-dashed border-gray-300 bg-gray-50 px-4 py-6 text-sm text-gray-500">
+                Selecione pelo menos um turno para definir o clima correspondente.
+              </div>
+            ) : (
+              <div className="space-y-3">
+                {selectedTurnosInEditor.map((turno) => {
+                  const selectedClima = editingClimaValue[turno.value] ?? null
+
+                  return (
+                    <div
+                      key={turno.value}
+                      className="space-y-3 rounded-lg border border-gray-200 bg-white p-4 shadow-sm"
+                    >
+                      <div className="flex items-center justify-between gap-3">
+                        <div>
+                          <p className="text-sm font-semibold text-[#1E1E1E]">{turno.label}</p>
+                          <p className="text-xs text-gray-500">
+                            Defina o clima deste turno ou deixe como não definido.
+                          </p>
+                        </div>
+                        <Button
+                          type="button"
+                          size="sm"
+                          variant="ghost"
+                          onClick={() => removeTurnoFromEditor(turno.value)}
+                          className="text-red-600 hover:bg-red-50 hover:text-red-700"
+                        >
+                          <Trash2 className="mr-1 h-4 w-4" />
+                          Remover
+                        </Button>
+                      </div>
+
+                      <div className="flex flex-wrap gap-2">
+                        <button
+                          type="button"
+                          onClick={() => setTurnoClimaInEditor(turno.value, null)}
+                          className={cn(
+                            "rounded-full border-2 px-4 py-2 text-sm font-semibold transition",
+                            selectedClima === null
+                              ? "border-[#F5C800] bg-[#F5C800] text-black"
+                              : "border-gray-300 bg-white text-gray-700 hover:border-[#F5C800]"
+                          )}
+                        >
+                          Não definido
+                        </button>
+                        {Object.entries(CLIMA_LABEL).map(([climaKey, climaLabel]) => {
+                          const clima = climaKey as Clima
+                          const Icon = CLIMA_ICON[clima]
+                          const active = selectedClima === clima
+
+                          return (
+                            <button
+                              key={clima}
+                              type="button"
+                              onClick={() => setTurnoClimaInEditor(turno.value, clima)}
+                              className={cn(
+                                "flex items-center gap-2 rounded-full border-2 px-4 py-2 text-sm font-semibold transition",
+                                active
+                                  ? "border-[#F5C800] bg-[#F5C800]/10 text-[#1E1E1E]"
+                                  : "border-gray-300 bg-white text-gray-600 hover:border-[#F5C800]"
+                              )}
+                            >
+                              <Icon className="h-4 w-4" />
+                              {climaLabel}
+                            </button>
+                          )
+                        })}
+                      </div>
+                    </div>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
+          <DialogFooter className="border-t border-gray-200 bg-white px-6 py-4">
+            <Button type="button" variant="outline" onClick={resetClimaEditor} disabled={isSavingClima}>
+              Cancelar
+            </Button>
+            <Button
+              type="button"
+              onClick={saveClimaEditor}
+              disabled={isSavingClima}
+              className="bg-[#F5C800] text-[#1E1E1E] hover:bg-[#F5C800]/90"
+            >
+              {isSavingClima ? "Salvando..." : "Salvar Turno / Clima"}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
