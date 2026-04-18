@@ -50,6 +50,8 @@ const CLIMA_ICON: Record<Clima, React.ComponentType<{ className?: string }>> = {
 
 export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFullProps) {
   const inline = useDiarioInlineEdit()
+  const expandButtonClassName =
+    "h-8 w-8 p-0 bg-[#F5C800] hover:bg-[#F5C800]/90 rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
 
   const [colaboradoresLocal, setColaboradoresLocal] = useState<Record<string, DiarioColaboradores>>({})
   const [progressoLocal, setProgressoLocal] = useState<Record<string, DiarioProgresso>>({})
@@ -131,13 +133,11 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                 const isAtvOpen = expandedAtv.has(d.id)
                 const isFotosOpen = expandedFotos.has(d.id)
 
-                const turnoClimaEntries = TURNOS
-                  .filter(({ value }) => Object.prototype.hasOwnProperty.call(d.clima_por_turno || {}, value))
-                  .map(({ value, label }) => ({
-                    turno: value,
-                    turnoLabel: label,
-                    clima: d.clima_por_turno?.[value] ?? null,
-                  }))
+                const turnoClimaEntries = TURNOS.map(({ value, label }) => ({
+                  turno: value,
+                  turnoLabel: label,
+                  clima: d.clima_por_turno?.[value] ?? null,
+                }))
 
                 return (
                   <Fragment key={d.id}>
@@ -151,10 +151,13 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                         <span className="font-semibold text-sm">{d.cliente_nome}</span>
                       </TableCell>
                       <TableCell className="py-3 text-sm">{d.responsavel}</TableCell>
-                      <TableCell className="py-3 text-xs">
-                        {turnoClimaEntries.length === 0 ? (
-                          <span className="text-gray-400">-</span>
-                        ) : (
+                      <TableCell className="py-3 text-xs min-w-[220px]">
+                        <button
+                          type="button"
+                          onClick={() => onEdit(d)}
+                          className="w-full rounded-lg border border-transparent px-3 py-2 text-left transition-colors hover:border-[#F5C800]/30 hover:bg-[#F5C800]/10"
+                          title="Clique para editar turno e clima"
+                        >
                           <div className="space-y-1">
                             {turnoClimaEntries.map(({ turno, turnoLabel, clima }) => {
                               const hasClima = clima !== null
@@ -170,24 +173,32 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                                       <span className="text-[10px] text-gray-500">{CLIMA_LABEL[clima]}</span>
                                     </>
                                   ) : (
-                                    <span className="text-[10px] text-gray-500">Nao definido</span>
+                                    <span className="text-[10px] text-gray-500">~ Não definido</span>
                                   )}
                                 </div>
                               )
                             })}
                           </div>
-                        )}
+                        </button>
                       </TableCell>
                       <TableCell className="text-center py-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleColab(d.id)}
-                          className="border-[#F5C800]/30 hover:bg-[#F5C800]/10 font-bold"
-                        >
-                          {colabTotal}
-                          {isColabOpen ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
-                        </Button>
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-sm font-bold text-black min-w-[56px] text-center">
+                            {colabTotal}
+                          </span>
+                          <Button
+                            size="sm"
+                            onClick={() => toggleColab(d.id)}
+                            className={expandButtonClassName}
+                            title={isColabOpen ? "Recolher colaboradores" : "Ver colaboradores"}
+                          >
+                            {isColabOpen ? (
+                              <ChevronUp className="h-5 w-5 text-[#1E1E1E] font-bold" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-[#1E1E1E] font-bold" />
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell className="py-3 max-w-[280px]">
                         <button
@@ -200,27 +211,43 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                         </button>
                       </TableCell>
                       <TableCell className="text-center py-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleAtv(d.id)}
-                          className="border-[#F5C800]/30 hover:bg-[#F5C800]/10 font-bold"
-                        >
-                          {progPct}%
-                          {isAtvOpen ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
-                        </Button>
+                        <div className="flex items-center justify-center gap-2">
+                          <span className="text-sm font-bold text-black min-w-[56px] text-center">
+                            {progPct}%
+                          </span>
+                          <Button
+                            size="sm"
+                            onClick={() => toggleAtv(d.id)}
+                            className={expandButtonClassName}
+                            title={isAtvOpen ? "Recolher progresso" : "Ver atividade e progresso"}
+                          >
+                            {isAtvOpen ? (
+                              <ChevronUp className="h-5 w-5 text-[#1E1E1E] font-bold" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-[#1E1E1E] font-bold" />
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell className="text-center py-3">
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          onClick={() => toggleFotos(d.id)}
-                          className="border-[#F5C800]/30 hover:bg-[#F5C800]/10 font-bold"
-                        >
-                          <ImageIcon className="h-3 w-3 mr-1" />
-                          {(d.fotos || []).length}
-                          {isFotosOpen ? <ChevronUp className="h-3 w-3 ml-1" /> : <ChevronDown className="h-3 w-3 ml-1" />}
-                        </Button>
+                        <div className="flex items-center justify-center gap-2">
+                          <div className="min-w-[56px] text-center flex items-center justify-center gap-1">
+                            <ImageIcon className="h-4 w-4 text-black" />
+                            <span className="text-sm font-bold text-black">{(d.fotos || []).length}</span>
+                          </div>
+                          <Button
+                            size="sm"
+                            onClick={() => toggleFotos(d.id)}
+                            className={expandButtonClassName}
+                            title={isFotosOpen ? "Recolher fotos" : "Ver fotos"}
+                          >
+                            {isFotosOpen ? (
+                              <ChevronUp className="h-5 w-5 text-[#1E1E1E] font-bold" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-[#1E1E1E] font-bold" />
+                            )}
+                          </Button>
+                        </div>
                       </TableCell>
                       <TableCell className="py-3">
                         <div className="flex items-center justify-center gap-2">

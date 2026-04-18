@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Dialog, DialogContent } from "@/components/ui/dialog"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { ChevronLeft, ChevronRight, Loader2, Trash2, X } from "lucide-react"
 import { getSignedFotoUrlsAction } from "./actions/diarioActions"
@@ -61,6 +61,9 @@ export function FotoViewerModal({
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
       <DialogContent className="max-w-4xl bg-black p-0 overflow-hidden">
+        <DialogHeader className="sr-only">
+          <DialogTitle>Visualizador de fotos</DialogTitle>
+        </DialogHeader>
         <div className="relative w-full h-[80vh] flex items-center justify-center">
           {loading || !url ? (
             <Loader2 className="h-8 w-8 animate-spin text-white" />
