@@ -330,7 +330,7 @@ export function DiarioModal({ isOpen, onClose, diario, defaultResponsavel }: Dia
                               min={0}
                               value={m.colaboradores[r.key] ?? 0}
                               onChange={(e) => m.setColaborador(r.key, parseInt(e.target.value || "0"))}
-                              className="h-8 text-right"
+                              className="h-8 text-right [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
                             />
                           </td>
                         </tr>

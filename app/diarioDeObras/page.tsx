@@ -2,7 +2,49 @@ import { redirect } from "next/navigation"
 import { createClient } from "@/lib/supabase/server"
 import { getUserContext } from "@/app/auth/context/userContext"
 import DiarioPageContent from "./diario-page-content"
-import type { DiarioComCliente } from "@/lib/types"
+import type {
+  DiarioClimaPorTurno,
+  DiarioColaboradores,
+  DiarioComCliente,
+  DiarioObrasFoto,
+  DiarioProgresso,
+} from "@/lib/types"
+
+interface DiarioClienteRow {
+  id: string
+  codigo?: number | null
+  nome?: string | null
+}
+
+interface DiarioRow {
+  id: string
+  codigo: number
+  cliente_id: string
+  responsavel: string
+  responsavel_id?: string | null
+  data: string
+  colaboradores?: DiarioColaboradores | string | null
+  atividade?: string | null
+  progresso?: DiarioProgresso | string | null
+  clima_por_turno?: DiarioClimaPorTurno | string | null
+  created_at: string
+  updated_at: string
+  created_by?: string | null
+  updated_by?: string | null
+  clientes?: DiarioClienteRow | null
+  fotos?: DiarioObrasFoto[] | null
+}
+
+function parseJsonField<T>(value: T | string | null | undefined, fallback: T): T {
+  if (value == null) return fallback
+  if (typeof value !== "string") return value
+
+  try {
+    return JSON.parse(value) as T
+  } catch {
+    return fallback
+  }
+}
 
 export const dynamic = "force-dynamic"
 
@@ -27,23 +69,34 @@ export default async function DiarioDeObrasPage() {
     defaultResponsavel = profile?.nome_completo || ""
   } catch {}
 
-  const { data: rows } = await supabase
+  const { data: rows, error: rowsError } = await supabase
     .from("diario_obras")
     .select(
       `
       *,
       clientes:cliente_id ( id, codigo, nome ),
-      fotos:diario_obras_fotos ( id, diario_id, storage_path, mime_type, size_bytes, ordem, created_at )
+      fotos:diario_obras_fotos ( id, diario_id, storage_path, ordem, created_at )
     `
     )
     .order("data", { ascending: false })
 
-  const diarios: DiarioComCliente[] = (rows || []).map((r: any) => ({
-    ...r,
-    cliente_codigo: r.clientes?.codigo,
-    cliente_nome: r.clientes?.nome || "—",
-    fotos: (r.fotos || []).sort((a: any, b: any) => (a.ordem ?? 0) - (b.ordem ?? 0)),
-  }))
+  if (rowsError) {
+    console.error("Erro ao buscar diários", rowsError)
+  }
+
+  const diarios: DiarioComCliente[] = (rows || []).map((row) => {
+    const r = row as DiarioRow
+
+    return {
+      ...r,
+      colaboradores: parseJsonField(r.colaboradores, {}),
+      progresso: parseJsonField(r.progresso, {}),
+      clima_por_turno: parseJsonField(r.clima_por_turno, {}),
+      cliente_codigo: r.clientes?.codigo ?? 0,
+      cliente_nome: r.clientes?.nome || "—",
+      fotos: (r.fotos || []).sort((a, b) => (a.ordem ?? 0) - (b.ordem ?? 0)),
+    }
+  })
 
   return (
     <DiarioPageContent
