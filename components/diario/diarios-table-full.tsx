@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useState } from "react"
+import { Fragment, useEffect, useRef, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -16,6 +16,7 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { Checkbox } from "@/components/ui/checkbox"
 import {
+  CalendarDays,
   ChevronDown,
   ChevronUp,
   ChevronLeft,
@@ -27,12 +28,15 @@ import {
   Pencil,
   Sun,
   Trash2,
+  Upload,
+  User,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { usePagination, useExpandableRows } from "@/lib/table-utils"
 import {
   CLIMA_LABEL,
   COLABORADOR_ROLES,
+  MAX_FOTOS,
   PROGRESSO_ITEMS,
   TURNOS,
 } from "./types/diarioTypes"
@@ -77,6 +81,17 @@ function cloneClimaPorTurno(value?: DiarioClimaPorTurno | null): DiarioClimaPorT
   return next
 }
 
+function formatDiarioDate(value?: string | null) {
+  if (!value) return "-"
+
+  const rawDate = value.split("T")[0]
+  const [year, month, day] = rawDate.split("-")
+
+  if (!year || !month || !day) return value
+
+  return `${day}/${month}/${year}`
+}
+
 export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFullProps) {
   const inline = useDiarioInlineEdit()
   const expandButtonClassName =
@@ -86,6 +101,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
   const [colaboradoresLocal, setColaboradoresLocal] = useState<Record<string, DiarioColaboradores>>({})
   const [progressoLocal, setProgressoLocal] = useState<Record<string, DiarioProgresso>>({})
   const [atividadeLocal, setAtividadeLocal] = useState<Record<string, string>>({})
+  const [fotosLocal, setFotosLocal] = useState<Record<string, DiarioObrasFoto[]>>({})
   const [editingClimaDiario, setEditingClimaDiario] = useState<DiarioComCliente | null>(null)
   const [editingClimaValue, setEditingClimaValue] = useState<DiarioClimaPorTurno>({})
 
@@ -171,6 +187,20 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
     resetClimaEditor()
   }
 
+  const handleAddFotos = async (
+    diarioId: string,
+    files: FileList,
+    currentFotos: DiarioObrasFoto[]
+  ) => {
+    const res = await inline.uploadFotos(diarioId, files)
+    if (res.added.length === 0) return
+
+    setFotosLocal((prev) => ({
+      ...prev,
+      [diarioId]: [...(prev[diarioId] ?? currentFotos), ...res.added].sort((a, b) => a.ordem - b.ordem),
+    }))
+  }
+
   if (diarios.length === 0) {
     return <div className="text-center py-8 text-muted-foreground">Nenhum diário cadastrado ainda.</div>
   }
@@ -190,6 +220,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                 <TableHead className="text-[#F5C800] font-bold py-3">ATIVIDADE</TableHead>
                 <TableHead className="text-center text-[#F5C800] font-bold py-3">PROGRESSO</TableHead>
                 <TableHead className="text-center text-[#F5C800] font-bold py-3">FOTOS</TableHead>
+                <TableHead className="text-center text-[#F5C800] font-bold py-3">DATA</TableHead>
                 <TableHead className="text-center text-[#F5C800] font-bold py-3">AÇÕES</TableHead>
               </TableRow>
             </TableHeader>
@@ -199,6 +230,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                 const colab = colaboradoresLocal[d.id] ?? d.colaboradores ?? {}
                 const prog = progressoLocal[d.id] ?? d.progresso ?? {}
                 const atv = atividadeLocal[d.id] ?? d.atividade ?? ""
+                const fotos = fotosLocal[d.id] ?? d.fotos ?? []
                 const colabTotal = totalColaboradores(colab)
                 const progPct = calcDiarioProgressPct(prog)
 
@@ -221,9 +253,21 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                         </Badge>
                       </TableCell>
                       <TableCell className="font-medium py-3">
-                        <span className="font-semibold text-sm">{d.cliente_nome}</span>
+                        <div className="flex items-center gap-1.5">
+                          <User className="h-3 w-3 text-gray-400" />
+                          <span className="truncate text-sm font-semibold text-gray-800" title={d.cliente_nome}>
+                            {d.cliente_nome}
+                          </span>
+                        </div>
                       </TableCell>
-                      <TableCell className="py-3 text-sm">{d.responsavel}</TableCell>
+                      <TableCell className="py-3">
+                        <div className="flex items-center gap-1.5">
+                          <User className="h-3 w-3 text-gray-400" />
+                          <span className="truncate text-sm font-semibold text-gray-800" title={d.responsavel}>
+                            {d.responsavel}
+                          </span>
+                        </div>
+                      </TableCell>
                       <TableCell className="py-3 text-xs min-w-[220px]">
                         <button
                           type="button"
@@ -306,7 +350,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                         <div className="flex items-center justify-center gap-2">
                           <div className="min-w-[56px] text-center flex items-center justify-center gap-1">
                             <ImageIcon className="h-4 w-4 text-black" />
-                            <span className="text-sm font-bold text-black">{(d.fotos || []).length}</span>
+                            <span className="text-sm font-bold text-black">{fotos.length}</span>
                           </div>
                           <Button
                             size="sm"
@@ -320,6 +364,12 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                               <ChevronDown className="h-5 w-5 text-[#1E1E1E] font-bold" />
                             )}
                           </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3 text-center">
+                        <div className="flex items-center justify-center gap-1.5 whitespace-nowrap text-xs font-medium text-gray-600">
+                          <CalendarDays className="h-3 w-3 text-gray-400" />
+                          {formatDiarioDate(d.data)}
                         </div>
                       </TableCell>
                       <TableCell className="py-3">
@@ -348,7 +398,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                     {/* COLABORADORES expandable */}
                     {isColabOpen && (
                       <TableRow className="bg-yellow-50 border-l-4 border-[#F5C800]">
-                        <TableCell colSpan={9} className="py-6 px-8">
+                        <TableCell colSpan={10} className="py-6 px-8">
                           <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
                             <h4 className="text-sm font-bold text-[#1E1E1E] mb-4 uppercase">
                               Quantidade de cada colaborador
@@ -391,7 +441,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                     {/* ATIVIDADE + PROGRESSO expandable (combined) */}
                     {isAtvOpen && (
                       <TableRow className="bg-yellow-50 border-l-4 border-[#F5C800]">
-                        <TableCell colSpan={9} className="py-6 px-8">
+                        <TableCell colSpan={10} className="py-6 px-8">
                           <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
                             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                               <div className="lg:col-span-2 space-y-4">
@@ -433,6 +483,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                                                   setProgressoLocal((prev) => ({ ...prev, [d.id]: next }))
                                                   await inline.updateField(d.id, "progresso", next, "Progresso")
                                                 }}
+                                                className="border-2 border-gray-600 data-[state=checked]:border-[#F5C800] data-[state=checked]:bg-[#F5C800] data-[state=unchecked]:bg-gray-400"
                                               />
                                             </td>
                                           </tr>
@@ -455,14 +506,22 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                     {/* FOTOS expandable */}
                     {isFotosOpen && (
                       <TableRow className="bg-yellow-50 border-l-4 border-[#F5C800]">
-                        <TableCell colSpan={9} className="py-6 px-8">
+                        <TableCell colSpan={10} className="py-6 px-8">
                           <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                            <h4 className="text-sm font-bold text-[#1E1E1E] mb-4 uppercase">
-                              Registro Fotográfico ({(d.fotos || []).length})
-                            </h4>
+                            <div className="mb-4 flex items-center justify-between gap-3">
+                              <h4 className="text-sm font-bold text-[#1E1E1E] uppercase">
+                                Registro Fotográfico ({fotos.length})
+                              </h4>
+                              <span className="text-[11px] text-gray-500">
+                                {fotos.length}/{MAX_FOTOS} (JPEG/PNG, máx. 50 MB)
+                              </span>
+                            </div>
                             <FotosThumbs
-                              fotos={d.fotos || []}
-                              onOpen={(idx) => openViewer(d.fotos || [], idx)}
+                              fotos={fotos}
+                              onOpen={(idx) => openViewer(fotos, idx)}
+                              onAdd={(files) => handleAddFotos(d.id, files, fotos)}
+                              canAdd={fotos.length < MAX_FOTOS}
+                              isUploading={inline.uploadingFotosFor === d.id}
                             />
                           </div>
                         </TableCell>
@@ -549,7 +608,13 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
         canDelete
         onDelete={async (foto) => {
           const ok = await inline.removeFoto(foto.id)
-          if (ok) setViewerFotos((prev) => prev.filter((f) => f.id !== foto.id))
+          if (ok) {
+            setViewerFotos((prev) => prev.filter((f) => f.id !== foto.id))
+            setFotosLocal((prev) => ({
+              ...prev,
+              [foto.diario_id]: (prev[foto.diario_id] ?? viewerFotos).filter((f) => f.id !== foto.id),
+            }))
+          }
         }}
       />
 
@@ -693,10 +758,17 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
 function FotosThumbs({
   fotos,
   onOpen,
+  onAdd,
+  canAdd,
+  isUploading,
 }: {
   fotos: DiarioObrasFoto[]
   onOpen: (idx: number) => void
+  onAdd: (files: FileList) => void
+  canAdd: boolean
+  isUploading: boolean
 }) {
+  const fileInputRef = useRef<HTMLInputElement | null>(null)
   const [urls, setUrls] = useState<Record<string, string>>({})
 
   useEffect(() => {
@@ -707,25 +779,52 @@ function FotosThumbs({
     })
   }, [fotos])
 
-  if (fotos.length === 0) return <p className="text-sm text-gray-500 italic">Nenhuma foto enviada.</p>
-
   return (
-    <div className="flex flex-wrap gap-3">
-      {fotos.map((f, idx) => (
-        <button
-          key={f.id}
-          type="button"
-          onClick={() => onOpen(idx)}
-          className="w-24 h-24 rounded border border-gray-200 overflow-hidden hover:ring-2 hover:ring-[#F5C800]"
-        >
-          {urls[f.storage_path] ? (
-            // eslint-disable-next-line @next/next/no-img-element
-            <img src={urls[f.storage_path]} alt="" className="object-cover w-full h-full" />
-          ) : (
-            <div className="w-full h-full bg-gray-100 animate-pulse" />
-          )}
-        </button>
-      ))}
+    <div className="space-y-3">
+      {fotos.length === 0 && <p className="text-sm text-gray-500 italic">Nenhuma foto enviada.</p>}
+
+      <div className="flex flex-wrap gap-3">
+        {fotos.map((f, idx) => (
+          <button
+            key={f.id}
+            type="button"
+            onClick={() => onOpen(idx)}
+            className="w-24 h-24 rounded border border-gray-200 overflow-hidden hover:ring-2 hover:ring-[#F5C800]"
+          >
+            {urls[f.storage_path] ? (
+              // eslint-disable-next-line @next/next/no-img-element
+              <img src={urls[f.storage_path]} alt="" className="object-cover w-full h-full" />
+            ) : (
+              <div className="w-full h-full bg-gray-100 animate-pulse" />
+            )}
+          </button>
+        ))}
+
+        {canAdd && (
+          <>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploading}
+              className="w-24 h-24 rounded border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 hover:border-[#F5C800] hover:text-[#1E1E1E] disabled:cursor-not-allowed disabled:opacity-60"
+            >
+              <Upload className="h-5 w-5 mb-1" />
+              <span className="text-[10px] font-semibold">{isUploading ? "Enviando..." : "Adicionar"}</span>
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              multiple
+              accept="image/jpeg,image/png"
+              className="hidden"
+              onChange={(e) => {
+                if (e.target.files?.length) onAdd(e.target.files)
+                e.target.value = ""
+              }}
+            />
+          </>
+        )}
+      </div>
     </div>
   )
 }
