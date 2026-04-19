@@ -1,18 +1,15 @@
 "use client"
 
-import { Fragment, useEffect, useState } from "react"
+import { Fragment, useMemo, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
-import { Input } from "@/components/ui/input"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   ChevronDown,
   ChevronUp,
   ChevronLeft,
   ChevronRight,
   Pencil,
-  Plus,
   Trash2,
 } from "lucide-react"
 import {
@@ -23,10 +20,9 @@ import {
   SelectValue,
 } from "@/components/ui/select"
 import { usePagination, useExpandableRows } from "@/lib/table-utils"
-import { Gauge360 } from "@/components/gauge-360"
 import { calcPlanejamentoProgressPct } from "./libs/planejamento-progress"
 import { usePlanejamentoInlineEdit } from "./hooks/usePlanejamentoInlineEdit"
-import { MAX_DESCRICAO_LEN } from "./types/planejamentoTypes"
+import { PlanejamentoExpandedPanel } from "./planejamento-panels"
 import type { PlanejamentoAtividade, PlanejamentoComCliente } from "@/lib/types"
 
 interface PlanejamentosTableFullProps {
@@ -48,17 +44,19 @@ export function PlanejamentosTableFull({
 }: PlanejamentosTableFullProps) {
   const inline = usePlanejamentoInlineEdit()
   const { expandedRows, toggleRow } = useExpandableRows()
+  const expandButtonClassName =
+    "h-8 w-8 p-0 bg-[#F5C800] hover:bg-[#F5C800]/90 rounded-full shadow-md hover:shadow-lg transition-all duration-200 flex items-center justify-center flex-shrink-0"
 
-  // Local mirror for atividades to allow optimistic edits
-  const [atividadesLocal, setAtividadesLocal] = useState<Record<string, PlanejamentoAtividade[]>>({})
-
-  useEffect(() => {
+  const baseAtividadesByPlanejamento = useMemo(() => {
     const map: Record<string, PlanejamentoAtividade[]> = {}
-    for (const p of planejamentos) {
-      map[p.id] = [...(p.atividades || [])].sort((a, b) => a.ordem - b.ordem)
+    for (const planejamento of planejamentos) {
+      map[planejamento.id] = [...(planejamento.atividades || [])].sort((a, b) => a.ordem - b.ordem)
     }
-    setAtividadesLocal(map)
+    return map
   }, [planejamentos])
+
+  // Local overrides for optimistic edits
+  const [atividadesLocal, setAtividadesLocal] = useState<Record<string, PlanejamentoAtividade[]>>({})
 
   const {
     currentPage,
@@ -75,7 +73,9 @@ export function PlanejamentosTableFull({
   const updateLocal = (pid: string, aid: string, patch: Partial<PlanejamentoAtividade>) => {
     setAtividadesLocal((prev) => ({
       ...prev,
-      [pid]: (prev[pid] || []).map((a) => (a.id === aid ? { ...a, ...patch } : a)),
+      [pid]: (prev[pid] ?? baseAtividadesByPlanejamento[pid] ?? []).map((a) =>
+        a.id === aid ? { ...a, ...patch } : a
+      ),
     }))
   }
 
@@ -91,7 +91,9 @@ export function PlanejamentosTableFull({
     if (created) {
       setAtividadesLocal((prev) => ({
         ...prev,
-        [pid]: [...(prev[pid] || []), created],
+        [pid]: [...(prev[pid] ?? baseAtividadesByPlanejamento[pid] ?? []), created].sort(
+          (a, b) => a.ordem - b.ordem
+        ),
       }))
     }
   }
@@ -101,248 +103,201 @@ export function PlanejamentosTableFull({
     if (ok) {
       setAtividadesLocal((prev) => ({
         ...prev,
-        [pid]: (prev[pid] || []).filter((a) => a.id !== aid),
+        [pid]: (prev[pid] ?? baseAtividadesByPlanejamento[pid] ?? []).filter((a) => a.id !== aid),
       }))
     }
   }
 
   if (planejamentos.length === 0) {
-    return (
-      <div className="bg-white rounded-md border p-12 text-center text-gray-500">
-        Nenhum planejamento encontrado.
-      </div>
-    )
+    return <div className="text-center py-8 text-muted-foreground">Nenhum planejamento encontrado.</div>
   }
 
   return (
-    <div className="bg-white rounded-md border overflow-hidden">
-      <Table>
-        <TableHeader>
-          <TableRow className="bg-gray-50">
-            <TableHead className="font-bold text-xs uppercase">Cód.</TableHead>
-            <TableHead className="font-bold text-xs uppercase">Cliente</TableHead>
-            <TableHead className="font-bold text-xs uppercase">Responsável</TableHead>
-            <TableHead className="font-bold text-xs uppercase">Semana</TableHead>
-            <TableHead className="font-bold text-xs uppercase">Atividade</TableHead>
-            <TableHead className="font-bold text-xs uppercase text-right">Ações</TableHead>
-          </TableRow>
-        </TableHeader>
-        <TableBody>
-          {paginatedData.map((p) => {
-            const ativs = atividadesLocal[p.id] || []
-            const pct = calcPlanejamentoProgressPct(ativs)
-            const isOpen = expandedRows.has(p.id)
-            return (
-              <Fragment key={p.id}>
-                <TableRow className="hover:bg-gray-50">
-                  <TableCell className="font-mono text-xs">
-                    #{String(p.codigo).padStart(3, "0")}
-                  </TableCell>
-                  <TableCell className="text-sm font-medium">{p.cliente_nome}</TableCell>
-                  <TableCell className="text-sm">{p.responsavel}</TableCell>
-                  <TableCell className="text-xs text-gray-600">
-                    {formatDate(p.data_inicio)} - {formatDate(p.data_fim)}
-                  </TableCell>
-                  <TableCell>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={() => toggleRow(p.id)}
-                      className="h-7 px-2 gap-2"
-                    >
-                      <Badge
-                        variant="outline"
-                        className={
-                          pct >= 100
-                            ? "bg-green-100 text-green-700 border-green-300"
-                            : pct >= 50
-                            ? "bg-yellow-100 text-yellow-700 border-yellow-300"
-                            : "bg-red-100 text-red-700 border-red-300"
-                        }
-                      >
-                        {pct}% ({ativs.length})
-                      </Badge>
-                      {isOpen ? (
-                        <ChevronUp className="h-3 w-3" />
-                      ) : (
-                        <ChevronDown className="h-3 w-3" />
-                      )}
-                    </Button>
-                  </TableCell>
-                  <TableCell className="text-right">
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => onEdit(p)}
-                      className="h-7 w-7"
-                    >
-                      <Pencil className="h-3 w-3" />
-                    </Button>
-                    <Button
-                      size="icon"
-                      variant="ghost"
-                      onClick={() => onDelete(p)}
-                      className="h-7 w-7 text-red-600 hover:bg-red-50"
-                    >
-                      <Trash2 className="h-3 w-3" />
-                    </Button>
-                  </TableCell>
-                </TableRow>
-                {isOpen && (
-                  <TableRow className="bg-gray-50">
-                    <TableCell colSpan={6} className="p-4">
-                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                        <div className="md:col-span-1 flex flex-col items-center justify-center bg-white rounded-md border p-4">
-                          <Gauge360 value={pct} size={160} label="Concluído" />
-                          <p className="text-xs text-gray-600 mt-2">
-                            {ativs.filter((a) => a.realizado).length} de {ativs.length}
-                          </p>
-                        </div>
-                        <div className="md:col-span-2 bg-white rounded-md border">
-                          <div className="flex items-center justify-between px-3 py-2 border-b">
-                            <span className="text-sm font-semibold">Atividades</span>
-                            <Button
-                              size="sm"
-                              onClick={() => handleAdd(p.id)}
-                              disabled={inline.busy}
-                              className="h-7 bg-[#F5C800] text-[#1E1E1E] hover:bg-yellow-500"
-                            >
-                              <Plus className="h-3 w-3 mr-1" />
-                              Adicionar
-                            </Button>
-                          </div>
-                          {ativs.length === 0 ? (
-                            <div className="p-6 text-center text-sm text-gray-500">
-                              Nenhuma atividade.
-                            </div>
-                          ) : (
-                            <table className="w-full text-sm">
-                              <thead className="bg-gray-50 border-b text-xs uppercase text-gray-600">
-                                <tr>
-                                  <th className="px-2 py-2 w-16 text-center">Cód.</th>
-                                  <th className="px-2 py-2 text-left">Descrição</th>
-                                  <th className="px-2 py-2 w-24 text-center">Realizado</th>
-                                  <th className="px-2 py-2 w-12"></th>
-                                </tr>
-                              </thead>
-                              <tbody>
-                                {ativs.map((a) => (
-                                  <tr key={a.id} className="border-b last:border-b-0">
-                                    <td className="px-2 py-1 text-center font-mono text-xs">
-                                      #{String(a.codigo).padStart(3, "0")}
-                                    </td>
-                                    <td className="px-2 py-1">
-                                      <Input
-                                        value={a.descricao}
-                                        maxLength={MAX_DESCRICAO_LEN}
-                                        onChange={(e) =>
-                                          updateLocal(p.id, a.id, { descricao: e.target.value })
-                                        }
-                                        onBlur={(e) =>
-                                          persistField(a.id, { descricao: e.target.value })
-                                        }
-                                        className="h-7 bg-white text-xs"
-                                      />
-                                    </td>
-                                    <td className="px-2 py-1 text-center">
-                                      <Checkbox
-                                        checked={a.realizado}
-                                        onCheckedChange={(v) => {
-                                          const realizado = !!v
-                                          updateLocal(p.id, a.id, { realizado })
-                                          persistField(a.id, { realizado })
-                                        }}
-                                      />
-                                    </td>
-                                    <td className="px-2 py-1 text-center">
-                                      <Button
-                                        size="icon"
-                                        variant="ghost"
-                                        onClick={() => handleRemove(p.id, a.id)}
-                                        disabled={inline.busy}
-                                        className="h-6 w-6 text-red-600 hover:bg-red-50"
-                                      >
-                                        <Trash2 className="h-3 w-3" />
-                                      </Button>
-                                    </td>
-                                  </tr>
-                                ))}
-                              </tbody>
-                            </table>
-                          )}
-                        </div>
-                      </div>
-                    </TableCell>
-                  </TableRow>
-                )}
-              </Fragment>
-            )
-          })}
-        </TableBody>
-      </Table>
+    <div className="space-y-4">
+      <div className="rounded-md border-2 border-[#F5C800]/20 overflow-hidden">
+        <div className="overflow-x-auto relative">
+          <Table>
+            <TableHeader className="sticky top-0 z-10 bg-[#1E1E1E] shadow-md">
+              <TableRow className="bg-[#1E1E1E] hover:bg-[#1E1E1E]">
+                <TableHead className="py-3 font-bold text-[#F5C800]">CÓD.</TableHead>
+                <TableHead className="py-3 font-bold text-[#F5C800]">CLIENTE</TableHead>
+                <TableHead className="py-3 font-bold text-[#F5C800]">RESPONSÁVEL</TableHead>
+                <TableHead className="py-3 font-bold text-[#F5C800]">SEMANA</TableHead>
+                <TableHead className="py-3 font-bold text-[#F5C800]">ATIVIDADES</TableHead>
+                <TableHead className="py-3 text-center font-bold text-[#F5C800]">AÇÕES</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedData.map((p) => {
+                const ativs = atividadesLocal[p.id] ?? baseAtividadesByPlanejamento[p.id] ?? []
+                const pct = calcPlanejamentoProgressPct(ativs)
+                const isOpen = expandedRows.has(p.id)
 
-      {/* Pagination */}
-      <div className="flex items-center justify-between p-3 border-t bg-gray-50">
-        <div className="flex items-center gap-2 text-xs text-gray-600">
-          <span>Itens por página:</span>
-          <Select
-            value={String(itemsPerPage)}
-            onValueChange={(v) => handleItemsPerPageChange(v)}
-          >
-            <SelectTrigger className="h-7 w-16 text-xs">
-              <SelectValue />
-            </SelectTrigger>
-            <SelectContent>
-              <SelectItem value="10">10</SelectItem>
-              <SelectItem value="25">25</SelectItem>
-              <SelectItem value="50">50</SelectItem>
-              <SelectItem value="100">100</SelectItem>
-            </SelectContent>
-          </Select>
-          <span>
-            {startIndex + 1}–{endIndex} de {planejamentos.length}
+                return (
+                  <Fragment key={p.id}>
+                    <TableRow className="border-b transition-all duration-300 hover:bg-[#F5C800]/5">
+                      <TableCell className="py-3">
+                        <Badge className="font-mono bg-[#F5C800] px-2 py-1 text-xs font-bold text-[#1E1E1E] hover:bg-[#F5C800]/90">
+                          #{String(p.codigo).padStart(3, "0")}
+                        </Badge>
+                      </TableCell>
+                      <TableCell className="py-3 font-medium">
+                        <span
+                          className="block max-w-[170px] truncate text-sm font-semibold text-gray-800 md:max-w-[220px]"
+                          title={p.cliente_nome}
+                        >
+                          {p.cliente_nome}
+                        </span>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <span
+                          className="block max-w-[150px] truncate text-sm font-semibold text-gray-800 md:max-w-[190px]"
+                          title={p.responsavel}
+                        >
+                          {p.responsavel}
+                        </span>
+                      </TableCell>
+                      <TableCell className="min-w-[165px] py-3 text-xs font-medium text-gray-600 whitespace-nowrap">
+                        {formatDate(p.data_inicio)} - {formatDate(p.data_fim)}
+                      </TableCell>
+                      <TableCell className="min-w-[160px] py-3">
+                        <div className="flex items-center gap-2">
+                          <Badge
+                            variant="outline"
+                            className={
+                              pct >= 100
+                                ? "border-green-300 bg-green-50 font-semibold text-green-700 hover:bg-green-50"
+                                : pct >= 50
+                                  ? "border-[#F5C800]/40 bg-[#F5C800]/10 font-semibold text-[#8a6500] hover:bg-[#F5C800]/10"
+                                  : "border-red-300 bg-red-50 font-semibold text-red-700 hover:bg-red-50"
+                            }
+                          >
+                            {pct}% ({ativs.length})
+                          </Badge>
+                          <Button
+                            size="sm"
+                            onClick={() => toggleRow(p.id)}
+                            className={expandButtonClassName}
+                            title={isOpen ? "Recolher atividades" : "Ver atividades"}
+                          >
+                            {isOpen ? (
+                              <ChevronUp className="h-5 w-5 text-[#1E1E1E] font-bold" />
+                            ) : (
+                              <ChevronDown className="h-5 w-5 text-[#1E1E1E] font-bold" />
+                            )}
+                          </Button>
+                        </div>
+                      </TableCell>
+                      <TableCell className="py-3">
+                        <div className="flex items-center justify-center gap-2">
+                          <Button
+                            size="sm"
+                            onClick={() => onEdit(p)}
+                            className="h-9 w-9 border-2 border-[#F5C800] bg-[#F5C800] p-0 hover:bg-[#F5C800]/90"
+                            title="Editar"
+                          >
+                            <Pencil className="h-4 w-4 text-[#1E1E1E]" />
+                          </Button>
+                          <Button
+                            size="sm"
+                            variant="outline"
+                            onClick={() => onDelete(p)}
+                            className="h-9 w-9 border-2 border-red-300 p-0 hover:border-red-500 hover:bg-red-50"
+                            title="Remover"
+                          >
+                            <Trash2 className="h-4 w-4 text-red-600" />
+                          </Button>
+                        </div>
+                      </TableCell>
+                    </TableRow>
+
+                    {isOpen && (
+                      <PlanejamentoExpandedPanel
+                        atividades={ativs}
+                        progressPct={pct}
+                        busy={inline.busy}
+                        onAddAtividade={async () => handleAdd(p.id)}
+                        onChangeAtividade={(atividadeId, patch) => {
+                          updateLocal(p.id, atividadeId, patch)
+                        }}
+                        onCommitAtividade={async (atividadeId, patch) => {
+                          await persistField(atividadeId, patch)
+                        }}
+                        onRemoveAtividade={async (atividadeId) => {
+                          await handleRemove(p.id, atividadeId)
+                        }}
+                      />
+                    )}
+                  </Fragment>
+                )
+              })}
+            </TableBody>
+          </Table>
+        </div>
+      </div>
+
+      <div className="flex flex-col items-start justify-between gap-4 px-2 py-4 sm:flex-row sm:items-center">
+        <div className="flex items-center gap-2">
+          <span className="text-sm font-semibold text-muted-foreground">
+            Mostrando {startIndex + 1} - {Math.min(endIndex, planejamentos.length)} de {planejamentos.length} planejamentos
           </span>
         </div>
-        <div className="flex items-center gap-1">
-          <Button
-            size="icon"
-            variant="ghost"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage(currentPage - 1)}
-            className="h-7 w-7"
-          >
-            <ChevronLeft className="h-3 w-3" />
-          </Button>
-          {getPageNumbers().map((n, i) =>
-            n === "..." ? (
-              <span key={i} className="px-1 text-xs text-gray-500">
-                …
-              </span>
-            ) : (
-              <Button
-                key={i}
-                size="sm"
-                variant={n === currentPage ? "default" : "ghost"}
-                onClick={() => setCurrentPage(Number(n))}
-                className={
-                  n === currentPage
-                    ? "h-7 w-7 p-0 bg-[#1E1E1E] text-white"
-                    : "h-7 w-7 p-0 text-xs"
-                }
-              >
-                {n}
-              </Button>
-            )
-          )}
-          <Button
-            size="icon"
-            variant="ghost"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage(currentPage + 1)}
-            className="h-7 w-7"
-          >
-            <ChevronRight className="h-3 w-3" />
-          </Button>
+        <div className="flex w-full flex-col items-start gap-4 sm:w-auto sm:flex-row sm:items-center">
+          <div className="flex items-center gap-3">
+            <span className="whitespace-nowrap text-sm font-semibold text-muted-foreground">
+              Planejamentos por página:
+            </span>
+            <Select value={String(itemsPerPage)} onValueChange={handleItemsPerPageChange}>
+              <SelectTrigger className="h-9 w-[80px] border-[#F5C800]/30 bg-background font-semibold focus:ring-[#F5C800]">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent className="min-w-[80px]">
+                <SelectItem value="10" className="font-semibold">10</SelectItem>
+                <SelectItem value="25" className="font-semibold">25</SelectItem>
+                <SelectItem value="50" className="font-semibold">50</SelectItem>
+                <SelectItem value="100" className="font-semibold">100</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+          <div className="flex items-center gap-1">
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+              disabled={currentPage === 1}
+              className="border-[#F5C800]/30 font-semibold hover:bg-[#F5C800]/10 disabled:opacity-50"
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            {getPageNumbers().map((page, idx) =>
+              page === "..." ? (
+                <span key={`ellipsis-${idx}`} className="px-2 font-semibold text-muted-foreground">...</span>
+              ) : (
+                <Button
+                  key={page}
+                  size="sm"
+                  variant={currentPage === page ? "default" : "outline"}
+                  onClick={() => setCurrentPage(page as number)}
+                  className={
+                    currentPage === page
+                      ? "bg-[#F5C800] font-bold text-[#1E1E1E] hover:bg-[#F5C800]/90"
+                      : "border-[#F5C800]/30 font-semibold hover:bg-[#F5C800]/10"
+                  }
+                >
+                  {page}
+                </Button>
+              )
+            )}
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+              disabled={currentPage === totalPages}
+              className="border-[#F5C800]/30 font-semibold hover:bg-[#F5C800]/10 disabled:opacity-50"
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </div>
     </div>
