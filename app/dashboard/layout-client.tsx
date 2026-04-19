@@ -5,7 +5,6 @@ import {
   Users,
   Building2,
   DollarSign,
-  CreditCard,
   LogOut,
   Menu,
   X,
@@ -27,11 +26,14 @@ import {
 import Link from "next/link";
 import Image from "next/image";
 import { Button } from "@/components/ui/button";
-import { redirect, usePathname } from "next/navigation";
+import { usePathname } from "next/navigation";
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import type { PermissoesUsuario } from "@/lib/types";
 import { Toaster } from "@/components/ui/toaster";
+
+type UserPermissions = Partial<PermissoesUsuario>;
 
 const menuItems = [
   {
@@ -157,7 +159,7 @@ function Logo({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { collapsed: boolean; onToggle: () => void; user: SupabaseUser; userRole: string, userPermissions: Record<string, any>; }) {
+function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { collapsed: boolean; onToggle: () => void; user: SupabaseUser; userRole: string, userPermissions: UserPermissions; }) {
   const pathname = usePathname();
 
   let items =
@@ -183,6 +185,14 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
 
   if (!userPermissions?.logs?.view) {
     items = items.filter((i) => i.title !== "Logs")
+  }
+
+  if (!userPermissions?.diario?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Diário de Obras")
+  }
+
+  if (!userPermissions?.diario?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Planejamento")
   }
 
   if (!userPermissions?.estoque?.view && userRole !== "admin") {
@@ -305,7 +315,7 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
   );
 }
 
-function MobileSidebar({ isOpen, onClose, user, userRole, userPermissions }: { isOpen: boolean; onClose: () => void; user: SupabaseUser; userRole: string, userPermissions: Record<string, any> }) {
+function MobileSidebar({ isOpen, onClose, user, userRole, userPermissions }: { isOpen: boolean; onClose: () => void; user: SupabaseUser; userRole: string, userPermissions: UserPermissions }) {
 
   const pathname = usePathname();
 
@@ -332,6 +342,14 @@ function MobileSidebar({ isOpen, onClose, user, userRole, userPermissions }: { i
 
   if (!userPermissions?.logs?.view) {
     items = items.filter((i) => i.title !== "Logs")
+  }
+
+  if (!userPermissions?.diario?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Diário de Obras")
+  }
+
+  if (!userPermissions?.diario?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Planejamento")
   }
 
   if (!userPermissions?.estoque?.view && userRole !== "admin") {
@@ -463,7 +481,7 @@ interface DashboardLayoutClientProps {
   children: React.ReactNode;
   user: SupabaseUser;
   userRole: string;
-  userPermissions: Record<string, any>;
+  userPermissions: UserPermissions;
 }
 
 export default function DashboardLayoutClient({

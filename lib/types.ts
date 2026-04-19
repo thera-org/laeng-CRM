@@ -200,6 +200,9 @@ export interface PermissoesUsuario {
   logs?: {
     view: boolean;
   };
+  diario?: {
+    view: boolean;
+  };
   obras: {
     view: boolean;
     edit: boolean;

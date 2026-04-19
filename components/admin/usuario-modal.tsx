@@ -23,10 +23,23 @@ interface UsuarioModalProps {
 const PERMISSOES_DEFAULT: PermissoesUsuario = {
   dashboard: { view: true },
   logs: { view: false},
+  diario: { view: false },
   obras: { view: true, edit: false},
   financeira: {view: true, edit: false},
   clientes: { view: false, create: false, delete: false, edit: false },
   estoque: { view: false },
+}
+
+function normalizePermissoes(permissoes?: Partial<PermissoesUsuario>): PermissoesUsuario {
+  return {
+    dashboard: { ...PERMISSOES_DEFAULT.dashboard, ...permissoes?.dashboard },
+    logs: { view: permissoes?.logs?.view ?? PERMISSOES_DEFAULT.logs?.view ?? false },
+    diario: { view: permissoes?.diario?.view ?? PERMISSOES_DEFAULT.diario?.view ?? false },
+    obras: { ...PERMISSOES_DEFAULT.obras, ...permissoes?.obras },
+    financeira: { ...PERMISSOES_DEFAULT.financeira, ...permissoes?.financeira },
+    clientes: { ...PERMISSOES_DEFAULT.clientes, ...permissoes?.clientes },
+    estoque: { view: permissoes?.estoque?.view ?? PERMISSOES_DEFAULT.estoque?.view ?? false },
+  }
 }
 
 interface FormData {
@@ -47,7 +60,7 @@ export function UsuarioModal({ usuario, isOpen, onClose }: UsuarioModalProps) {
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
   const [activeTab, setActiveTab] = useState("informacoes")
-  const [permissoes, setPermissoes] = useState<PermissoesUsuario>(PERMISSOES_DEFAULT)
+  const [permissoes, setPermissoes] = useState<PermissoesUsuario>(() => normalizePermissoes())
   const [formData, setFormData] = useState<FormData>({
     login: "",
     nomeCompleto: "",
@@ -74,7 +87,7 @@ export function UsuarioModal({ usuario, isOpen, onClose }: UsuarioModalProps) {
         confirmarSenha: "",
       })
       
-      setPermissoes(usuario.modulos)
+      setPermissoes(normalizePermissoes(usuario.modulos))
 
       } else {
         setFormData({
@@ -86,7 +99,7 @@ export function UsuarioModal({ usuario, isOpen, onClose }: UsuarioModalProps) {
           confirmarSenha: "",
         })
       
-      setPermissoes(PERMISSOES_DEFAULT)
+        setPermissoes(normalizePermissoes())
       }
     }
   }, [isOpen, usuario])
@@ -200,7 +213,7 @@ onClose()
   } finally {
     setIsLoading(false)
   }
-}, [formData, isEditMode, permissoes, validarFormulario, toast, onClose])
+}, [formData, isEditMode, permissoes, validarFormulario, toast, onClose, usuario])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>

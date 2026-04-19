@@ -1,30 +1,47 @@
-export const ROUTES = [
+import type { PermissoesUsuario } from "@/lib/types";
+
+type RoutePermissions = Partial<PermissoesUsuario>;
+
+interface AppRoute {
+  path: string;
+  permission: (p: RoutePermissions) => boolean | undefined;
+}
+
+export const ROUTES: AppRoute[] = [
   {
     path: "/dashboard",
-    permission: (p: any) => p?.dashboard?.view,
+    permission: (p) => p?.dashboard?.view,
   },
   {
     path: "/clientes",
-    permission: (p: any) => p?.clientes?.view,
+    permission: (p) => p?.clientes?.view,
   },
   {
     path: "/financeira",
-    permission: (p: any) => p?.financeira?.view,
+    permission: (p) => p?.financeira?.view,
   },
   {
     path: "/logs",
-    permission: (p: any) => p?.logs?.view,
+    permission: (p) => p?.logs?.view,
   },
   {
     path: "/obras",
-    permission: (p: any) => p?.obras?.view,
+    permission: (p) => p?.obras?.view,
+  },
+  {
+    path: "/diarioDeObras",
+    permission: (p) => p?.diario?.view,
+  },
+  {
+    path: "/planejamentoDeObras",
+    permission: (p) => p?.diario?.view,
   },
   {
     path: "/entrada",
-    permission: (p: any) => p?.estoque?.view,
+    permission: (p) => p?.estoque?.view,
   },
   {
     path: "/saida",
-    permission: (p: any) => p?.estoque?.view,
+    permission: (p) => p?.estoque?.view,
   },
 ];
