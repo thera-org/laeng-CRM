@@ -1,6 +1,6 @@
 "use client"
 
-import { Fragment, useEffect, useRef, useState } from "react"
+import { Fragment, useState } from "react"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table"
 import { Button } from "@/components/ui/button"
 import { Badge } from "@/components/ui/badge"
@@ -12,9 +12,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog"
-import { Input } from "@/components/ui/input"
-import { Textarea } from "@/components/ui/textarea"
-import { Checkbox } from "@/components/ui/checkbox"
 import {
   CalendarDays,
   ChevronDown,
@@ -28,23 +25,19 @@ import {
   Pencil,
   Sun,
   Trash2,
-  Upload,
   User,
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { usePagination, useExpandableRows } from "@/lib/table-utils"
-import {
-  CLIMA_LABEL,
-  COLABORADOR_ROLES,
-  MAX_FOTOS,
-  PROGRESSO_ITEMS,
-  TURNOS,
-} from "./types/diarioTypes"
+import { CLIMA_LABEL, MAX_FOTOS, TURNOS } from "./types/diarioTypes"
 import { calcDiarioProgressPct, totalColaboradores } from "./libs/diario-progress"
-import { Gauge360 } from "@/components/gauge-360"
 import { useDiarioInlineEdit } from "./hooks/useDiarioInlineEdit"
-import { getSignedFotoUrlsAction } from "./actions/diarioActions"
 import { FotoViewerModal } from "./foto-viewer-modal"
+import {
+  DiarioAtividadeProgressoPanel,
+  DiarioColaboradoresPanel,
+  DiarioFotosPanel,
+} from "./diarios-panels"
 import { cn } from "@/lib/utils"
 import type {
   Clima,
@@ -255,7 +248,10 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                       <TableCell className="font-medium py-3">
                         <div className="flex items-center gap-1.5">
                           <User className="h-3 w-3 text-gray-400" />
-                          <span className="truncate text-sm font-semibold text-gray-800" title={d.cliente_nome}>
+                          <span
+                            className="block max-w-[140px] truncate text-sm font-semibold text-gray-800 md:max-w-[180px]"
+                            title={d.cliente_nome}
+                          >
                             {d.cliente_nome}
                           </span>
                         </div>
@@ -263,12 +259,15 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                       <TableCell className="py-3">
                         <div className="flex items-center gap-1.5">
                           <User className="h-3 w-3 text-gray-400" />
-                          <span className="truncate text-sm font-semibold text-gray-800" title={d.responsavel}>
+                          <span
+                            className="block max-w-[140px] truncate text-sm font-semibold text-gray-800 md:max-w-[180px]"
+                            title={d.responsavel}
+                          >
                             {d.responsavel}
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 text-xs min-w-[220px]">
+                      <TableCell className="min-w-[180px] py-3 text-xs align-top whitespace-normal md:min-w-[220px]">
                         <button
                           type="button"
                           onClick={() => openClimaEditor(d)}
@@ -317,11 +316,11 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="py-3 max-w-[280px]">
+                      <TableCell className="max-w-[220px] py-3 align-top whitespace-normal md:max-w-[280px]">
                         <button
                           type="button"
                           onClick={() => toggleAtv(d.id)}
-                          className="text-left text-sm text-gray-700 hover:text-[#1E1E1E] line-clamp-2"
+                          className="block w-full text-left text-sm text-gray-700 hover:text-[#1E1E1E] line-clamp-2"
                           title="Expandir atividade"
                         >
                           {atv || <span className="italic text-gray-400">Sem descrição</span>}
@@ -395,137 +394,49 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                       </TableCell>
                     </TableRow>
 
-                    {/* COLABORADORES expandable */}
                     {isColabOpen && (
-                      <TableRow className="bg-yellow-50 border-l-4 border-[#F5C800]">
-                        <TableCell colSpan={10} className="py-6 px-8">
-                          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                            <h4 className="text-sm font-bold text-[#1E1E1E] mb-4 uppercase">
-                              Quantidade de cada colaborador
-                            </h4>
-                            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3">
-                              {COLABORADOR_ROLES.map((r) => (
-                                <div
-                                  key={r.key}
-                                  className="rounded-lg border border-gray-200 bg-[#F5C800] p-4 shadow-sm transition-all duration-200 hover:-translate-y-0.5 hover:shadow-md"
-                                >
-                                  <div className="mb-2 text-[11px] font-bold uppercase tracking-wide text-[#1E1E1E]/70">
-                                    {r.label}
-                                  </div>
-                                  <Input
-                                    type="number"
-                                    min={0}
-                                    value={colab[r.key] ?? 0}
-                                    onChange={(e) => {
-                                      const value = Math.max(0, parseInt(e.target.value || "0"))
-                                      setColaboradoresLocal((prev) => ({
-                                        ...prev,
-                                        [d.id]: { ...(prev[d.id] || {}), [r.key]: value },
-                                      }))
-                                    }}
-                                    onBlur={async (e) => {
-                                      const value = Math.max(0, parseInt(e.target.value || "0"))
-                                      const next = { ...(colaboradoresLocal[d.id] || {}), [r.key]: value }
-                                      await inline.updateField(d.id, "colaboradores", next, "Colaboradores")
-                                    }}
-                                    className="h-10 border-black/15 bg-white text-right font-bold text-[#1E1E1E] shadow-sm focus-visible:ring-[#1E1E1E]/20 [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none"
-                                  />
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      <DiarioColaboradoresPanel
+                        colaboradores={colab}
+                        onChangeColaborador={(roleKey, value) => {
+                          setColaboradoresLocal((prev) => ({
+                            ...prev,
+                            [d.id]: { ...(prev[d.id] || {}), [roleKey]: value },
+                          }))
+                        }}
+                        onCommitColaborador={async (roleKey, value) => {
+                          const next = { ...colab, [roleKey]: value }
+                          await inline.updateField(d.id, "colaboradores", next, "Colaboradores")
+                        }}
+                      />
                     )}
 
-                    {/* ATIVIDADE + PROGRESSO expandable (combined) */}
                     {isAtvOpen && (
-                      <TableRow className="bg-yellow-50 border-l-4 border-[#F5C800]">
-                        <TableCell colSpan={10} className="py-6 px-8">
-                          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                              <div className="lg:col-span-2 space-y-4">
-                                <div>
-                                  <h4 className="text-sm font-bold text-[#1E1E1E] mb-2 uppercase">Atividade</h4>
-                                  <Textarea
-                                    value={atv}
-                                    onChange={(e) =>
-                                      setAtividadeLocal((prev) => ({ ...prev, [d.id]: e.target.value.slice(0, 2000) }))
-                                    }
-                                    onBlur={async (e) =>
-                                      inline.updateField(d.id, "atividade", e.target.value.slice(0, 2000), "Atividade")
-                                    }
-                                    rows={5}
-                                    className="resize-none border-gray-300"
-                                  />
-                                </div>
-                                <div>
-                                  <h4 className="text-sm font-bold text-[#1E1E1E] mb-2 uppercase">Itens da Obra</h4>
-                                  <div className="rounded-md border border-gray-200 max-h-72 overflow-y-auto">
-                                    <table className="w-full text-sm">
-                                      <thead className="bg-gray-50 sticky top-0">
-                                        <tr>
-                                          <th className="text-left px-3 py-2 font-semibold text-gray-700">Itens</th>
-                                          <th className="text-center px-3 py-2 font-semibold text-gray-700 w-24">
-                                            Finalizado
-                                          </th>
-                                        </tr>
-                                      </thead>
-                                      <tbody>
-                                        {PROGRESSO_ITEMS.map((it) => (
-                                          <tr key={it.key} className="border-t">
-                                            <td className="px-3 py-2 text-xs">{it.label}</td>
-                                            <td className="px-3 py-1 text-center">
-                                              <Checkbox
-                                                checked={!!prog[it.key]}
-                                                onCheckedChange={async (v) => {
-                                                  const next = { ...prog, [it.key]: !!v }
-                                                  setProgressoLocal((prev) => ({ ...prev, [d.id]: next }))
-                                                  await inline.updateField(d.id, "progresso", next, "Progresso")
-                                                }}
-                                                className="border-2 border-gray-600 data-[state=checked]:border-[#F5C800] data-[state=checked]:bg-[#F5C800] data-[state=unchecked]:bg-gray-400"
-                                              />
-                                            </td>
-                                          </tr>
-                                        ))}
-                                      </tbody>
-                                    </table>
-                                  </div>
-                                </div>
-                              </div>
-                              <div className="flex flex-col items-center justify-center bg-yellow-50 rounded-lg p-4 border border-gray-200">
-                                <h5 className="text-sm font-bold text-[#1E1E1E] mb-4 uppercase">Progresso</h5>
-                                <Gauge360 value={progPct} size={180} strokeWidth={18} label="finalizado" />
-                              </div>
-                            </div>
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      <DiarioAtividadeProgressoPanel
+                        atividade={atv}
+                        progresso={prog}
+                        progressPct={progPct}
+                        onAtividadeChange={(value) => {
+                          setAtividadeLocal((prev) => ({ ...prev, [d.id]: value }))
+                        }}
+                        onAtividadeCommit={async (value) => {
+                          await inline.updateField(d.id, "atividade", value, "Atividade")
+                        }}
+                        onToggleProgresso={async (itemKey, checked) => {
+                          const next = { ...prog, [itemKey]: checked }
+                          setProgressoLocal((prev) => ({ ...prev, [d.id]: next }))
+                          await inline.updateField(d.id, "progresso", next, "Progresso")
+                        }}
+                      />
                     )}
 
-                    {/* FOTOS expandable */}
                     {isFotosOpen && (
-                      <TableRow className="bg-yellow-50 border-l-4 border-[#F5C800]">
-                        <TableCell colSpan={10} className="py-6 px-8">
-                          <div className="bg-white rounded-lg shadow-md p-6 border border-gray-200">
-                            <div className="mb-4 flex items-center justify-between gap-3">
-                              <h4 className="text-sm font-bold text-[#1E1E1E] uppercase">
-                                Registro Fotográfico ({fotos.length})
-                              </h4>
-                              <span className="text-[11px] text-gray-500">
-                                {fotos.length}/{MAX_FOTOS} (JPEG/PNG, máx. 50 MB)
-                              </span>
-                            </div>
-                            <FotosThumbs
-                              fotos={fotos}
-                              onOpen={(idx) => openViewer(fotos, idx)}
-                              onAdd={(files) => handleAddFotos(d.id, files, fotos)}
-                              canAdd={fotos.length < MAX_FOTOS}
-                              isUploading={inline.uploadingFotosFor === d.id}
-                            />
-                          </div>
-                        </TableCell>
-                      </TableRow>
+                      <DiarioFotosPanel
+                        fotos={fotos}
+                        onOpen={(idx) => openViewer(fotos, idx)}
+                        onAdd={(files) => handleAddFotos(d.id, files, fotos)}
+                        canAdd={fotos.length < MAX_FOTOS}
+                        isUploading={inline.uploadingFotosFor === d.id}
+                      />
                     )}
                   </Fragment>
                 )
@@ -751,80 +662,6 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
           </DialogFooter>
         </DialogContent>
       </Dialog>
-    </div>
-  )
-}
-
-function FotosThumbs({
-  fotos,
-  onOpen,
-  onAdd,
-  canAdd,
-  isUploading,
-}: {
-  fotos: DiarioObrasFoto[]
-  onOpen: (idx: number) => void
-  onAdd: (files: FileList) => void
-  canAdd: boolean
-  isUploading: boolean
-}) {
-  const fileInputRef = useRef<HTMLInputElement | null>(null)
-  const [urls, setUrls] = useState<Record<string, string>>({})
-
-  useEffect(() => {
-    if (fotos.length === 0) return
-    const paths = fotos.map((f) => f.storage_path)
-    getSignedFotoUrlsAction(paths).then((res) => {
-      if (res.ok) setUrls(res.data || {})
-    })
-  }, [fotos])
-
-  return (
-    <div className="space-y-3">
-      {fotos.length === 0 && <p className="text-sm text-gray-500 italic">Nenhuma foto enviada.</p>}
-
-      <div className="flex flex-wrap gap-3">
-        {fotos.map((f, idx) => (
-          <button
-            key={f.id}
-            type="button"
-            onClick={() => onOpen(idx)}
-            className="w-24 h-24 rounded border border-gray-200 overflow-hidden hover:ring-2 hover:ring-[#F5C800]"
-          >
-            {urls[f.storage_path] ? (
-              // eslint-disable-next-line @next/next/no-img-element
-              <img src={urls[f.storage_path]} alt="" className="object-cover w-full h-full" />
-            ) : (
-              <div className="w-full h-full bg-gray-100 animate-pulse" />
-            )}
-          </button>
-        ))}
-
-        {canAdd && (
-          <>
-            <button
-              type="button"
-              onClick={() => fileInputRef.current?.click()}
-              disabled={isUploading}
-              className="w-24 h-24 rounded border-2 border-dashed border-gray-300 flex flex-col items-center justify-center text-gray-500 hover:border-[#F5C800] hover:text-[#1E1E1E] disabled:cursor-not-allowed disabled:opacity-60"
-            >
-              <Upload className="h-5 w-5 mb-1" />
-              <span className="text-[10px] font-semibold">{isUploading ? "Enviando..." : "Adicionar"}</span>
-            </button>
-            <input
-              ref={fileInputRef}
-              type="file"
-              multiple
-              accept="image/jpeg,image/png"
-              className="hidden"
-              onChange={(e) => {
-                if (e.target.files?.length) onAdd(e.target.files)
-                e.target.value = ""
-              }}
-            />
-          </>
-        )}
-      </div>
     </div>
   )
 }
