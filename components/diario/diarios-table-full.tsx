@@ -267,7 +267,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="min-w-[150px] py-3 text-xs align-top whitespace-normal md:min-w-[60px]">
+                      <TableCell className="min-w-[190px] py-3 text-xs align-top whitespace-normal md:min-w-[220px]">
                         <button
                           type="button"
                           onClick={() => openClimaEditor(d)}
@@ -280,16 +280,19 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                               const Icon = hasClima ? CLIMA_ICON[clima] : null
 
                               return (
-                                <div key={turno} className="flex items-center gap-2">
-                                  <span className="font-semibold">{turnoLabel}</span>
-                                  <span className="text-gray-400">:</span>
+                                <div
+                                  key={turno}
+                                  className="grid grid-cols-[4.75rem_0.5rem_minmax(0,1fr)] items-center gap-x-2"
+                                >
+                                  <span className="whitespace-nowrap font-semibold">{turnoLabel}</span>
+                                  <span className="text-center text-gray-400">:</span>
                                   {hasClima && Icon ? (
-                                    <>
-                                      <Icon className="h-4 w-5 text-[#F5C800]" />
-                                      <span className="text-[10px] text-gray-500">{CLIMA_LABEL[clima]}</span>
-                                    </>
+                                    <div className="flex min-w-0 items-center gap-2">
+                                      <Icon className="h-4 w-4 shrink-0 text-[#F5C800]" />
+                                      <span className="truncate text-[10px] text-gray-500">{CLIMA_LABEL[clima]}</span>
+                                    </div>
                                   ) : (
-                                    <span className="text-[10px] text-gray-500">~ Não definido</span>
+                                    <span className="truncate text-[10px] text-gray-500">~ Não definido</span>
                                   )}
                                 </div>
                               )
@@ -316,14 +319,28 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                           </Button>
                         </div>
                       </TableCell>
-                      <TableCell className="max-w-[220px] py-3 align-top whitespace-normal md:max-w-[280px]">
+                      <TableCell className="min-w-[260px] max-w-[320px] py-3 align-top whitespace-normal md:min-w-[320px] md:max-w-[420px] lg:min-w-[380px] lg:max-w-[520px]">
                         <button
                           type="button"
                           onClick={() => toggleAtv(d.id)}
-                          className="block w-full text-left text-sm text-gray-700 hover:text-[#1E1E1E] line-clamp-2"
+                          className="block w-full text-left text-sm text-gray-700 hover:text-[#1E1E1E]"
                           title="Expandir atividade"
                         >
-                          {atv || <span className="italic text-gray-400">Sem descrição</span>}
+                          {atv ? (
+                            <span
+                              className="block break-words whitespace-pre-line leading-5"
+                              style={{
+                                display: "-webkit-box",
+                                WebkitBoxOrient: "vertical",
+                                WebkitLineClamp: 3,
+                                overflow: "hidden",
+                              }}
+                            >
+                              {atv}
+                            </span>
+                          ) : (
+                            <span className="italic text-gray-400">Sem descrição</span>
+                          )}
                         </button>
                       </TableCell>
                       <TableCell className="text-center py-3">
