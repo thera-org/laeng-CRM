@@ -1,9 +1,10 @@
 "use client"
 
 import { useEffect, useRef, useState, type ReactNode } from "react"
-import { Upload } from "lucide-react"
+import { ChevronLeft, ChevronRight, Upload } from "lucide-react"
 
 import { Gauge360 } from "@/components/gauge-360"
+import { Button } from "@/components/ui/button"
 import { Checkbox } from "@/components/ui/checkbox"
 import { Input } from "@/components/ui/input"
 import { TableCell, TableRow } from "@/components/ui/table"
@@ -14,6 +15,8 @@ import type { DiarioColaboradores, DiarioObrasFoto, DiarioProgresso } from "@/li
 
 type ColaboradorRoleKey = (typeof COLABORADOR_ROLES)[number]["key"]
 type ProgressoItemKey = (typeof PROGRESSO_ITEMS)[number]["key"]
+
+const PROGRESSO_ITEMS_PER_PAGE = 12
 
 interface DiarioExpandedPanelShellProps {
   children: ReactNode
@@ -99,6 +102,12 @@ export function DiarioAtividadeProgressoPanel({
   onAtividadeCommit,
   onToggleProgresso,
 }: DiarioAtividadeProgressoPanelProps) {
+  const [currentPage, setCurrentPage] = useState(1)
+  const totalPages = Math.ceil(PROGRESSO_ITEMS.length / PROGRESSO_ITEMS_PER_PAGE)
+  const startIndex = (currentPage - 1) * PROGRESSO_ITEMS_PER_PAGE
+  const endIndex = Math.min(startIndex + PROGRESSO_ITEMS_PER_PAGE, PROGRESSO_ITEMS.length)
+  const paginatedItems = PROGRESSO_ITEMS.slice(startIndex, endIndex)
+
   return (
     <DiarioExpandedPanelShell>
       <div className="grid grid-cols-1 gap-4 xl:grid-cols-3 xl:gap-6">
@@ -118,7 +127,7 @@ export function DiarioAtividadeProgressoPanel({
             <h4 className="mb-2 text-sm font-bold uppercase text-[#1E1E1E]">Itens da Obra</h4>
             <div className="overflow-hidden rounded-md border border-gray-200">
               <div className="divide-y divide-gray-200">
-                {PROGRESSO_ITEMS.map((item) => (
+                {paginatedItems.map((item) => (
                   <div key={item.key} className="flex items-start justify-between gap-3 p-3">
                     <div className="min-w-0">
                       <p className="text-sm font-semibold text-gray-700">{item.label}</p>
@@ -132,6 +141,38 @@ export function DiarioAtividadeProgressoPanel({
                     />
                   </div>
                 ))}
+              </div>
+
+              <div className="flex flex-col gap-3 border-t border-gray-200 bg-gray-50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between">
+                <p className="text-xs font-medium text-gray-600">
+                  Mostrando {startIndex + 1}-{endIndex} de {PROGRESSO_ITEMS.length} itens
+                </p>
+
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((page) => Math.max(1, page - 1))}
+                    disabled={currentPage === 1}
+                    className="h-8 border-[#F5C800]/30 px-2 hover:bg-[#F5C800]/10 disabled:opacity-50"
+                  >
+                    <ChevronLeft className="h-4 w-4" />
+                  </Button>
+                  <span className="min-w-[72px] text-center text-xs font-semibold text-gray-700">
+                    Página {currentPage}/{totalPages}
+                  </span>
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="sm"
+                    onClick={() => setCurrentPage((page) => Math.min(totalPages, page + 1))}
+                    disabled={currentPage === totalPages}
+                    className="h-8 border-[#F5C800]/30 px-2 hover:bg-[#F5C800]/10 disabled:opacity-50"
+                  >
+                    <ChevronRight className="h-4 w-4" />
+                  </Button>
+                </div>
               </div>
             </div>
           </div>

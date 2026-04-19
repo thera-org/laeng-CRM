@@ -267,14 +267,14 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                           </span>
                         </div>
                       </TableCell>
-                      <TableCell className="min-w-[180px] py-3 text-xs align-top whitespace-normal md:min-w-[220px]">
+                      <TableCell className="min-w-[150px] py-3 text-xs align-top whitespace-normal md:min-w-[60px]">
                         <button
                           type="button"
                           onClick={() => openClimaEditor(d)}
                           className="w-full rounded-lg border border-transparent px-3 py-2 text-left transition-colors hover:border-[#F5C800]/30 hover:bg-[#F5C800]/10"
                           title="Clique para editar turno e clima"
                         >
-                          <div className="space-y-1">
+                          <div className="space-y-2">
                             {turnoClimaEntries.map(({ turno, turnoLabel, clima }) => {
                               const hasClima = clima !== null
                               const Icon = hasClima ? CLIMA_ICON[clima] : null
@@ -285,7 +285,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
                                   <span className="text-gray-400">:</span>
                                   {hasClima && Icon ? (
                                     <>
-                                      <Icon className="h-4 w-4 text-[#F5C800]" />
+                                      <Icon className="h-4 w-5 text-[#F5C800]" />
                                       <span className="text-[10px] text-gray-500">{CLIMA_LABEL[clima]}</span>
                                     </>
                                   ) : (
