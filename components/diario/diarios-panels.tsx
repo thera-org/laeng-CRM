@@ -21,14 +21,13 @@ interface DiarioExpandedPanelShellProps {
 
 function DiarioExpandedPanelShell({ children }: DiarioExpandedPanelShellProps) {
   return (
-    <TableRow className="border-l-4 border-[#F5C800] bg-yellow-50">
-      <TableCell
-        colSpan={10}
-        className="whitespace-normal break-words px-3 py-4 align-top sm:px-4 md:px-6 lg:px-8"
-      >
-        <div className="mr-auto w-full min-w-0 max-w-[calc(100vw-1.5rem)] sm:max-w-[calc(100vw-2rem)] lg:max-w-none">
-          <div className="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-md sm:p-5 md:p-6">
+    <TableRow className="border-l-4 border-[#F5C800]">
+      <TableCell colSpan={10} className="!p-0 whitespace-normal break-words align-top">
+        <div className="sticky left-0 w-screen max-w-[95vw] overflow-x-auto overscroll-x-contain md:static md:w-full md:max-w-none md:overflow-visible">
+          <div className="min-w-full px-3 py-4 sm:px-4 md:px-6 lg:px-8">
+            <div className="min-w-0 overflow-hidden rounded-lg border border-gray-200 bg-white p-4 shadow-md sm:p-5 md:p-6">
             {children}
+            </div>
           </div>
         </div>
       </TableCell>
@@ -52,7 +51,6 @@ export function DiarioColaboradoresPanel({
       <div className="space-y-4">
         <div>
           <h4 className="text-sm font-bold uppercase text-[#1E1E1E]">Quantidade de cada colaborador</h4>
-          <p className="mt-1 text-xs text-gray-500">Os campos se reorganizam em uma única coluna nas telas menores.</p>
         </div>
 
         <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
