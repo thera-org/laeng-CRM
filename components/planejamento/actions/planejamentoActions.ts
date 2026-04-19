@@ -33,6 +33,28 @@ export async function savePlanejamentoAction(payload: PlanejamentoPayload, id?: 
       data: { user },
     } = await supabase.auth.getUser()
 
+    // Check for duplicate planejamento for the same client in the same week
+    let duplicateQuery = supabase
+      .from("planejamento_obras")
+      .select("id", { count: "exact", head: true })
+      .eq("cliente_id", payload.cliente_id)
+      .lte("data_inicio", payload.data_fim)
+      .gte("data_fim", payload.data_inicio)
+
+    if (id) {
+      duplicateQuery = duplicateQuery.neq("id", id)
+    }
+
+    const { count: duplicateCount, error: dupError } = await duplicateQuery
+
+    if (dupError) throw dupError
+    if (duplicateCount && duplicateCount > 0) {
+      return {
+        ok: false,
+        error: "Já existe um planejamento para este cliente na mesma semana. Edite o planejamento existente.",
+      }
+    }
+
     const headerBase = {
       cliente_id: payload.cliente_id,
       responsavel: payload.responsavel,
