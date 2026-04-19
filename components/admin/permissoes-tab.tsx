@@ -1,7 +1,7 @@
 "use client"
 
 import { Checkbox } from "@/components/ui/checkbox"
-import { Eye, Plus, Trash2, LayoutDashboard, Users, Building2, DollarSign, LogsIcon, Pencil, Package } from "lucide-react"
+import { Eye, Plus, Trash2, LayoutDashboard, Users, Building2, DollarSign, LogsIcon, Pencil, Package, ClipboardList } from "lucide-react"
 import type { PermissoesUsuario } from "@/lib/types"
 
 interface PermissoesTabProps {
@@ -23,6 +23,13 @@ const MODULOS = [
     label: "Logs",
     descricao: "Acesso aos logs do sistema",
     icon: LogsIcon,
+    acoes: ["view"],
+  },
+  {
+    id: "diario",
+    label: "Diário e Planejamento",
+    descricao: "Acesso ao Diário de Obras e Planejamento",
+    icon: ClipboardList,
     acoes: ["view"],
   },
   {

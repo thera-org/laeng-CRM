@@ -1,17 +1,5 @@
 import type { PermissoesUsuario } from "@/lib/types"
 
-const mapAcao = (view?: boolean, create?: boolean, edit?: boolean, del?: boolean) => {
-  const obj: any = {}
-
-  if (view !== undefined) obj.ver = view
-  if (create !== undefined) obj.criar = create
-  if (edit !== undefined) obj.editar = edit
-  if (del !== undefined) obj.deletar = del
-
-  return obj
-}
-
-
 export function mapPermissoesToModulos(permissoes: PermissoesUsuario) {
   return {
     dashboard: {
@@ -19,6 +7,9 @@ export function mapPermissoesToModulos(permissoes: PermissoesUsuario) {
     },
     logs: {
       view: permissoes.logs?.view ?? false
+    },
+    diario: {
+      view: permissoes.diario?.view ?? false
     },
     obras: {
       view: permissoes.obras?.view ?? false,

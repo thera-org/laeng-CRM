@@ -200,6 +200,9 @@ export interface PermissoesUsuario {
   logs?: {
     view: boolean;
   };
+  diario?: {
+    view: boolean;
+  };
   obras: {
     view: boolean;
     edit: boolean;
@@ -379,6 +382,98 @@ export interface FluxoMaterialResumo {
   total_entradas: number;
   total_saidas: number;
   estoque_atual: number;
+}
+
+// ============ TIPOS PARA O MÓDULO DE DIÁRIO DE OBRAS ============
+
+export type Turno = 'manha' | 'tarde' | 'noite';
+export type Clima = 'sol' | 'nublado' | 'chuva' | 'impraticavel';
+export type DiarioClimaPorTurno = Partial<Record<Turno, Clima | null>>;
+
+export interface DiarioColaboradores {
+  pedreiro?: number;
+  ajudante?: number;
+  gesseiro?: number;
+  eletricista?: number;
+  pintor?: number;
+}
+
+export type DiarioProgresso = Record<string, boolean>;
+
+export interface DiarioObrasFoto {
+  id: string;
+  diario_id: string;
+  storage_path: string;
+  ordem: number;
+  created_at: string;
+}
+
+export interface DiarioObras {
+  id: string;
+  codigo: number;
+  cliente_id: string;
+  responsavel: string;
+  responsavel_id?: string | null;
+  data: string;
+  clima_por_turno: DiarioClimaPorTurno;
+  colaboradores: DiarioColaboradores;
+  atividade?: string | null;
+  progresso: DiarioProgresso;
+  created_at: string;
+  updated_at: string;
+  created_by?: string | null;
+  updated_by?: string | null;
+}
+
+export interface DiarioComCliente extends DiarioObras {
+  cliente_nome: string;
+  cliente_codigo: number;
+  fotos: DiarioObrasFoto[];
+}
+
+export interface DiarioFiltersState {
+  month: string;
+  year: string;
+  week: string;
+}
+
+// ============ TIPOS PARA O MÓDULO DE PLANEJAMENTO DE OBRAS ============
+
+export interface PlanejamentoAtividade {
+  id: string;
+  planejamento_id: string;
+  codigo: number;
+  descricao: string;
+  realizado: boolean;
+  ordem: number;
+  created_at?: string;
+  updated_at?: string;
+}
+
+export interface PlanejamentoObras {
+  id: string;
+  codigo: number;
+  cliente_id: string;
+  responsavel: string;
+  responsavel_id?: string | null;
+  data_inicio: string;
+  data_fim: string;
+  created_at: string;
+  updated_at: string;
+  created_by?: string | null;
+  updated_by?: string | null;
+}
+
+export interface PlanejamentoComCliente extends PlanejamentoObras {
+  cliente_nome: string;
+  cliente_codigo: number;
+  atividades: PlanejamentoAtividade[];
+}
+
+export interface PlanejamentoFiltersState {
+  month: string;
+  year: string;
+  week: string;
 }
 
 // teste
