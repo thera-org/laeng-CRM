@@ -86,3 +86,5 @@ export function useDiarioInlineEdit() {
 
   return { updateField, removeFoto, uploadFotos, savingField, uploadingFotosFor }
 }
+
+//sdsdasa
