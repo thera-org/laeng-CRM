@@ -94,6 +94,7 @@ export function PlanejamentoModal({
                   <Input
                     value={m.searchTerm}
                     onChange={(e) => {
+                      m.clearSaveError()
                       m.setSearchTerm(e.target.value)
                     }}
                     placeholder={m.loadingClientes ? "Carregando..." : "Digite ao menos 2 caracteres"}
@@ -237,6 +238,7 @@ export function PlanejamentoModal({
                               onCheckedChange={(v) =>
                                 m.updateAtividadeLocal(a.id, { realizado: !!v })
                               }
+                              className="border-2 border-gray-600 data-[state=checked]:border-[#F5C800] data-[state=checked]:bg-[#F5C800] data-[state=unchecked]:bg-gray-400"
                             />
                           </td>
                           <td className="px-2 py-1 text-center">
@@ -256,6 +258,15 @@ export function PlanejamentoModal({
                   </table>
                 )}
               </div>
+            </div>
+          )}
+
+          {!m.isEditing && m.saveError && (
+            <div className="rounded-md border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-700 md:hidden">
+              <p className="font-semibold">{m.saveError.title}</p>
+              {m.saveError.description && (
+                <p className="mt-1 text-red-600">{m.saveError.description}</p>
+              )}
             </div>
           )}
         </div>

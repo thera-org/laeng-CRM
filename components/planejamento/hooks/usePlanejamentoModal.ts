@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from "react"
 import { endOfWeek, format, parseISO, startOfWeek } from "date-fns"
+import { useRouter } from "next/navigation"
 import { toast } from "@/hooks/use-toast"
 import {
   getClientesForPlanejamentoAction,
@@ -20,6 +21,11 @@ interface UndoEntry {
   atividade: PlanejamentoAtividade
 }
 
+interface SaveErrorState {
+  title: string
+  description?: string
+}
+
 const isoDay = (d: Date) => format(d, "yyyy-MM-dd")
 
 function defaultWeekRange() {
@@ -36,6 +42,7 @@ export function usePlanejamentoModal(
   planejamento?: PlanejamentoComCliente | null,
   defaultResponsavel?: string
 ) {
+  const router = useRouter()
   const isEditing = !!planejamento
 
   const [clienteId, setClienteId] = useState("")
@@ -44,6 +51,7 @@ export function usePlanejamentoModal(
   const [dataFim, setDataFim] = useState<string>(defaultWeekRange().fim)
   const [atividades, setAtividades] = useState<PlanejamentoAtividade[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [saveError, setSaveError] = useState<SaveErrorState | null>(null)
 
   const [clientes, setClientes] = useState<ClienteOption[]>([])
   const [loadingClientes, setLoadingClientes] = useState(false)
@@ -76,6 +84,7 @@ export function usePlanejamentoModal(
       setSearchTerm("")
     }
     setUndoStack([])
+    setSaveError(null)
   }, [isOpen, planejamento, defaultResponsavel])
 
   useEffect(() => {
@@ -103,12 +112,14 @@ export function usePlanejamentoModal(
   )
 
   const selectClienteFromSearch = (id: string, nome: string) => {
+    setSaveError(null)
     setClienteId(id)
     setSearchTerm(nome)
   }
 
   // ---------- week pick ----------
   const setWeek = (dateAnyDay: string) => {
+    setSaveError(null)
     const d = parseISO(dateAnyDay)
     setDataInicio(isoDay(startOfWeek(d, { weekStartsOn: 0 })))
     setDataFim(isoDay(endOfWeek(d, { weekStartsOn: 0 })))
@@ -121,6 +132,7 @@ export function usePlanejamentoModal(
 
   // ---------- atividades CRUD ----------
   const addAtividade = () => {
+    setSaveError(null)
     setAtividades((prev) => {
       const nextCodigo = prev.reduce((m, a) => Math.max(m, a.codigo), 0) + 1
       const nextOrdem = prev.length
@@ -139,10 +151,12 @@ export function usePlanejamentoModal(
   }
 
   const updateAtividadeLocal = (id: string, patch: Partial<PlanejamentoAtividade>) => {
+    setSaveError(null)
     setAtividades((prev) => prev.map((a) => (a.id === id ? { ...a, ...patch } : a)))
   }
 
   const removeAtividade = (id: string) => {
+    setSaveError(null)
     setAtividades((prev) => {
       const idx = prev.findIndex((a) => a.id === id)
       if (idx === -1) return prev
@@ -153,6 +167,7 @@ export function usePlanejamentoModal(
   }
 
   const undoRemove = () => {
+    setSaveError(null)
     setUndoStack((u) => {
       if (u.length === 0) return u
       const last = u[u.length - 1]
@@ -171,16 +186,31 @@ export function usePlanejamentoModal(
     return Math.round((done / atividades.length) * 100)
   }, [atividades])
 
+  const clearSaveError = () => {
+    setSaveError(null)
+  }
+
+  const handleSaveError = (title: string, description?: string) => {
+    if (!isEditing) {
+      setSaveError({ title, description })
+    }
+
+    toast({ title, description, variant: "destructive" })
+  }
+
   // ---------- save ----------
   const save = async () => {
+    setSaveError(null)
+
     if (!clienteId) {
-      toast({ title: "Cliente obrigatório", variant: "destructive" })
+      handleSaveError("Cliente obrigatório", "Selecione um cliente antes de salvar.")
       return
     }
     if (!responsavel.trim()) {
-      toast({ title: "Responsável obrigatório", variant: "destructive" })
+      handleSaveError("Responsável obrigatório", "Informe um responsável para o planejamento.")
       return
     }
+
     setIsSaving(true)
     const res = await savePlanejamentoAction(
       {
@@ -199,11 +229,22 @@ export function usePlanejamentoModal(
     )
     setIsSaving(false)
     if (!res.ok) {
-      toast({ title: "Erro ao salvar", description: res.error, variant: "destructive" })
+      handleSaveError("Erro ao salvar", res.error)
       return
     }
-    toast({ title: isEditing ? "Planejamento atualizado" : "Planejamento criado" })
+
+    setSaveError(null)
+
+    toast({
+      title: "Planejamento Salvo",
+      description: isEditing
+        ? "As alterações foram aplicadas com sucesso."
+        : "O planejamento foi criado com sucesso.",
+    })
+
     onClose()
+    await new Promise((resolve) => setTimeout(resolve, 300))
+    router.refresh()
   }
 
   return {
@@ -231,6 +272,8 @@ export function usePlanejamentoModal(
     selectedCliente,
     selectClienteFromSearch,
     isSaving,
+    saveError,
+    clearSaveError,
     save,
   }
 }
