@@ -4,7 +4,6 @@ import { useEffect, useMemo, useRef, useState } from "react"
 import { toast } from "@/hooks/use-toast"
 import {
   saveDiarioAction,
-  uploadDiarioFotoAction,
   getClientesForDiarioAction,
 } from "../actions/diarioActions"
 import {
@@ -13,6 +12,7 @@ import {
   MAX_FOTO_BYTES,
   MAX_ATIVIDADE_LEN,
 } from "../types/diarioTypes"
+import { uploadDiarioFotosSequentially } from "../libs/diario-foto-upload"
 import type {
   Clima,
   DiarioClimaPorTurno,
@@ -66,6 +66,7 @@ export function useDiarioModal(
   const [progresso, setProgresso] = useState<DiarioProgresso>({})
   const [pendingFotos, setPendingFotos] = useState<PendingFoto[]>([])
   const [isSaving, setIsSaving] = useState(false)
+  const [uploadProgressLabel, setUploadProgressLabel] = useState<string | null>(null)
 
   // ---------- cliente search ----------
   const [clientes, setClientes] = useState<ClienteOption[]>([])
@@ -78,6 +79,8 @@ export function useDiarioModal(
   useEffect(() => {
     if (!isOpen) return
     if (diario) {
+      // Local form state is rehydrated from the selected diario whenever the dialog opens.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClienteId(diario.cliente_id)
       setResponsavel(diario.responsavel || defaultResponsavel || "")
       setData(diario.data?.split("T")[0] || new Date().toISOString().split("T")[0])
@@ -97,17 +100,20 @@ export function useDiarioModal(
       setSearchTerm("")
     }
     setPendingFotos([])
-  }, [isOpen, diario?.id])
+    setUploadProgressLabel(null)
+  }, [isOpen, diario, defaultResponsavel])
 
   // Load clientes once when opening
   useEffect(() => {
     if (!isOpen || clientes.length > 0) return
+    // The initial fetch is intentionally kicked off from the open transition.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingClientes(true)
     getClientesForDiarioAction().then((res) => {
       if (res.ok) setClientes(res.data || [])
       setLoadingClientes(false)
     })
-  }, [isOpen])
+  }, [isOpen, clientes.length])
 
   // Cleanup blob URLs
   useEffect(() => {
@@ -186,7 +192,7 @@ export function useDiarioModal(
 
     const accepted: PendingFoto[] = []
     for (const file of incoming.slice(0, remainingSlots)) {
-      if (!ALLOWED_FOTO_MIMES.includes(file.type as any)) {
+      if (!ALLOWED_FOTO_MIMES.includes(file.type as (typeof ALLOWED_FOTO_MIMES)[number])) {
         toast({ title: "Formato inválido", description: `${file.name} não é JPEG/PNG`, variant: "destructive" })
         continue
       }
@@ -248,18 +254,31 @@ export function useDiarioModal(
     // Upload pending fotos sequentially after we have the diario id
     const diarioId = res.data!.id
     let uploadFailures = 0
-    for (const pf of pendingFotos) {
-      const fd = new FormData()
-      fd.append("file", pf.file, pf.file.name)
-      const upRes = await uploadDiarioFotoAction(diarioId, fd)
-      if (!upRes.ok) uploadFailures += 1
+    let lastUploadError = ""
+
+    if (pendingFotos.length > 0) {
+      const uploadResult = await uploadDiarioFotosSequentially({
+        diarioId,
+        files: pendingFotos.map((foto) => foto.file),
+        onProgress: (progress) => {
+          setUploadProgressLabel(
+            progress ? `Enviando ${progress.current}/${progress.total}` : null
+          )
+        },
+      })
+
+      uploadFailures = uploadResult.failed
+      lastUploadError = uploadResult.lastError
     }
 
     setIsSaving(false)
+    setUploadProgressLabel(null)
     if (uploadFailures > 0) {
       toast({
         title: "Diário salvo com avisos",
-        description: `${uploadFailures} foto(s) não foram enviadas.`,
+        description: lastUploadError
+          ? `${uploadFailures} foto(s) não foram enviadas. ${lastUploadError}`
+          : `${uploadFailures} foto(s) não foram enviadas.`,
         variant: "destructive",
       })
     } else {
@@ -302,6 +321,7 @@ export function useDiarioModal(
     removePendingFoto,
     // save
     isSaving,
+    uploadProgressLabel,
     save,
   }
 }

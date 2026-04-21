@@ -5,8 +5,8 @@ import { toast } from "@/hooks/use-toast"
 import {
   deleteDiarioFotoAction,
   updateDiarioFieldAction,
-  uploadDiarioFotoAction,
 } from "../actions/diarioActions"
+import { uploadDiarioFotosSequentially } from "../libs/diario-foto-upload"
 import type { DiarioObrasFoto } from "@/lib/types"
 
 export function useDiarioInlineEdit() {
@@ -37,31 +37,33 @@ export function useDiarioInlineEdit() {
     return true
   }
 
-  const uploadFotos = async (diarioId: string, files: FileList | File[]) => {
+  const uploadFotos = async (
+    diarioId: string,
+    files: FileList | File[],
+    existingCount = 0
+  ) => {
     const fileList = Array.from(files)
     if (fileList.length === 0) {
       return { ok: false, added: [] as DiarioObrasFoto[], failed: 0 }
     }
 
     setUploadingFotosFor(diarioId)
-    const added: DiarioObrasFoto[] = []
-    let failed = 0
-    let lastError = ""
+    let result: { ok: boolean; added: DiarioObrasFoto[]; failed: number; lastError: string }
 
-    for (const file of fileList) {
-      const formData = new FormData()
-      formData.append("file", file, file.name)
-
-      const res = await uploadDiarioFotoAction(diarioId, formData)
-      if (res.ok && res.data) {
-        added.push(res.data as DiarioObrasFoto)
-        continue
-      }
-
-      failed += 1
-      lastError = res.error || "Erro ao enviar foto"
+    try {
+      result = await uploadDiarioFotosSequentially({
+        diarioId,
+        files: fileList,
+        existingCount,
+      })
+    } catch (error) {
+      setUploadingFotosFor(null)
+      const errorMessage = error instanceof Error ? error.message : "Erro ao enviar fotos"
+      toast({ title: "Erro ao enviar fotos", description: errorMessage, variant: "destructive" })
+      return { ok: false, added: [] as DiarioObrasFoto[], failed: fileList.length }
     }
 
+    const { added, failed, lastError } = result
     setUploadingFotosFor(null)
 
     if (failed === 0) {
@@ -86,5 +88,3 @@ export function useDiarioInlineEdit() {
 
   return { updateField, removeFoto, uploadFotos, savingField, uploadingFotosFor }
 }
-
-//sdsdasa

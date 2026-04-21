@@ -185,7 +185,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
     files: FileList,
     currentFotos: DiarioObrasFoto[]
   ) => {
-    const res = await inline.uploadFotos(diarioId, files)
+    const res = await inline.uploadFotos(diarioId, files, currentFotos.length)
     if (res.added.length === 0) return
 
     setFotosLocal((prev) => ({

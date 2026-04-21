@@ -3,10 +3,8 @@
 import { createClient } from "@/lib/supabase/server"
 import { revalidatePath } from "next/cache"
 import {
-  ALLOWED_FOTO_MIMES,
   DIARIO_BUCKET,
   MAX_FOTOS,
-  MAX_FOTO_BYTES,
 } from "../types/diarioTypes"
 import type {
   DiarioClimaPorTurno,
@@ -19,6 +17,10 @@ const REVALIDATE_PATHS = ["/diarioDeObras"]
 
 function revalidateAll() {
   REVALIDATE_PATHS.forEach((p) => revalidatePath(p))
+}
+
+function getErrorMessage(error: unknown, fallback: string) {
+  return error instanceof Error ? error.message : fallback
 }
 
 export interface DiarioPayload {
@@ -73,8 +75,8 @@ export async function saveDiarioAction(payload: DiarioPayload, id?: string) {
 
     revalidateAll()
     return { ok: true, data: data as DiarioObras }
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Erro ao salvar diário" }
+  } catch (error: unknown) {
+    return { ok: false, error: getErrorMessage(error, "Erro ao salvar diário") }
   }
 }
 
@@ -100,8 +102,8 @@ export async function deleteDiarioAction(id: string) {
 
     revalidateAll()
     return { ok: true }
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Erro ao remover diário" }
+  } catch (error: unknown) {
+    return { ok: false, error: getErrorMessage(error, "Erro ao remover diário") }
   }
 }
 
@@ -139,58 +141,56 @@ export async function updateDiarioFieldAction(
 
     revalidateAll()
     return { ok: true }
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Erro ao atualizar campo" }
+  } catch (error: unknown) {
+    return { ok: false, error: getErrorMessage(error, "Erro ao atualizar campo") }
   }
 }
 
-export async function uploadDiarioFotoAction(diarioId: string, formData: FormData) {
+export async function registerDiarioFotoAction(diarioId: string, storagePath: string) {
   const supabase = await createClient()
+  const normalizedPath = storagePath.trim()
+  let registered = false
+
   try {
-    const file = formData.get("file") as File | null
-    if (!file) return { ok: false, error: "Arquivo não enviado" }
-
-    if (file.size > MAX_FOTO_BYTES) {
-      return { ok: false, error: `Arquivo excede ${MAX_FOTO_BYTES / 1024 / 1024} MB` }
-    }
-    if (!ALLOWED_FOTO_MIMES.includes(file.type as any)) {
-      return { ok: false, error: "Formato inválido. Use JPEG ou PNG." }
+    if (!normalizedPath) {
+      return { ok: false, error: "Caminho da foto não informado" }
     }
 
-    // Enforce max 12 photos per diario
-    const { count } = await supabase
+    if (!normalizedPath.startsWith(`${diarioId}/`)) {
+      return { ok: false, error: "Caminho da foto inválido" }
+    }
+
+    const { data: existing, error: existingError } = await supabase
       .from("diario_obras_fotos")
-      .select("id", { count: "exact", head: true })
+      .select("id, ordem")
       .eq("diario_id", diarioId)
-    if ((count ?? 0) >= MAX_FOTOS) {
+      .order("ordem", { ascending: false })
+
+    if (existingError) throw existingError
+
+    if ((existing?.length ?? 0) >= MAX_FOTOS) {
+      await supabase.storage.from(DIARIO_BUCKET).remove([normalizedPath])
       return { ok: false, error: `Máximo de ${MAX_FOTOS} fotos por diário` }
     }
 
-    const ext = file.name.split(".").pop()?.toLowerCase() || (file.type === "image/png" ? "png" : "jpg")
-    const path = `${diarioId}/${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`
-
-    const arrayBuf = await file.arrayBuffer()
-    const { error: upErr } = await supabase.storage
-      .from(DIARIO_BUCKET)
-      .upload(path, arrayBuf, { contentType: file.type, upsert: false })
-    if (upErr) throw upErr
-
-    const ordem = count ?? 0
-    const { data: row, error: rowErr } = await supabase
+    const nextOrder = existing?.length ? Math.max(...existing.map((foto) => foto.ordem ?? 0)) + 1 : 0
+    const { data: row, error: rowError } = await supabase
       .from("diario_obras_fotos")
-      .insert({ diario_id: diarioId, storage_path: path, ordem })
+      .insert({ diario_id: diarioId, storage_path: normalizedPath, ordem: nextOrder })
       .select("*")
       .single()
-    if (rowErr) {
-      // rollback storage
-      await supabase.storage.from(DIARIO_BUCKET).remove([path])
-      throw rowErr
-    }
 
+    if (rowError) throw rowError
+
+    registered = true
     revalidateAll()
     return { ok: true, data: row }
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Erro ao enviar foto" }
+  } catch (error: unknown) {
+    if (!registered && normalizedPath.startsWith(`${diarioId}/`)) {
+      await supabase.storage.from(DIARIO_BUCKET).remove([normalizedPath])
+    }
+
+    return { ok: false, error: getErrorMessage(error, "Erro ao registrar foto") }
   }
 }
 
@@ -216,8 +216,8 @@ export async function deleteDiarioFotoAction(fotoId: string) {
 
     revalidateAll()
     return { ok: true }
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Erro ao remover foto" }
+  } catch (error: unknown) {
+    return { ok: false, error: getErrorMessage(error, "Erro ao remover foto") }
   }
 }
 
@@ -235,8 +235,8 @@ export async function getSignedFotoUrlsAction(paths: string[]) {
       if (entry.signedUrl) map[p] = entry.signedUrl
     })
     return { ok: true, data: map }
-  } catch (e: any) {
-    return { ok: false, error: e.message || "Erro ao gerar URLs" }
+  } catch (error: unknown) {
+    return { ok: false, error: getErrorMessage(error, "Erro ao gerar URLs") }
   }
 }
 
@@ -249,7 +249,7 @@ export async function getClientesForDiarioAction() {
       .order("nome", { ascending: true })
     if (error) throw error
     return { ok: true, data: data || [] }
-  } catch (e: any) {
-    return { ok: false, error: e.message }
+  } catch (error: unknown) {
+    return { ok: false, error: getErrorMessage(error, "Erro ao buscar clientes") }
   }
 }

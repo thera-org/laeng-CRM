@@ -469,7 +469,12 @@ export function DiarioModal({ isOpen, onClose, diario, defaultResponsavel }: Dia
             disabled={m.isSaving || (!m.isEditing && !m.selectedCliente)}
             className="bg-[#1E1E1E] text-white hover:bg-[#333] font-bold min-w-[150px] border border-[#F5C800]"
           >
-            {m.isSaving ? <Loader2 className="animate-spin h-4 w-4" /> : (m.isEditing ? "Salvar Alterações" : "Salvar Diário")}
+            {m.isSaving ? (
+              <span className="inline-flex items-center gap-2">
+                <Loader2 className="h-4 w-4 animate-spin" />
+                <span>{m.uploadProgressLabel || "Salvando..."}</span>
+              </span>
+            ) : (m.isEditing ? "Salvar Alterações" : "Salvar Diário")}
           </Button>
         </DialogFooter>
       </DialogContent>
