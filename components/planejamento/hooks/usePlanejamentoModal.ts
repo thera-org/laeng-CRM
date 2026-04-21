@@ -20,7 +20,7 @@ interface UndoEntry {
   atividade: PlanejamentoAtividade
 }
 
-const isoDay = (d: Date) => d.toISOString().split("T")[0]
+const isoDay = (d: Date) => format(d, "yyyy-MM-dd")
 
 function defaultWeekRange() {
   const now = new Date()
@@ -56,6 +56,8 @@ export function usePlanejamentoModal(
   useEffect(() => {
     if (!isOpen) return
     if (planejamento) {
+      // Local form state is rehydrated from the selected planejamento whenever the dialog opens.
+      // eslint-disable-next-line react-hooks/set-state-in-effect
       setClienteId(planejamento.cliente_id)
       setResponsavel(planejamento.responsavel || defaultResponsavel || "")
       setDataInicio(planejamento.data_inicio?.split("T")[0] || defaultWeekRange().inicio)
@@ -74,16 +76,18 @@ export function usePlanejamentoModal(
       setSearchTerm("")
     }
     setUndoStack([])
-  }, [isOpen, planejamento?.id])
+  }, [isOpen, planejamento, defaultResponsavel])
 
   useEffect(() => {
     if (!isOpen || clientes.length > 0) return
+    // The initial fetch is intentionally kicked off from the open transition.
+    // eslint-disable-next-line react-hooks/set-state-in-effect
     setLoadingClientes(true)
     getClientesForPlanejamentoAction().then((res) => {
       if (res.ok) setClientes(res.data || [])
       setLoadingClientes(false)
     })
-  }, [isOpen])
+  }, [isOpen, clientes.length])
 
   const filteredClientes = useMemo(() => {
     const term = searchTerm.trim().toLowerCase()

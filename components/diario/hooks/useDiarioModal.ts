@@ -11,6 +11,9 @@ import {
   MAX_FOTOS,
   MAX_FOTO_BYTES,
   MAX_ATIVIDADE_LEN,
+  TURNOS,
+  getVisibleClimaPorTurno,
+  toClimaPorTurnoPayload,
 } from "../types/diarioTypes"
 import { uploadDiarioFotosSequentially } from "../libs/diario-foto-upload"
 import type {
@@ -34,19 +37,7 @@ export interface PendingFoto {
   previewUrl: string
 }
 
-const TURNO_KEYS: Turno[] = ["manha", "tarde", "noite"]
-
-function normalizeClimaPorTurno(value?: DiarioClimaPorTurno | null): DiarioClimaPorTurno {
-  const next: DiarioClimaPorTurno = {}
-
-  for (const turno of TURNO_KEYS) {
-    if (value && Object.prototype.hasOwnProperty.call(value, turno)) {
-      next[turno] = value[turno] ?? null
-    }
-  }
-
-  return next
-}
+const VISIBLE_TURNO_KEYS = TURNOS.map(({ value }) => value)
 
 export function useDiarioModal(
   isOpen: boolean,
@@ -84,7 +75,7 @@ export function useDiarioModal(
       setClienteId(diario.cliente_id)
       setResponsavel(diario.responsavel || defaultResponsavel || "")
       setData(diario.data?.split("T")[0] || new Date().toISOString().split("T")[0])
-      setClimaPorTurno(normalizeClimaPorTurno(diario.clima_por_turno))
+      setClimaPorTurno(getVisibleClimaPorTurno(diario.clima_por_turno))
       setColaboradores(diario.colaboradores || {})
       setAtividade(diario.atividade || "")
       setProgresso(diario.progresso || {})
@@ -138,7 +129,7 @@ export function useDiarioModal(
   )
 
   const selectedTurnos = useMemo(
-    () => TURNO_KEYS.filter((turno) => Object.prototype.hasOwnProperty.call(climaPorTurno, turno)),
+    () => VISIBLE_TURNO_KEYS.filter((turno) => Object.prototype.hasOwnProperty.call(climaPorTurno, turno)),
     [climaPorTurno]
   )
 
@@ -237,7 +228,7 @@ export function useDiarioModal(
         cliente_id: clienteId,
         responsavel: responsavel.trim(),
         data,
-        clima_por_turno: climaPorTurno,
+        clima_por_turno: toClimaPorTurnoPayload(climaPorTurno),
         colaboradores,
         atividade,
         progresso,

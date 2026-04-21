@@ -1,6 +1,6 @@
 import { getUserContext } from "@/app/auth/context/userContext";
 import DashboardLayoutClient from "@/app/dashboard/layout-client";
-import { redirect } from "next/navigation";
+import { resolveRedirect } from "@/app/auth/routes/resolveRedirect";
 
 export default async function GestaoLayout({
     children,
@@ -10,7 +10,7 @@ export default async function GestaoLayout({
     const { user, userRole, userPermissions } = await getUserContext();
 
     if (userRole !== "admin") {
-        redirect("/dashboard");
+        resolveRedirect(userPermissions, (p) => p?.estoque?.view);
     }
 
     return (

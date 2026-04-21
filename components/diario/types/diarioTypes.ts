@@ -1,4 +1,4 @@
-import type { Clima, Turno } from "@/lib/types"
+import type { Clima, DiarioClimaPorTurno, Turno } from "@/lib/types"
 
 export const DIARIO_BUCKET = "diario-imagens"
 export const MAX_FOTOS = 12
@@ -9,8 +9,26 @@ export const MAX_ATIVIDADE_LEN = 2000
 export const TURNOS: { value: Turno; label: string }[] = [
   { value: "manha", label: "Manhã" },
   { value: "tarde", label: "Tarde" },
-  { value: "noite", label: "Noite" },
 ]
+
+export function getVisibleClimaPorTurno(value?: DiarioClimaPorTurno | null): DiarioClimaPorTurno {
+  const next: DiarioClimaPorTurno = {}
+
+  for (const { value: turno } of TURNOS) {
+    if (Object.prototype.hasOwnProperty.call(value ?? {}, turno)) {
+      next[turno] = value?.[turno] ?? null
+    }
+  }
+
+  return next
+}
+
+export function toClimaPorTurnoPayload(value?: DiarioClimaPorTurno | null): DiarioClimaPorTurno {
+  return {
+    ...getVisibleClimaPorTurno(value),
+    noite: null,
+  }
+}
 
 // Icon names from lucide-react. Components import the actual icon by key.
 export const CLIMAS: { value: Clima; label: string; icon: "Sun" | "CloudSun" | "CloudRain" | "CloudLightning" }[] = [
@@ -68,10 +86,11 @@ export const PROGRESSO_ITEMS: ProgressoItem[] = [
   { key: "limpeza_final", label: "LIMPEZA - FINAL" },
 ]
 
-export const TURNO_LABEL: Record<Turno, string> = TURNOS.reduce(
-  (acc, t) => ({ ...acc, [t.value]: t.label }),
-  {} as Record<Turno, string>
-)
+export const TURNO_LABEL: Record<Turno, string> = {
+  manha: "Manhã",
+  tarde: "Tarde",
+  noite: "Noite",
+}
 
 export const CLIMA_LABEL: Record<Clima, string> = CLIMAS.reduce(
   (acc, c) => ({ ...acc, [c.value]: c.label }),

@@ -165,7 +165,7 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
   let items =
     userRole === "admin"
       ? menuItems
-      : menuItems.filter((i) => i.title !== "Admin" && i.title !== "Receita" && i.title !== "Despesas" && i.title !== "Fluxo de Caixa" && i.title !== "Materiais" && i.title !== "Fluxo Material");
+      : menuItems.filter((i) => i.title !== "Admin" && i.title !== "Receita" && i.title !== "Despesas" && i.title !== "Fluxo de Caixa" && i.title !== "Fluxo Material");
 
   if (!userPermissions?.dashboard?.view) {
     items = items.filter((i) => i.title !== "Dashboard")
@@ -193,6 +193,10 @@ function Sidebar({ collapsed, onToggle, user, userRole, userPermissions }: { col
 
   if (!userPermissions?.diario?.view && userRole !== "admin") {
     items = items.filter((i) => i.title !== "Planejamento")
+  }
+
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Materiais")
   }
 
   if (!userPermissions?.estoque?.view && userRole !== "admin") {
@@ -322,7 +326,7 @@ function MobileSidebar({ isOpen, onClose, user, userRole, userPermissions }: { i
   let items =
     userRole === "admin"
       ? menuItems
-      : menuItems.filter((i) => i.title !== "Admin" && i.title !== "Receita" && i.title !== "Despesas" && i.title !== "Fluxo de Caixa" && i.title !== "Materiais" && i.title !== "Fluxo Material");
+      : menuItems.filter((i) => i.title !== "Admin" && i.title !== "Receita" && i.title !== "Despesas" && i.title !== "Fluxo de Caixa" && i.title !== "Fluxo Material");
 
   if (!userPermissions?.dashboard?.view) {
     items = items.filter((i) => i.title !== "Dashboard")
@@ -350,6 +354,10 @@ function MobileSidebar({ isOpen, onClose, user, userRole, userPermissions }: { i
 
   if (!userPermissions?.diario?.view && userRole !== "admin") {
     items = items.filter((i) => i.title !== "Planejamento")
+  }
+
+  if (!userPermissions?.estoque?.view && userRole !== "admin") {
+    items = items.filter((i) => i.title !== "Materiais")
   }
 
   if (!userPermissions?.estoque?.view && userRole !== "admin") {

@@ -29,7 +29,13 @@ import {
 } from "lucide-react"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { usePagination, useExpandableRows } from "@/lib/table-utils"
-import { CLIMA_LABEL, MAX_FOTOS, TURNOS } from "./types/diarioTypes"
+import {
+  CLIMA_LABEL,
+  MAX_FOTOS,
+  TURNOS,
+  getVisibleClimaPorTurno,
+  toClimaPorTurnoPayload,
+} from "./types/diarioTypes"
 import { calcDiarioProgressPct, totalColaboradores } from "./libs/diario-progress"
 import { useDiarioInlineEdit } from "./hooks/useDiarioInlineEdit"
 import { FotoViewerModal } from "./foto-viewer-modal"
@@ -63,15 +69,7 @@ const CLIMA_ICON: Record<Clima, React.ComponentType<{ className?: string }>> = {
 }
 
 function cloneClimaPorTurno(value?: DiarioClimaPorTurno | null): DiarioClimaPorTurno {
-  const next: DiarioClimaPorTurno = {}
-
-  for (const { value: turno } of TURNOS) {
-    if (Object.prototype.hasOwnProperty.call(value ?? {}, turno)) {
-      next[turno] = value?.[turno] ?? null
-    }
-  }
-
-  return next
+  return getVisibleClimaPorTurno(value)
 }
 
 function formatDiarioDate(value?: string | null) {
@@ -166,7 +164,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
   const saveClimaEditor = async () => {
     if (!editingClimaDiario) return
 
-    const nextValue = cloneClimaPorTurno(editingClimaValue)
+    const nextValue = toClimaPorTurnoPayload(editingClimaValue)
     const ok = await inline.updateField(
       editingClimaDiario.id,
       "clima_por_turno",
@@ -176,7 +174,7 @@ export function DiariosTableFull({ diarios, onEdit, onDelete }: DiariosTableFull
 
     if (!ok) return
 
-    setClimaPorTurnoLocal((prev) => ({ ...prev, [editingClimaDiario.id]: nextValue }))
+    setClimaPorTurnoLocal((prev) => ({ ...prev, [editingClimaDiario.id]: cloneClimaPorTurno(nextValue) }))
     resetClimaEditor()
   }
 
